@@ -12,8 +12,10 @@ class ModernRecipeGenerator {
         this.debugMode = true;
         this.currentRecipe = null;
         
-        // 🔧 Configuración LOCAL
-        this.apiBaseUrl = 'http://localhost:5000';
+        // 🔧 Configuración DINÁMICA (Producción + Local)
+        this.apiBaseUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000'  // Desarrollo local
+            : `https://${window.location.hostname}`;  // Producción en Railway
         this.apiEndpoint = '/generate_recipe';
         
         this.init();
