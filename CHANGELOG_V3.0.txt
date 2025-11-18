@@ -1,0 +1,66 @@
+CHANGELOG - GENERADOR DE RECETAS V3.0
+=====================================
+
+FECHA: 2025-01-09
+VERSIÓN: 3.0 FINAL
+
+🆕 NUEVAS FUNCIONALIDADES:
+
+1. 🏆 SISTEMA DE BENCHMARK
+   - Compara recetas con 15 productos del mercado
+   - Score de competitividad (0-100)
+   - Identifica producto más similar
+   - Top 3 productos similares
+   - Recomendaciones para mejorar
+
+2. ⭐ SISTEMA DE REVIEWS
+   - Rating 1-5 estrellas
+   - Comentarios opcionales
+   - Almacenamiento en SQLite
+   - Métricas agregadas
+
+3. 🤖 MACHINE LEARNING
+   - Predicción de ratings
+   - 30+ features extraídos
+   - Random Forest / Gradient Boosting
+   - Cross-validation (5-fold)
+   - Feature importance analysis
+
+4. 🏷️ SELECTOR DE TIPO DE PRODUCTO
+   - Polvo para Batidos
+   - Jugo Funcional
+   - Cápsulas
+   - Polvo de Hidratación
+   - Golden Milk
+   - Supergreens
+
+5. 🔧 FIX DE PROPORCIONES
+   - Ahora muestra 2 decimales (0.01g - 0.09g)
+   - Antes: 0.0g → Ahora: 0.05g ✅
+
+🔧 MEJORAS TÉCNICAS:
+
+- RecipeGeneratorV3 hereda de RecipeGenerator
+- Endpoints nuevos: /submit_feedback, /get_feedback
+- Frontend con modal de benchmark
+- Sistema de estrellas interactivo
+- ml_training_system.py (500+ líneas)
+- Documentación completa
+
+📊 ESTADÍSTICAS:
+
+- Código original preservado: 3219 líneas ✅
+- Código nuevo agregado: +800 líneas
+- Total: 4019 líneas
+- Archivos nuevos: 2 (ml_training_system.py, QUICK_START.txt)
+- Productos benchmark: 15
+- Superalimentos: 510
+
+✅ COMPATIBILIDAD:
+
+- 100% backward compatible
+- Código antiguo sigue funcionando
+- Extensiones opcionales
+- Sin breaking changes
+
+=====================================

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenLab Superalimentos - Batidos Inteligentes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS del proyecto -->
+    <link rel="stylesheet" href="css/modern-style.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/productos.css">
+    <link rel="stylesheet" href="css/superalimentos.css">
+    <link rel="stylesheet" href="css/superfoods_detail.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="images/zenlab_logo_white.png" alt="ZenLab" height="50">
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#inicio">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="productos.html">Nuestros Productos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="superalimentos.html">Superalimentos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#generador">Generador de Batidos</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="hero-section">
+        <div class="container">
+            <div class="row align-items-center min-vh-100">
+                <div class="col-lg-6">
+                    <div class="hero-content">
+                        <h1 class="hero-title">
+                            Batidos <span class="text-gradient">inteligentes</span> 
+                            con biodisponibilidad optimizada
+                        </h1>
+                        <p class="hero-subtitle">
+                            Nuestro algoritmo científico combina superalimentos maximizando sinergias positivas 
+                            y eliminando interacciones inhibidoras. Cada batido es único y científicamente respaldado.
+                        </p>
+                        <div class="hero-actions">
+                            <button class="btn btn-primary btn-lg" onclick="openRecipeGenerator()">
+                                <i class="fas fa-flask me-2"></i>
+                                Crear Mi Batido Personalizado
+                            </button>
+                            <a href="superalimentos.html" class="btn btn-outline-light btn-lg">
+                                Explorar Superalimentos
+                            </a>
+                        </div>
+                        
+                        <!-- UX: Badges de diferenciación -->
+                        <div class="mt-4">
+                            <span class="badge bg-success me-2">
+                                <i class="fas fa-check-circle me-1"></i> +2000% absorción con sinergias
+                            </span>
+                            <span class="badge bg-info">
+                                <i class="fas fa-shield-alt me-1"></i> Sin interacciones inhibidoras
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-visual">
+                        <div class="floating-card">
+                            <div class="card-content">
+                                <div class="metric-circle">
+                                    <span class="metric-number">75+</span>
+                                    <span class="metric-label">Superalimentos</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="floating-card delay-1">
+                            <div class="card-content">
+                                <i class="fas fa-atom text-success"></i>
+                                <span>Biodisponibilidad Optimizada</span>
+                            </div>
+                        </div>
+                        <div class="floating-card delay-2">
+                            <div class="card-content">
+                                <i class="fas fa-microscope text-info"></i>
+                                <span>Científicamente Respaldado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <!-- UX: Sección explicativa de sinergias -->
+            <div class="row mb-5">
+                <div class="col-12 text-center">
+                    <h2 class="mb-3">¿Por qué nuestros batidos son diferentes?</h2>
+                    <p class="lead text-muted">No basta con mezclar superalimentos. La biodisponibilidad importa.</p>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon bg-success">
+                            <i class="fas fa-arrows-alt"></i>
+                        </div>
+                        <h3>Sinergias Potenciadoras</h3>
+                        <p>Combinamos ingredientes que se potencian mutuamente. Ejemplo: Curcumina + Piperina aumenta absorción 20x.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon bg-danger">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <h3>Sin Interacciones Negativas</h3>
+                        <p>Evitamos combinaciones que reducen absorción. Ejemplo: Separamos hierro de té verde para evitar inhibición.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon bg-primary">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3>Algoritmo Inteligente</h3>
+                        <p>Cada batido es único, generado en tiempo real según tus objetivos de salud y las mejores interacciones.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-3 mb-4">
+                    <div class="stat-item">
+                        <div class="stat-number">75+</div>
+                        <div class="stat-label">Superalimentos</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stat-item">
+                        <div class="stat-number">35</div>
+                        <div class="stat-label">Interacciones Científicas</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stat-item">
+                        <div class="stat-number">250+</div>
+                        <div class="stat-label">Papers Científicos</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stat-item">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Natural</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recipe Generator Modal -->
+    <div class="modal fade" id="recipeGeneratorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">
+                        <i class="fas fa-flask me-2 text-primary"></i>
+                        Generador de Batidos con Biodisponibilidad Optimizada
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Form Section -->
+                        <div class="col-lg-6">
+                            <div class="generator-form">
+                                <!-- UX: Callout informativo -->
+                                <div class="alert alert-info mb-4" role="alert">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Modo actual:</strong> Polvos para batidos con biodisponibilidad optimizada
+                                </div>
+                                
+                                <form id="recipeForm">
+                                    <!-- Primary Objective -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label" for="primaryObjective">
+                                            <i class="fas fa-bullseye me-1"></i> Objetivo Principal
+                                        </label>
+                                        <select class="form-select" id="primaryObjective" required aria-required="true">
+                                            <option value="">Selecciona un objetivo</option>
+                                            <option value="immune">🛡️ Fortalecer sistema inmunológico</option>
+                                            <option value="energy">⚡ Aumentar energía y vitalidad</option>
+                                            <option value="cognitive">🧠 Mejorar rendimiento cognitivo</option>
+                                            <option value="physical">💪 Potenciar rendimiento físico</option>
+                                            <option value="muscle">🏋️ Aumentar masa muscular</option>
+                                            <option value="detox">🌿 Desintoxicación y limpieza</option>
+                                            <option value="stress">😌 Reducir estrés y mejorar sueño</option>
+                                            <option value="digestion">🥗 Mejorar digestión</option>
+                                            <option value="beauty">💅 Mejorar piel, cabello y uñas</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Secondary Objectives -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label">
+                                            <i class="fas fa-list-check me-1"></i> Objetivos Secundarios (Opcional)
+                                        </label>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="form-label small" for="secondaryObjective1">Salud general</label>
+                                                <select class="form-select mb-2" id="secondaryObjective1">
+                                                    <option value="">Ninguno</option>
+                                                    <option value="cardiovascular">Apoyar la salud cardiovascular</option>
+                                                    <option value="brain_health">Mejorar salud cerebral</option>
+                                                    <option value="inflammation">Reducir inflamación</option>
+                                                    <option value="blood_sugar">Regular niveles de azúcar</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small" for="secondaryObjective2">Bienestar específico</label>
+                                                <select class="form-select" id="secondaryObjective2">
+                                                    <option value="">Ninguno</option>
+                                                    <option value="weight_control">Apoyar control de peso</option>
+                                                    <option value="hormonal">Equilibrar hormonas</option>
+                                                    <option value="joint_health">Fortalecer articulaciones</option>
+                                                    <option value="visual_health">Mejorar salud visual</option>
+                                                    <option value="intestinal_health">Optimizar salud intestinal</option>
+                                                    <option value="bone_health">Fortalecer huesos</option>
+                                                    <option value="liver_function">Apoyar función hepática</option>
+                                                    <option value="mood">Mejorar estado de ánimo</option>
+                                                    <option value="mental_clarity">Aumentar claridad mental</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Dietary Restrictions -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label">
+                                            <i class="fas fa-shield-halved me-1"></i> Restricciones Dietéticas
+                                        </label>
+                                        <div class="restriction-buttons" role="group" aria-label="Restricciones dietéticas">
+                                            <button type="button" class="btn btn-outline-secondary restriction-btn" data-restriction="vegan" aria-pressed="false">
+                                                <i class="fas fa-leaf me-1"></i> Vegano
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary restriction-btn" data-restriction="gluten_free" aria-pressed="false">
+                                                <i class="fas fa-wheat me-1"></i> Sin Gluten
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary restriction-btn" data-restriction="nut_free" aria-pressed="false">
+                                                <i class="fas fa-ban me-1"></i> Sin Frutos Secos
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Number of Ingredients -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label" for="numIngredients">
+                                            <i class="fas fa-layer-group me-1"></i> Número de Ingredientes: 
+                                            <span id="ingredientCount" class="text-primary fw-bold">5</span>
+                                        </label>
+                                        <input type="range" class="form-range" id="numIngredients" 
+                                               min="3" max="8" value="5" 
+                                               aria-valuemin="3" aria-valuemax="8" aria-valuenow="5">
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">Mínimo (3)</small>
+                                            <small class="text-muted">Óptimo (5-6)</small>
+                                            <small class="text-muted">Máximo (8)</small>
+                                        </div>
+                                    </div>
+
+                                    <!-- 🆕 NUEVO: Package Size Selector -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label" for="packageSize">
+                                            <i class="fas fa-box me-1"></i> Tamaño del Envase
+                                        </label>
+                                        <select class="form-select" id="packageSize" aria-label="Seleccionar tamaño de envase">
+                                            <option value="100" selected>100g (Personal - 30 porciones)</option>
+                                            <option value="200">200g (Familiar - 60 porciones)</option>
+                                        </select>
+                                        <div class="form-text">
+                                            <small class="text-muted">
+                                                <i class="fas fa-calculator me-1"></i>
+                                                El algoritmo calculará las cantidades proporcionalmente
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Food Sources -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label">
+                                            <i class="fas fa-filter me-1"></i> Fuentes de Alimentos (Opcional)
+                                        </label>
+                                        <div class="source-buttons" role="group" aria-label="Fuentes de alimentos">
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="hongos_medicinales" aria-pressed="false">
+                                                <i class="fas fa-mushroom me-1"></i> Hongos Medicinales
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="frutas_bayas" aria-pressed="false">
+                                                <i class="fas fa-apple-alt me-1"></i> Frutas y Bayas
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="frutos_secos" aria-pressed="false">
+                                                <i class="fas fa-seedling me-1"></i> Frutos Secos
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="algas_marinas" aria-pressed="false">
+                                                <i class="fas fa-water me-1"></i> Algas Marinas
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="semillas" aria-pressed="false">
+                                                <i class="fas fa-seed me-1"></i> Semillas
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="vegetales_verdes" aria-pressed="false">
+                                                <i class="fas fa-leaf me-1"></i> Vegetales Verdes
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Selector de Tipo de Producto -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">
+                                            <i class="fas fa-box-open me-2"></i>
+                                            Tipo de Producto
+                                        </label>
+                                        <select class="form-select form-select-lg" id="productType" required>
+                                            <option value="polvo_batidos" selected>
+                                                🥤 Polvo para Batidos (Suplemento en Polvo)
+                                            </option>
+                                            <option value="jugo_funcional">
+                                                🧋 Jugo Funcional (Bebida Lista)
+                                            </option>
+                                            <option value="capsula_suplemento">
+                                                💊 Cápsulas (Suplemento Encapsulado)
+                                            </option>
+                                            <option value="polvo_hidratacion">
+                                                💧 Polvo de Hidratación (Electrolitos)
+                                            </option>
+                                            <option value="golden_milk">
+                                                ☕ Golden Milk (Bebida Caliente)
+                                            </option>
+                                            <option value="supergreens">
+                                                🌿 Supergreens (Mezcla Verde)
+                                            </option>
+                                        </select>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            El tipo de producto afecta las proporciones y formato de los ingredientes
+                                        </small>
+                                    </div>
+
+                                    <!-- Generate Button -->
+                                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                                        <i class="fas fa-flask me-2"></i>
+                                        Generar Mi Batido Optimizado
+                                    </button>
+                                    
+                                    <!-- UX: Hint sobre el proceso -->
+                                    <div class="mt-3 text-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-atom me-1"></i>
+                                            El algoritmo analizará <strong>35 interacciones científicas</strong> para maximizar la absorción
+                                        </small>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Results Section -->
+                        <div class="col-lg-6">
+                            <!-- UX: Estado vacío mejorado -->
+                            <div id="emptyState" class="text-center py-5">
+                                <i class="fas fa-blender fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Tu batido personalizado aparecerá aquí</h5>
+                                <p class="text-muted small">Completa el formulario y haz clic en "Generar Mi Batido Optimizado"</p>
+                                
+                                <!-- UX: Preview de qué esperar -->
+                                <div class="mt-4">
+                                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-check text-success"></i> Sinergias potenciadoras
+                                        </span>
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-times text-danger"></i> Sin inhibidores
+                                        </span>
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-chart-line text-info"></i> Biodisponibilidad optimizada
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- UX: Loading state mejorado -->
+                            <div id="loadingSpinner" class="text-center py-5 d-none" role="status" aria-live="polite">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">Generando batido...</span>
+                                </div>
+                                <h6>Analizando interacciones...</h6>
+                                <p class="text-muted small">Optimizando biodisponibilidad y sinergias</p>
+                            </div>
+                            
+                            <!-- UX: Results container -->
+                            <div id="recipeResults" class="recipe-results d-none" role="region" aria-label="Resultados del batido">
+                                <!-- Recipe content will be populated here by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/modern-recipe-generator.js"></script>
+</body>
+</html>
