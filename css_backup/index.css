@@ -1,0 +1,163 @@
+/* Estilos específicos para la página de índice */
+
+/* Generador de Recetas */
+.recipe-form {
+    background-color: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+}
+
+.recipe-result {
+    background-color: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    margin-top: 2rem;
+    transition: all 0.3s ease;
+}
+
+.ingredient-item {
+    background-color: var(--zenlab-light-blue);
+    border-radius: 8px;
+    padding: 0.8rem 1.2rem;
+    margin-bottom: 0.8rem;
+    border-left: 4px solid var(--zenlab-teal);
+}
+
+/* Secciones de la página principal */
+#que-son, #productos, #superalimentos-destacados, #generador, #acerca {
+    padding: 2rem 0;
+    margin-bottom: 1rem;
+}
+
+/* Destacados */
+.feature-box {
+    text-align: center;
+    padding: 1.5rem;
+    border-radius: 12px;
+    background-color: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.feature-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    color: var(--zenlab-teal);
+    margin-bottom: 1rem;
+}
+
+/* Vitaminas y nutrientes */
+.vitamin-badge {
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    margin: 0.2rem;
+    border-radius: 20px;
+    background-color: var(--zenlab-light-blue);
+    color: var(--zenlab-teal);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.nutrient-info {
+    background-color: var(--zenlab-light-blue);
+    border-radius: 10px;
+    padding: 1.2rem;
+    margin-top: 1.5rem;
+}
+
+.nutrient-info h4 {
+    color: var(--zenlab-teal);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+/* Botón de impresión */
+.print-button {
+    position: relative;
+    top: 0;
+    right: 0;
+    margin-bottom: 1rem;
+    float: right;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.print-button:hover {
+    transform: scale(1.05);
+}
+
+/* Productos destacados */
+.product-highlight {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.product-highlight img {
+    width: 100%;
+    transition: transform 0.5s ease;
+}
+
+.product-highlight:hover img {
+    transform: scale(1.05);
+}
+
+.product-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+    padding: 1.5rem;
+    color: white;
+}
+
+.product-overlay h4 {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+/* Estilos para impresión específicos de recetas */
+@media print {
+    .recipe-result {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .recipe-result h3 {
+        font-size: 18pt;
+        margin-bottom: 15pt;
+    }
+    
+    .ingredient-item {
+        background-color: #f8f8f8 !important;
+        border-left: 2px solid #333;
+        padding: 8pt;
+        margin-bottom: 5pt;
+    }
+    
+    .vitamin-badge {
+        border: 1px solid #ddd;
+        background-color: #f8f8f8 !important;
+        color: #333 !important;
+    }
+}

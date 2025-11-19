@@ -5,57 +5,19 @@
  * COMPLETO: 1054+ líneas preservando TODA la funcionalidad original
  */
 
-/*
-ESTA ES LA CLASE ORIGINAL que funciona en RAILWAYclass ModernRecipeGenerator { 
-    constructor() {
-        this.selectedRestrictions = new Set();
-        this.selectedSources = new Set();
-        this.debugMode = true;
-        this.currentRecipe = null;
-
-        // 🔧 Configuración DINÁMICA (Producción + Local)
-        // ⚠️ NOTA: Este bloque se reemplazó por una versión más robusta.
-        //          Se mantiene comentado por si en el futuro deseas restaurarlo.
-        //
-        // ORIGINAL:
-        // this.apiBaseUrl = window.location.hostname === 'localhost' 
-        //     ? 'http://localhost:5000'  // Desarrollo local
-        //     : `https://${window.location.hostname}`;  // Producción en Railway
-
-        this.apiEndpoint = '/generate_recipe';
-
-        this.init();
-    }
-}
-*/
-
 class ModernRecipeGenerator {
     constructor() {
         this.selectedRestrictions = new Set();
         this.selectedSources = new Set();
         this.debugMode = true;
         this.currentRecipe = null;
-
-        // 🔧 Configuración del endpoint backend (LOCAL + RAILWAY)
-        //
-        // - Si el HTML se abre como archivo (file://), asumimos Flask en localhost:5000
-        // - Si la página viene de un servidor (Flask local o Railway),
-        //   usamos SIEMPRE el mismo origin para las llamadas a la API.
-        //
-        // Ejemplos:
-        //   Local Flask:   http://127.0.0.1:5000  → API: http://127.0.0.1:5000/generate_recipe
-        //   Railway:       https://web-production-a582d.up.railway.app
-        //                   → API: https://web-production-a582d.up.railway.app/generate_recipe
-        if (window.location.protocol === 'file:' || window.location.hostname === '') {
-            // Modo “archivo local”
-            this.apiBaseUrl = 'http://127.0.0.1:5000';
-        } else {
-            // Mismo origin que sirve la web (local o Railway)
-            this.apiBaseUrl = window.location.origin;
-        }
-
+        
+        // 🔧 Configuración DINÁMICA (Producción + Local)
+        this.apiBaseUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000'  // Desarrollo local
+            : `https://${window.location.hostname}`;  // Producción en Railway
         this.apiEndpoint = '/generate_recipe';
-
+        
         this.init();
     }
 
@@ -378,8 +340,7 @@ Troubleshooting:
         const packageImage = packageSize === 200 ? 'images/4.png' : 'images/3.png';
 
         return `
-
-            ${false ? `
+            <!-- Imagen del empaque según gramaje -->
             <div class="package-preview text-center mb-4">
                 <h5 class="mb-3">
                     <i class="fas fa-box-open me-2"></i>
@@ -391,7 +352,6 @@ Troubleshooting:
                     Visualiza el potencial de tu propio producto
                 </p>
             </div>
-            ` : ''}
             
             <div class="recipe-header">
                 <h3 class="recipe-title">${recipe.name}</h3>
