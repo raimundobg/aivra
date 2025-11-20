@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - ZenLab</title>
+    <link rel="stylesheet" href="/css/style-improved.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        .register-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-xl);
+            padding: 3rem;
+        }
+        .register-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .register-header h1 {
+            color: var(--primary-green);
+            margin-bottom: 0.5rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            display: block;
+            font-weight: var(--font-weight-medium);
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            transition: all var(--transition-base);
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, var(--primary-green), var(--secondary-teal));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: var(--radius-lg);
+            font-weight: var(--font-weight-semibold);
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: all var(--transition-base);
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+        .alert {
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+        }
+        .alert-danger {
+            background: #fee;
+            color: #c00;
+            border: 1px solid #fcc;
+        }
+        .alert-success {
+            background: #efe;
+            color: #0a0;
+            border: 1px solid #cfc;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-header">
+            <h1>Crear Cuenta</h1>
+            <p style="color: var(--text-secondary);">Únete a ZenLab Superalimentos</p>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="{{ url_for('auth.register') }}">
+            <!-- Tipo de cuenta -->
+            <div class="form-group">
+                <label class="form-label">Tipo de cuenta *</label>
+                <select class="form-control" name="user_type" required>
+                    <option value="cliente">👤 Cliente (Usuario regular)</option>
+                    <option value="nutricionista">⭐ Nutricionista (Profesional)</option>
+                    <option value="empresa">🏢 Empresa (I+D)</option>
+                </select>
+            </div>
+            
+            <!-- Email -->
+            <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input type="email" class="form-control" name="email" required>
+            </div>
+            
+            <!-- Contraseñas -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">Contraseña *</label>
+                    <input type="password" class="form-control" name="password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Confirmar *</label>
+                    <input type="password" class="form-control" name="confirm_password" required>
+                </div>
+            </div>
+            
+            <!-- Nombre y Apellido -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">Nombre *</label>
+                    <input type="text" class="form-control" name="first_name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Apellido *</label>
+                    <input type="text" class="form-control" name="last_name" required>
+                </div>
+            </div>
+            
+            <!-- Fecha de nacimiento -->
+            <div class="form-group">
+                <label class="form-label">Fecha de Nacimiento *</label>
+                <input type="date" class="form-control" name="birth_date" required>
+            </div>
+            
+            <!-- País -->
+            <div class="form-group">
+                <label class="form-label">País *</label>
+                <select class="form-control" name="country" id="country" required>
+                    <option value="">Selecciona...</option>
+                    {% for country in countries %}
+                        <option value="{{ country }}">{{ country }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Ciudad (solo Chile) -->
+            <div class="form-group" id="cityField" style="display: none;">
+                <label class="form-label">Ciudad *</label>
+                <select class="form-control" name="city">
+                    <option value="">Selecciona...</option>
+                    {% for city in cities %}
+                        <option value="{{ city }}">{{ city }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Teléfono -->
+            <div class="form-group">
+                <label class="form-label">Teléfono (opcional)</label>
+                <input type="tel" class="form-control" name="phone" placeholder="+56 9 1234 5678">
+            </div>
+            
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-rocket"></i> Crear Mi Cuenta
+            </button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--gray-200);">
+            <p>¿Ya tienes cuenta? <a href="{{ url_for('auth.login') }}" style="color: var(--primary-green); font-weight: bold;">Inicia sesión</a></p>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('country').addEventListener('change', function() {
+            const cityField = document.getElementById('cityField');
+            const citySelect = cityField.querySelector('select');
+            if (this.value === 'Chile') {
+                cityField.style.display = 'block';
+                citySelect.required = true;
+            } else {
+                cityField.style.display = 'none';
+                citySelect.required = false;
+            }
+        });
+    </script>
+</body>
+</html>

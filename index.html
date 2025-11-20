@@ -26,6 +26,9 @@
     <!-- ========================================
          NAVBAR CON SCROLL EFFECT
     ========================================= -->
+<!-- ========================================
+     NAVBAR CON SCROLL EFFECT + AUTH BUTTONS
+========================================= -->
     <nav class="navbar-custom" id="mainNavbar">
         <div class="container">
             <div class="navbar-wrapper">
@@ -44,11 +47,17 @@
                     <li><a href="#testimonios" class="nav-link-custom">Testimonios</a></li>
                 </ul>
 
-                <!-- CTA Button Desktop -->
-                <button class="btn-cta-nav" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
-                    <i class="fas fa-flask me-2"></i>
-                    Crear Batido
-                </button>
+                <!-- 🆕 Auth Buttons Desktop -->
+                <div class="auth-buttons-desktop" style="display: flex; gap: 1rem; align-items: center;">
+                    <a href="/auth/login" class="nav-link-custom" style="text-decoration: none;">
+                        <i class="fas fa-sign-in-alt me-1"></i>
+                        Login
+                    </a>
+                    <a href="/auth/register" class="btn-cta-nav" style="text-decoration: none;">
+                        <i class="fas fa-user-plus me-2"></i>
+                        Crear Cuenta
+                    </a>
+                </div>
 
                 <!-- Mobile Hamburger -->
                 <button class="hamburger" id="hamburgerBtn" aria-label="Menú">
@@ -66,10 +75,17 @@
                 <a href="#como-funciona" class="mobile-menu-link">Cómo Funciona</a>
                 <a href="#precios" class="mobile-menu-link">Precios</a>
                 <a href="#testimonios" class="mobile-menu-link">Testimonios</a>
-                <button class="btn-cta-mobile" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
-                    <i class="fas fa-flask me-2"></i>
-                    Crear Mi Batido
-                </button>
+                
+                <!-- 🆕 Auth Links Mobile -->
+                <hr style="border-color: rgba(255,255,255,0.2); margin: 1rem 0;">
+                <a href="/auth/login" class="mobile-menu-link">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Iniciar Sesión
+                </a>
+                <a href="/auth/register" class="btn-cta-mobile" style="text-decoration: none; display: block; text-align: center;">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Crear Cuenta Gratis
+                </a>
             </div>
         </div>
     </nav>
@@ -285,8 +301,8 @@
                         </div>
 
                         <ul class="audience-features-list">
-                            <li><i class="fas fa-check-circle"></i> Base de datos de +75 superalimentos</li>
-                            <li><i class="fas fa-check-circle"></i> Algoritmo respaldado por 250+ papers</li>
+                            <li><i class="fas fa-check-circle"></i> Base de datos con miles de superalimentos e ingredientes</li>
+                            <li><i class="fas fa-check-circle"></i> Algoritmo respaldado por miles de papers académicos</li>
                             <li><i class="fas fa-check-circle"></i> Genera recetas personalizadas en segundos</li>
                             <li><i class="fas fa-check-circle"></i> Exporta informes nutricionales completos</li>
                             <li><i class="fas fa-check-circle"></i> Considera restricciones dietéticas</li>

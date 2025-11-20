@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dashboard Nutricionista - ZenLab Pro</title>
+        
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        
+        <!-- 🔧 FIX: Rutas directas sin url_for -->
+        <link rel="stylesheet" href="/css/modern-style.css">
+    
+    <style>
+        body { background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%); font-family: 'Inter', sans-serif; }
+        .dashboard-wrapper { padding-top: 120px; min-height: 100vh; }
+        .dashboard-header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 3rem 0; margin-bottom: 3rem; border-radius: 0 0 2rem 2rem; color: white; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+        .stat-card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07); transition: all 0.2s; text-align: center; }
+        .stat-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15); }
+        .stat-icon { width: 60px; height: 60px; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; color: white; margin: 0 auto 1.5rem; }
+        .stat-icon.green { background: linear-gradient(135deg, #10b981, #14b8a6); }
+        .stat-icon.blue { background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+        .stat-icon.red { background: linear-gradient(135deg, #ef4444, #f97316); }
+        .stat-icon.orange { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+        .stat-number { font-size: 2.5rem; font-weight: 800; margin: 1rem 0; }
+        .stat-number.green { color: #10b981; }
+        .stat-number.blue { color: #3b82f6; }
+        .stat-number.red { color: #ef4444; }
+        .stat-number.orange { color: #f59e0b; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+        .menu-card { background: white; border-radius: 1.5rem; padding: 2rem; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; position: relative; overflow: hidden; }
+        .menu-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #10b981, #14b8a6); transform: scaleX(0); transition: transform 0.3s; }
+        .menu-card:hover::before { transform: scaleX(1); }
+        .menu-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15); border-color: #10b981; }
+        .menu-icon { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white; margin: 0 auto 1.5rem; }
+        .menu-icon.green { background: linear-gradient(135deg, #10b981, #14b8a6); }
+        .menu-icon.blue { background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+        .menu-icon.purple { background: linear-gradient(135deg, #8b5cf6, #a855f7); }
+        .menu-icon.orange { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+        .content-section { background: white; border-radius: 1.5rem; padding: 2rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07); margin-bottom: 2rem; }
+        .section-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .title-icon { color: #10b981; }
+        .btn-modern { background: linear-gradient(135deg, #10b981, #14b8a6); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+        .btn-modern:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4); color: white; }
+        .badge-pro { background: linear-gradient(135deg, #10b981, #14b8a6); color: white; padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .empty-state { text-align: center; padding: 3rem; color: #6b7280; }
+        .empty-icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.3; }
+        .recipe-item { background: white; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; border-left: 4px solid #10b981; transition: all 0.2s; }
+        .recipe-item:hover { transform: translateX(8px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <nav class="navbar-custom" style="background: rgba(17, 24, 39, 0.95); backdrop-filter: blur(10px); position: fixed; top: 0; width: 100%; z-index: 1000;">
+        <div class="container">
+            <div class="navbar-wrapper" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0;">
+                <a href="{{ url_for('index') }}" class="navbar-brand-custom">
+                    <img src="/images/logo.png" alt="ZenLab" style="height: 200px;">
+                </a>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <span style="color: rgba(255,255,255,0.9);">
+                        <i class="fas fa-user-md me-1"></i>
+                        {{ current_user.get_full_name() }}
+                    </span>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-light">
+                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="dashboard-wrapper">
+        <div class="dashboard-header">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem;">
+                            <i class="fas fa-user-md me-2"></i>
+                            Dashboard de Nutricionista
+                        </h1>
+                        <p style="font-size: 1.125rem; opacity: 0.9; margin-bottom: 1rem;">
+                            Bienvenido/a, {{ current_user.get_full_name() }}
+                        </p>
+                        <span class="badge-pro">
+                            <i class="fas fa-star"></i>
+                            Plan Professional
+                        </span>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-flask"></i>
+                    </div>
+                    <h3 class="stat-number green">{{ total_recipes }}</h3>
+                    <p style="color: #6b7280; margin: 0;">Recetas Totales</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-infinity"></i>
+                    </div>
+                    <h3 class="stat-number blue">∞</h3>
+                    <p style="color: #6b7280; margin: 0;">Recetas Disponibles</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon red">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="stat-number red">0</h3>
+                    <p style="color: #6b7280; margin: 0;">Pacientes Activos</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="stat-number orange">{{ recipes|length }}</h3>
+                    <p style="color: #6b7280; margin: 0;">Este Mes</p>
+                </div>
+            </div>
+            
+            <div class="content-section">
+                <h2 class="section-title">
+                    <i class="fas fa-th-large title-icon"></i>
+                    Menú Principal
+                </h2>
+                
+                <div class="menu-grid">
+                    <div class="menu-card" onclick="alert('Próximamente: Módulo de Ingreso de Pacientes')">
+                        <div class="menu-icon green">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Ingresar un Paciente</h3>
+                        <p style="color: #6b7280; text-align: center; margin: 0;">Registrar nueva ficha con datos antropométricos</p>
+                    </div>
+                    
+                    <div class="menu-card" onclick="alert('Próximamente: Módulo de Gestión de Fichas')">
+                        <div class="menu-icon blue">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Abrir Ficha Paciente</h3>
+                        <p style="color: #6b7280; text-align: center; margin: 0;">Ver historial y plan nutricional</p>
+                    </div>
+                    
+                    <div class="menu-card" onclick="alert('Próximamente: Generador de Pautas')">
+                        <div class="menu-icon purple">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Crear Pauta de Alimentación</h3>
+                        <p style="color: #6b7280; text-align: center; margin: 0;">Plan semanal con lista de supermercado</p>
+                    </div>
+                    
+                    <div class="menu-card" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
+                        <div class="menu-icon orange">
+                            <i class="fas fa-flask"></i>
+                        </div>
+                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Generar Recetas Personalizadas</h3>
+                        <p style="color: #6b7280; text-align: center; margin: 0;">Batidos optimizados con IA</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2 class="section-title" style="margin: 0;">
+                        <i class="fas fa-history title-icon"></i>
+                        Mis Recetas Recientes
+                    </h2>
+                    <button class="btn-modern" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
+                        <i class="fas fa-plus me-2"></i>
+                        Nueva Receta
+                    </button>
+                </div>
+                
+                {% if recipes %}
+                    {% for recipe in recipes %}
+                        <div class="recipe-item">
+                            <h4 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">
+                                <i class="fas fa-blender" style="color: #10b981;"></i>
+                                {{ recipe.recipe_name }}
+                            </h4>
+                            <small style="color: #6b7280;">
+                                <i class="far fa-calendar me-1"></i>
+                                {{ recipe.created_at.strftime('%d/%m/%Y %H:%M') }}
+                            </small>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-flask empty-icon"></i>
+                        <h4 style="color: #6b7280; font-size: 1.25rem; font-weight: 600;">Aún no tienes recetas</h4>
+                        <p>¡Crea tu primera receta optimizada con IA!</p>
+                        <button class="btn-modern" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
+                            <i class="fas fa-plus me-2"></i>
+                            Crear Primera Receta
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <!-- ========================================
+         MODAL DEL GENERADOR DE RECETAS COMPLETO
+    ========================================= -->
+    <div class="modal fade" id="recipeGeneratorModal" tabindex="-1" aria-labelledby="recipeGeneratorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="recipeGeneratorModalLabel">
+                        <i class="fas fa-flask me-2 text-primary"></i>
+                        Generador de Batidos con Biodisponibilidad Optimizada
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Form Section -->
+                        <div class="col-lg-6">
+                            <div class="generator-form">
+                                <div class="alert alert-info mb-4" role="alert">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Modo actual:</strong> Polvos para batidos con biodisponibilidad optimizada
+                                </div>
+                                
+                                <form id="recipeForm">
+                                    <!-- Primary Objective -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label" for="primaryObjective">
+                                            <i class="fas fa-bullseye me-1"></i> Objetivo Principal
+                                        </label>
+                                        <select class="form-select" id="primaryObjective" required>
+                                            <option value="">Selecciona un objetivo</option>
+                                            <option value="immune">🛡️ Fortalecer sistema inmunológico</option>
+                                            <option value="energy">⚡ Aumentar energía y vitalidad</option>
+                                            <option value="cognitive">🧠 Mejorar rendimiento cognitivo</option>
+                                            <option value="physical">💪 Potenciar rendimiento físico</option>
+                                            <option value="muscle">🏋️ Aumentar masa muscular</option>
+                                            <option value="detox">🌿 Desintoxicación y limpieza</option>
+                                            <option value="stress">😌 Reducir estrés y mejorar sueño</option>
+                                            <option value="digestion">🥗 Mejorar digestión</option>
+                                            <option value="beauty">💅 Mejorar piel, cabello y uñas</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Secondary Objectives -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label">
+                                            <i class="fas fa-list-check me-1"></i> Objetivos Secundarios (Opcional)
+                                        </label>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="form-label small" for="secondaryObjective1">Salud general</label>
+                                                <select class="form-select mb-2" id="secondaryObjective1">
+                                                    <option value="">Ninguno</option>
+                                                    <option value="cardiovascular">Salud cardiovascular</option>
+                                                    <option value="brain_health">Salud cerebral</option>
+                                                    <option value="inflammation">Reducir inflamación</option>
+                                                    <option value="blood_sugar">Regular azúcar</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small" for="secondaryObjective2">Bienestar específico</label>
+                                                <select class="form-select" id="secondaryObjective2">
+                                                    <option value="">Ninguno</option>
+                                                    <option value="weight_control">Control de peso</option>
+                                                    <option value="hormonal">Equilibrar hormonas</option>
+                                                    <option value="joint_health">Articulaciones</option>
+                                                    <option value="visual_health">Salud visual</option>
+                                                    <option value="intestinal_health">Salud intestinal</option>
+                                                    <option value="bone_health">Fortalecer huesos</option>
+                                                    <option value="liver_function">Función hepática</option>
+                                                    <option value="mood">Estado de ánimo</option>
+                                                    <option value="mental_clarity">Claridad mental</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Dietary Restrictions -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label">
+                                            <i class="fas fa-shield-halved me-1"></i> Restricciones Dietéticas
+                                        </label>
+                                        <div class="restriction-buttons" role="group">
+                                            <button type="button" class="btn btn-outline-secondary restriction-btn" data-restriction="vegan">
+                                                <i class="fas fa-leaf me-1"></i> Vegano
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary restriction-btn" data-restriction="gluten_free">
+                                                <i class="fas fa-wheat me-1"></i> Sin Gluten
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary restriction-btn" data-restriction="nut_free">
+                                                <i class="fas fa-ban me-1"></i> Sin Frutos Secos
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Number of Ingredients -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label" for="numIngredients">
+                                            <i class="fas fa-layer-group me-1"></i> Número de Ingredientes: 
+                                            <span id="ingredientCount" class="text-primary fw-bold">5</span>
+                                        </label>
+                                        <input type="range" class="form-range" id="numIngredients" 
+                                               min="3" max="8" value="5">
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">Mínimo (3)</small>
+                                            <small class="text-muted">Óptimo (5-6)</small>
+                                            <small class="text-muted">Máximo (8)</small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Package Size -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label" for="packageSize">
+                                            <i class="fas fa-box me-1"></i> Tamaño del Envase
+                                        </label>
+                                        <select class="form-select" id="packageSize">
+                                            <option value="100" selected>100g (Personal - 30 porciones)</option>
+                                            <option value="200">200g (Familiar - 60 porciones)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Food Sources -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label">
+                                            <i class="fas fa-filter me-1"></i> Fuentes de Alimentos (Opcional)
+                                        </label>
+                                        <div class="source-buttons" role="group">
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="hongos_medicinales">
+                                                <i class="fas fa-mushroom me-1"></i> Hongos
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="frutas_bayas">
+                                                <i class="fas fa-apple-alt me-1"></i> Frutas
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="frutos_secos">
+                                                <i class="fas fa-seedling me-1"></i> Frutos Secos
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="algas_marinas">
+                                                <i class="fas fa-water me-1"></i> Algas
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="semillas">
+                                                <i class="fas fa-seed me-1"></i> Semillas
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="vegetales_verdes">
+                                                <i class="fas fa-leaf me-1"></i> Vegetales
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Product Type -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">
+                                            <i class="fas fa-box-open me-2"></i>
+                                            Tipo de Producto
+                                        </label>
+                                        <select class="form-select form-select-lg" id="productType" required>
+                                            <option value="polvo_batidos" selected>
+                                                🥤 Polvo para Batidos
+                                            </option>
+                                            <option value="jugo_funcional">
+                                                🧋 Jugo Funcional
+                                            </option>
+                                            <option value="capsula_suplemento">
+                                                💊 Cápsulas
+                                            </option>
+                                            <option value="polvo_hidratacion">
+                                                💧 Polvo de Hidratación
+                                            </option>
+                                            <option value="golden_milk">
+                                                ☕ Golden Milk
+                                            </option>
+                                            <option value="supergreens">
+                                                🌿 Supergreens
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Generate Button -->
+                                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                                        <i class="fas fa-flask me-2"></i>
+                                        Generar Mi Batido Optimizado
+                                    </button>
+                                    
+                                    <div class="mt-3 text-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-atom me-1"></i>
+                                            El algoritmo analizará <strong>35 interacciones científicas</strong>
+                                        </small>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Results Section -->
+                        <div class="col-lg-6">
+                            <!-- Empty State -->
+                            <div id="emptyState" class="text-center py-5">
+                                <i class="fas fa-blender fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Tu batido personalizado aparecerá aquí</h5>
+                                <p class="text-muted small">Completa el formulario y genera tu receta</p>
+                                
+                                <div class="mt-4">
+                                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-check text-success"></i> Sinergias potenciadoras
+                                        </span>
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-times text-danger"></i> Sin inhibidores
+                                        </span>
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-chart-line text-info"></i> Biodisponibilidad optimizada
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Loading State -->
+                            <div id="loadingSpinner" class="text-center py-5 d-none" role="status">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">Generando batido...</span>
+                                </div>
+                                <h6>Analizando interacciones...</h6>
+                                <p class="text-muted small">Optimizando biodisponibilidad y sinergias</p>
+                            </div>
+                            
+                            <!-- Results Container -->
+                            <div id="recipeResults" class="recipe-results d-none" role="region">
+                                <!-- Recipe content will be populated here by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ========================================
+         SCRIPTS
+    ========================================= -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/modern-recipe-generator.js"></script>
+    <script>
+    // Update ingredient count display
+    document.getElementById('numIngredients').addEventListener('input', function() {
+        document.getElementById('ingredientCount').textContent = this.value;
+    });
+    </script>
+</body>
+</html>

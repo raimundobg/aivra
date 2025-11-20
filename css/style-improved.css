@@ -206,22 +206,34 @@ body {
 }
 
 /* Hamburger Menu */
+/* Hamburger Menu - FIX Z-INDEX */
 .hamburger {
     display: none;
     flex-direction: column;
     gap: 5px;
-    background: none;
-    border: none;
+    background: rgba(16, 185, 129, 0.2);  /* Fondo visible */
+    border: 2px solid rgba(16, 185, 129, 0.5);  /* Borde visible */
+    border-radius: 8px;
     cursor: pointer;
-    padding: 0.5rem;
+    padding: 0.75rem;
+    position: relative;
+    z-index: 1052 !important;  /* 🔥 FIX: Por encima de todo */
+    transition: all var(--transition-base);
+}
+
+.hamburger:hover {
+    background: rgba(16, 185, 129, 0.3);
+    border-color: rgba(16, 185, 129, 0.7);
+    transform: scale(1.05);
 }
 
 .hamburger span {
     display: block;
     width: 25px;
-    height: 2px;
+    height: 3px;  /* Más grueso para mejor visibilidad */
     background-color: white;
     transition: all var(--transition-base);
+    border-radius: 2px;
 }
 
 .hamburger.active span:nth-child(1) {
@@ -235,6 +247,7 @@ body {
 .hamburger.active span:nth-child(3) {
     transform: rotate(-45deg) translate(7px, -7px);
 }
+
 
 /* Mobile Menu */
 .mobile-menu {
@@ -1474,7 +1487,7 @@ body {
     
     /* Hero */
     .hero-section-improved {
-        padding-top: 250px !important;
+        padding-top: 300px !important;
         min-height: auto;
         padding-bottom: 3rem;
     }
@@ -1625,3 +1638,50 @@ body {
    FIN DEL CSS
    ============================================ */
 /* Continúa en siguiente mensaje... */
+/* ============================================
+   FIX: Z-INDEX HIERARCHY MOBILE
+   ============================================ */
+
+   @media (max-width: 768px) {
+    /* Asegurar que navbar esté siempre arriba */
+    .navbar-custom {
+        z-index: 1050 !important;
+        background-color: rgba(17, 24, 39, 0.98) !important;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Hamburger por encima de todo */
+    .hamburger {
+        z-index: 1052 !important;
+        background: rgba(16, 185, 129, 0.2) !important;
+        border: 2px solid rgba(16, 185, 129, 0.6) !important;
+    }
+    
+    /* Mobile menu debajo del hamburger */
+    .mobile-menu {
+        z-index: 1051 !important;
+        background-color: rgba(17, 24, 39, 0.98);
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Hero section debajo del navbar */
+    .hero-section-improved,
+    .hero-title-improved,
+    .hero-subtitle-improved,
+    .hero-badge {
+        z-index: 1 !important;
+    }
+}
+/* Auth buttons siempre visibles en desktop */
+.auth-buttons-desktop {
+    display: flex !important;
+    gap: 1rem;
+    align-items: center;
+}
+
+@media (max-width: 991px) {
+    .auth-buttons-desktop {
+        display: none !important;
+    }
+}
+
