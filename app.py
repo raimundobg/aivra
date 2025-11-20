@@ -146,6 +146,7 @@ def client_dashboard():
     # ✅ IMPORTANTE: Agregar user=current_user
     return render_template('client_dashboard.html',
                          user=current_user,  # ← AGREGAR ESTA LÍNEA
+                        current_user=current_user,  # Por si acaso usa current_user en el template
                          recipes=recipes,
                          recipes_remaining=recipes_remaining,
                          total_recipes=total_recipes)

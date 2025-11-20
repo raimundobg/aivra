@@ -20,6 +20,8 @@
     
     <!-- TUS CSS ORIGINALES (mantienen funcionalidad del modal) -->
     <link rel="stylesheet" href="css/modern-style.css">
+    <!-- 🔧 FIX: Estilos responsive para mobile -->
+    <link rel="stylesheet" href="css/responsive-fixes.css">
 </head>
 <body>
 
@@ -47,15 +49,15 @@
                     <li><a href="#testimonios" class="nav-link-custom">Testimonios</a></li>
                 </ul>
 
-                <!-- 🆕 Auth Buttons Desktop -->
-                <div class="auth-buttons-desktop" style="display: flex; gap: 1rem; align-items: center;">
-                    <a href="/auth/login" class="nav-link-custom" style="text-decoration: none;">
+                <!-- 🆕 Auth Buttons Desktop + Mobile Header -->
+                <div class="auth-buttons-always-visible">
+                    <a href="/auth/login" class="btn-auth-login">
                         <i class="fas fa-sign-in-alt me-1"></i>
-                        Login
+                        <span class="d-none d-md-inline">Login</span>
                     </a>
-                    <a href="/auth/register" class="btn-cta-nav" style="text-decoration: none;">
-                        <i class="fas fa-user-plus me-2"></i>
-                        Crear Cuenta
+                    <a href="/auth/register" class="btn-auth-register">
+                        <i class="fas fa-user-plus me-1"></i>
+                        <span class="d-none d-md-inline">Crear Cuenta</span>
                     </a>
                 </div>
 
@@ -67,7 +69,7 @@
                 </button>
             </div>
 
-            <!-- Mobile Menu -->
+            <!-- Mobile Menu (SOLO LINKS DE NAVEGACIÓN) -->
             <div class="mobile-menu" id="mobileMenu">
                 <a href="#inicio" class="mobile-menu-link">Inicio</a>
                 <a href="#caracteristicas" class="mobile-menu-link">Características</a>
@@ -75,17 +77,6 @@
                 <a href="#como-funciona" class="mobile-menu-link">Cómo Funciona</a>
                 <a href="#precios" class="mobile-menu-link">Precios</a>
                 <a href="#testimonios" class="mobile-menu-link">Testimonios</a>
-                
-                <!-- 🆕 Auth Links Mobile -->
-                <hr style="border-color: rgba(255,255,255,0.2); margin: 1rem 0;">
-                <a href="/auth/login" class="mobile-menu-link">
-                    <i class="fas fa-sign-in-alt me-2"></i>
-                    Iniciar Sesión
-                </a>
-                <a href="/auth/register" class="btn-cta-mobile" style="text-decoration: none; display: block; text-align: center;">
-                    <i class="fas fa-user-plus me-2"></i>
-                    Crear Cuenta Gratis
-                </a>
             </div>
         </div>
     </nav>
