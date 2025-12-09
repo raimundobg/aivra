@@ -77,8 +77,8 @@
         <!-- Patient Summary -->
         <div class="patient-summary" id="patientSummary">
             <div class="summary-item">
-                <div class="summary-value" id="summaryEdad">{{ patient.calcular_edad() or '-' }}</div>
-                <div class="summary-label">Edad (años)</div>
+                <div class="summary-value" id="summaryEdad">{{ edad_calculada or '-' }}</div>
+                <div class="summary-label">Edad (aÃ±os)</div>
             </div>
             <div class="summary-item {{ 'warning' if patient.imc and patient.imc >= 25 and patient.imc < 30 else 'danger' if patient.imc and patient.imc >= 30 else '' }}">
                 <div class="summary-value" id="summaryIMC">{{ patient.imc or '-' }}</div>
@@ -94,7 +94,7 @@
             </div>
             <div class="summary-item">
                 <div class="summary-value" id="summaryProteinas">{{ patient.proteinas_g or '-' }}g</div>
-                <div class="summary-label">Proteínas</div>
+                <div class="summary-label">ProteÃ­nas</div>
             </div>
         </div>
         
@@ -118,7 +118,7 @@
                 <div class="info-box">
                     <i class="fas fa-info-circle"></i>
                     <div>
-                        <strong>Información básica:</strong> Estos datos son esenciales para personalizar el plan nutricional.
+                        <strong>InformaciÃ³n bÃ¡sica:</strong> Estos datos son esenciales para personalizar el plan nutricional.
                     </div>
                 </div>
                 
@@ -129,7 +129,7 @@
                             Nombre Completo
                         </label>
                         <input type="text" class="form-control" id="nombre" name="nombre"  
-                               placeholder="Ej: María González Pérez" value="{{ patient.nombre or '' }}">
+                               placeholder="Ej: MarÃ­a GonzÃ¡lez PÃ©rez" value="{{ patient.nombre or '' }}">
 
                     </div>
                     
@@ -139,7 +139,7 @@
                             Fecha de Nacimiento
                         </label>
                         <input type="date" class="form-control" id="fechaNacimiento" name="fecha_nacimiento" value="{{ patient.fecha_nacimiento or '' }}">
-                        <small class="text-muted">Edad: <span id="edadCalculada">-</span> años</small>
+                        <small class="text-muted">Edad: <span id="edadCalculada">-</span> aÃ±os</small>
                     </div>
                     
                     <div class="col-md-3">
@@ -157,7 +157,7 @@
                     <div class="col-md-3">
                         <label class="form-label" for="fechaAtencion">
                             <i class="fas fa-calendar-check"></i>
-                            Fecha de Atención
+                            Fecha de AtenciÃ³n
                         </label>
                         <input type="datetime-local" class="form-control" id="fechaAtencion" name="fecha_atencion" value="{{ patient.fecha_atencion or '' }}">
                     </div>
@@ -188,11 +188,11 @@
                             </button>
                             <button type="button" class="pill-btn" data-objetivo="consciente">
                                 <i class="fas fa-brain"></i>
-                                Alimentación consciente
+                                AlimentaciÃ³n consciente
                             </button>
                             <button type="button" class="pill-btn" data-objetivo="proteina">
                                 <i class="fas fa-drumstick-bite"></i>
-                                Aumentar proteína
+                                Aumentar proteÃ­na
                             </button>
                             <button type="button" class="pill-btn" data-objetivo="peso">
                                 <i class="fas fa-weight-scale"></i>
@@ -205,21 +205,21 @@
                     <div class="col-md-6">
                         <label class="form-label" for="diagnosticos">
                             <i class="fas fa-stethoscope"></i>
-                            Diagnósticos Médicos
+                            DiagnÃ³sticos MÃ©dicos
                         </label>
                         <select class="form-select" id="diagnosticos" name="diagnosticos" multiple size="5" data-patient-value="{{ patient.diagnosticos or '' }}">
                             <option value="colesterol_alto" {{ 'selected' if patient.diagnosticos == 'colesterol_alto' else '' }}>Colesterol Alto</option>
-                            <option value="depresion" {{ 'selected' if patient.diagnosticos == 'depresion' else '' }}>Depresión</option>
+                            <option value="depresion" {{ 'selected' if patient.diagnosticos == 'depresion' else '' }}>DepresiÃ³n</option>
                             <option value="diabetes" {{ 'selected' if patient.diagnosticos == 'diabetes' else '' }}>Diabetes</option>
-                            <option value="estrenimiento" {{ 'selected' if patient.diagnosticos == 'estrenimiento' else '' }}>Estreñimiento Crónico</option>
-                            <option value="hipertension" {{ 'selected' if patient.diagnosticos == 'hipertension' else '' }}>Hipertensión</option>
+                            <option value="estrenimiento" {{ 'selected' if patient.diagnosticos == 'estrenimiento' else '' }}>EstreÃ±imiento CrÃ³nico</option>
+                            <option value="hipertension" {{ 'selected' if patient.diagnosticos == 'hipertension' else '' }}>HipertensiÃ³n</option>
                             <option value="hipotiroidismo" {{ 'selected' if patient.diagnosticos == 'hipotiroidismo' else '' }}>Hipotiroidismo</option>
                             <option value="hipertiroidismo" {{ 'selected' if patient.diagnosticos == 'hipertiroidismo' else '' }}>Hipertiroidismo</option>
                             <option value="ingesta_emocional" {{ 'selected' if patient.diagnosticos == 'ingesta_emocional' else '' }}>Ingesta Emocional</option>
                             <option value="sarcopenia" {{ 'selected' if patient.diagnosticos == 'sarcopenia' else '' }}>Sarcopenia</option>
                             <option value="otros" {{ 'selected' if patient.diagnosticos == 'otros' else '' }}>Otros</option>
                         </select>
-                        <small class="text-muted">Mantén presionado Ctrl/Cmd para seleccionar múltiples</small>
+                        <small class="text-muted">MantÃ©n presionado Ctrl/Cmd para seleccionar mÃºltiples</small>
                     </div>
                     
                     <div class="col-md-6">
@@ -228,15 +228,15 @@
                             Medicamentos Actuales
                         </label>
                         <select class="form-select" id="medicamentos" name="medicamentos" multiple size="5" data-patient-value="{{ patient.medicamentos or '' }}">
-                            <option value="ansiolitico" {{ 'selected' if patient.medicamentos == 'ansiolitico' else '' }}>Ansiolítico</option>
+                            <option value="ansiolitico" {{ 'selected' if patient.medicamentos == 'ansiolitico' else '' }}>AnsiolÃ­tico</option>
                             <option value="antidepresivo" {{ 'selected' if patient.medicamentos == 'antidepresivo' else '' }}>Antidepresivo</option>
                             <option value="diabetes" {{ 'selected' if patient.medicamentos == 'diabetes' else '' }}>Diabetes</option>
-                            <option value="dolor_cronico" {{ 'selected' if patient.medicamentos == 'dolor_cronico' else '' }}>Dolor Crónico</option>
-                            <option value="enfermedades_cronicas" {{ 'selected' if patient.medicamentos == 'enfermedades_cronicas' else '' }}>Enfermedades Crónicas</option>
-                            <option value="hipertension" {{ 'selected' if patient.medicamentos == 'hipertension' else '' }}>Hipertensión</option>
+                            <option value="dolor_cronico" {{ 'selected' if patient.medicamentos == 'dolor_cronico' else '' }}>Dolor CrÃ³nico</option>
+                            <option value="enfermedades_cronicas" {{ 'selected' if patient.medicamentos == 'enfermedades_cronicas' else '' }}>Enfermedades CrÃ³nicas</option>
+                            <option value="hipertension" {{ 'selected' if patient.medicamentos == 'hipertension' else '' }}>HipertensiÃ³n</option>
                             <option value="otros" {{ 'selected' if patient.medicamentos == 'otros' else '' }}>Otros</option>
                         </select>
-                        <small class="text-muted">Mantén presionado Ctrl/Cmd para seleccionar múltiples</small>
+                        <small class="text-muted">MantÃ©n presionado Ctrl/Cmd para seleccionar mÃºltiples</small>
                     </div>
                     
                     <div class="col-md-12">
@@ -257,11 +257,11 @@
                             <option value="magnesio" {{ 'selected' if patient.suplementos == 'magnesio' else '' }}>Magnesio</option>
                             <option value="melena_leon" {{ 'selected' if patient.suplementos == 'melena_leon' else '' }}>Melena de LeÃ³n</option>
                             <option value="omega3" {{ 'selected' if patient.suplementos == 'omega3' else '' }}>Omega 3</option>
-                            <option value="proteina_polvo" {{ 'selected' if patient.suplementos == 'proteina_polvo' else '' }}>Proteína en Polvo</option>
+                            <option value="proteina_polvo" {{ 'selected' if patient.suplementos == 'proteina_polvo' else '' }}>ProteÃ­na en Polvo</option>
                             <option value="reishi" {{ 'selected' if patient.suplementos == 'reishi' else '' }}>Reishi</option>
                             <option value="zinc" {{ 'selected' if patient.suplementos == 'zinc' else '' }}>Zinc</option>
                         </select>
-                        <small class="text-muted">Mantén presionado Ctrl/Cmd para seleccionar múltiples</small>
+                        <small class="text-muted">MantÃ©n presionado Ctrl/Cmd para seleccionar mÃºltiples</small>
                     </div>
                 </div>
             </div>
@@ -283,7 +283,7 @@
                     <div class="col-md-4">
                         <label class="form-label" for="profesion">
                             <i class="fas fa-briefcase"></i>
-                            Profesión / Ocupación
+                            ProfesiÃ³n / OcupaciÃ³n
                         </label>
                         <select class="form-select" id="profesion" name="profesion" data-patient-value="{{ patient.profesion or '' }}">
                             <option value="" {{ 'selected' if not patient.sexo else '' }}>Seleccionar</option>
@@ -308,7 +308,7 @@
                     <div class="col-md-4">
                         <label class="form-label" for="teletrabajo">
                             <i class="fas fa-laptop-house"></i>
-                            ¿Trabaja desde casa?
+                            Â¿Trabaja desde casa?
                         </label>
                         <select class="form-select" id="teletrabajo" name="teletrabajo" data-patient-value="{{ patient.teletrabajo or '' }}">
                             <option value="" {{ 'selected' if not patient.sexo else '' }}>Seleccionar</option>
@@ -321,7 +321,7 @@
                     <div class="col-md-4">
                         <label class="form-label" for="quien_cocina">
                             <i class="fas fa-utensil-spoon"></i>
-                            ¿Quién cocina en casa?
+                            Â¿QuiÃ©n cocina en casa?
                         </label>
                         <select class="form-select" id="quien_cocina" name="quien_cocina" multiple size="3" data-patient-value="{{ patient.quien_cocina or '' }}">
                             <option value="yo" {{ 'selected' if patient.quien_cocina == 'yo' else '' }}>Yo mismo/a</option>
@@ -335,7 +335,7 @@
                     <div class="col-md-6">
                         <label class="form-label" for="con_quien_vive">
                             <i class="fas fa-users"></i>
-                            ¿Con quién vive?
+                            Â¿Con quiÃ©n vive?
                         </label>
                         <select class="form-select" id="con_quien_vive" name="con_quien_vive" multiple size="4" data-patient-value="{{ patient.con_quien_vive or '' }}">
                             <option value="solo" {{ 'selected' if patient.con_quien_vive == 'solo' else '' }}>Solo/a</option>
@@ -350,7 +350,7 @@
                     <div class="col-md-6">
                         <label class="form-label" for="donde_come">
                             <i class="fas fa-map-marker-alt"></i>
-                            ¿Dónde come habitualmente?
+                            Â¿DÃ³nde come habitualmente?
                         </label>
                         <select class="form-select" id="donde_come" name="donde_come" multiple size="4" data-patient-value="{{ patient.donde_come or '' }}">
                             <option value="casa" {{ 'selected' if patient.donde_come == 'casa' else '' }}>En casa</option>
@@ -374,7 +374,7 @@
                 <div class="section-icon green">
                         <i class="fas fa-heart-pulse"></i>
                     </div>
-                    <span>3. Salud General y Hábitos</span>
+                    <span>3. Salud General y HÃ¡bitos</span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse show" id="section3">
@@ -385,7 +385,7 @@
                     <div class="col-md-4">
                         <label class="form-label" for="horas_sueno">
                             <i class="fas fa-moon"></i>
-                            Horas de Sueño
+                            Horas de SueÃ±o
                         </label>
                         <select class="form-select" id="horas_sueno" name="horas_sueno">
                             <option value="">Seleccionar</option>
@@ -400,7 +400,7 @@
                     <div class="col-md-4">
                         <label class="form-label">
                             <i class="fas fa-star"></i>
-                            Calidad del Sueño
+                            Calidad del SueÃ±o
                         </label>
                         <div class="range-container">
                             <div class="range-value">
@@ -418,7 +418,7 @@
                     <div class="col-md-4">
                         <label class="form-label" for="observaciones_sueno">
                             <i class="fas fa-sticky-note"></i>
-                            Observaciones Sueño
+                            Observaciones SueÃ±o
                         </label>
                         <input type="text" class="form-control" id="observaciones_sueno" 
                                name="observaciones_sueno" placeholder="Ej: Insomnio, apnea..." value="{{ patient.observaciones_sueno or '' }}">
@@ -429,7 +429,7 @@
                     <div class="col-md-4">
                         <label class="form-label">
                             <i class="fas fa-brain"></i>
-                            Nivel de Estrés
+                            Nivel de EstrÃ©s
                         </label>
                         <div class="range-container">
                             <div class="range-value">
@@ -447,7 +447,7 @@
                     <div class="col-md-4">
                         <label class="form-label" for="gatillantes_estres">
                             <i class="fas fa-bolt"></i>
-                            Gatillantes del Estrés
+                            Gatillantes del EstrÃ©s
                         </label>
                         <input type="text" class="form-control" id="gatillantes_estres" 
                                name="gatillantes_estres" placeholder="Ej: Trabajo, familia..." value="{{ patient.gatillantes_estres or '' }}">
@@ -457,7 +457,7 @@
                     <div class="col-md-4">
                         <label class="form-label" for="manejo_estres">
                             <i class="fas fa-spa"></i>
-                            Manejo del Estrés
+                            Manejo del EstrÃ©s
                         </label>
                         <input type="text" class="form-control" id="manejo_estres" 
                                name="manejo_estres" placeholder="Ej: MeditaciÃ³n, ejercicio..." value="{{ patient.manejo_estres or '' }}">
@@ -494,7 +494,7 @@
                     <div class="col-md-2">
                         <label class="form-label" for="tabaco">
                             <i class="fas fa-smoking"></i>
-                            ¿Fuma?
+                            Â¿Fuma?
                         </label>
                         <select class="form-select" id="tabaco" name="tabaco" data-patient-value="{{ patient.tabaco or '' }}">
                             <option value="no" {{ 'selected' if patient.tabaco == 'no' else '' }}>No</option>
@@ -517,7 +517,7 @@
                     <div class="col-md-4">
                         <label class="form-label" for="actividad_fisica">
                             <i class="fas fa-running"></i>
-                            Actividad Física Semanal
+                            Actividad FÃ­sica Semanal
                         </label>
                         <select class="form-select" id="actividad_fisica" name="actividad_fisica">
                             <option value="">Seleccionar</option>
@@ -541,7 +541,7 @@
                     <div class="col-md-4">
                         <label class="form-label" for="duracion_ejercicio">
                             <i class="fas fa-clock"></i>
-                            Duración por Sesión (min)
+                            DuraciÃ³n por SesiÃ³n (min)
                         </label>
                         <select class="form-select" id="duracion_ejercicio" name="duracion_ejercicio" data-patient-value="{{ patient.duracion_ejercicio or '' }}">
                             <option value="" {{ 'selected' if not patient.sexo else '' }}>Seleccionar</option>
@@ -567,14 +567,14 @@
                 <button type="button" class="accordion-button-custom" data-bs-toggle="collapse" data-bs-target="#section4">
                 <div class="section-header" style="background: linear-gradient(135deg, #ef4444 0%, #f97316 100%); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
                     <i class="fas fa-stomach"></i>
-                    <span>4. Síntomas Gastrointestinales</span>
+                    <span>4. SÃ­ntomas Gastrointestinales</span>
                 </div>
                 
                 <div class="row g-4">
                     <div class="col-md-4">
                         <label class="form-label" for="frecuencia_evacuacion">
                             <i class="fas fa-toilet"></i>
-                            Frecuencia de Evacuación
+                            Frecuencia de EvacuaciÃ³n
                         </label>
                         <select class="form-select" id="frecuencia_evacuacion" name="frecuencia_evacuacion" data-patient-value="{{ patient.frecuencia_evacuacion or '' }}">
                             <option value="" {{ 'selected' if not patient.sexo else '' }}>Seleccionar</option>
@@ -590,7 +590,7 @@
                     <div class="col-md-4">
                         <label class="form-label" for="reflujo">
                             <i class="fas fa-fire"></i>
-                            ¿Presenta Reflujo?
+                            Â¿Presenta Reflujo?
                         </label>
                         <select class="form-select" id="reflujo" name="reflujo" data-patient-value="{{ patient.reflujo or '' }}">
                             <option value="no" {{ 'selected' if patient.reflujo == 'no' else '' }}>No</option>
@@ -612,7 +612,7 @@
                     <div class="col-md-4">
                         <label class="form-label" for="hinchazon">
                             <i class="fas fa-expand-alt"></i>
-                            ¿Presenta Hinchazón?
+                            Â¿Presenta HinchazÃ³n?
                         </label>
                         <select class="form-select" id="hinchazon" name="hinchazon" data-patient-value="{{ patient.hinchazon or '' }}">
                             <option value="no" {{ 'selected' if patient.hinchazon == 'no' else '' }}>No</option>
@@ -664,7 +664,7 @@
                 <button type="button" class="accordion-button-custom" data-bs-toggle="collapse" data-bs-target="#section5">
                 <div class="section-header" style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);">
                     <i class="fas fa-clock"></i>
-                    <span>5. Registro de Alimentación 24 Horas</span>
+                    <span>5. Registro de AlimentaciÃ³n 24 Horas</span>
                 </div>
                 
                 <div class="info-box">
@@ -1043,7 +1043,7 @@
                         <div class="col-md-3">
                             <div class="summary-card">
                                 <div class="summary-value" id="totalDiaProt">0g</div>
-                                <div class="summary-label">Proteínas</div>
+                                <div class="summary-label">ProteÃ­nas</div>
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -1486,7 +1486,7 @@
                 <div class="section-icon green">
                         <i class="fas fa-ruler-combined"></i>
                     </div>
-                    <span>7. Evaluación Antropométrica</span>
+                    <span>7. EvaluaciÃ³n AntropomÃ©trica</span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse show" id="section7">
@@ -1495,7 +1495,7 @@
                 <div class="info-box success">
                     <i class="fas fa-calculator"></i>
                     <div>
-                        <strong>Mediciones:</strong> Los cálculos de composición corporal se realizarán automáticamente.
+                        <strong>Mediciones:</strong> Los cÃ¡lculos de composiciÃ³n corporal se realizarÃ¡n automÃ¡ticamente.
                     </div>
                 </div>
                 

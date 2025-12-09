@@ -1,6 +1,6 @@
 """
 models.py - Sistema de Base de Datos Escalable
-Versión: 2.0 - Con PatientFile completo para Nutricionistas
+VersiÃ³n: 2.0 - Con PatientFile completo para Nutricionistas
 """
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
@@ -49,16 +49,16 @@ class User(UserMixin, db.Model):
     phone = db.Column(db.String(20))
     referral_code = db.Column(db.String(8))
     
-    # ===== CAMPOS ESPECÍFICOS NUTRICIONISTA =====
+    # ===== CAMPOS ESPECÃFICOS NUTRICIONISTA =====
     license_number = db.Column(db.String(50))
     specialization = db.Column(db.String(100))
     
-    # ===== CAMPOS ESPECÍFICOS EMPRESA =====
+    # ===== CAMPOS ESPECÃFICOS EMPRESA =====
     company_name = db.Column(db.String(100))
     company_rut = db.Column(db.String(20))
     industry = db.Column(db.String(50))
     
-    # ===== LÍMITES Y CUOTAS =====
+    # ===== LÃMITES Y CUOTAS =====
     recipes_this_month = db.Column(db.Integer, default=0)
     last_recipe_reset = db.Column(db.Date, default=date.today)
     
@@ -121,7 +121,7 @@ class User(UserMixin, db.Model):
         return self.recipes.order_by(UserRecipe.created_at.desc()).limit(limit).all()
     
     def get_patient_count(self):
-        """Obtener número de pacientes activos"""
+        """Obtener nÃºmero de pacientes activos"""
         return self.patient_files.filter_by(is_active=True).count()
     
     def __repr__(self):
@@ -177,12 +177,12 @@ class Review(db.Model):
     )
     
     def __repr__(self):
-        return f'<Review {self.rating}★>'
+        return f'<Review {self.rating}â˜…>'
 
 
 # ============================================
 # MODELO: PATIENT FILE (Solo Nutricionistas)
-# Versión 2.0 - Completo con todos los campos
+# VersiÃ³n 2.0 - Completo con todos los campos
 # ============================================
 
 class PatientFile(db.Model):
@@ -191,13 +191,13 @@ class PatientFile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nutricionista_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
-    # ===== NÚMERO DE FICHA (auto-generado por nutricionista) =====
+    # ===== NÃšMERO DE FICHA (auto-generado por nutricionista) =====
     ficha_numero = db.Column(db.Integer)  # Ficha #1, #2, etc. por nutricionista
     
     # ===== 1. ANTECEDENTES GENERALES =====
     nombre = db.Column(db.String(100), nullable=False)
     fecha_nacimiento = db.Column(db.String(20))
-    fecha_atencion = db.Column(db.DateTime)  # ← AGREGAR ESTA LÍNEA
+    fecha_atencion = db.Column(db.DateTime)  # â† AGREGAR ESTA LÃNEA
     sexo = db.Column(db.String(20))
     email = db.Column(db.String(120))
     telefono = db.Column(db.String(20))
@@ -208,13 +208,13 @@ class PatientFile(db.Model):
     motivo_consulta = db.Column(db.Text)
     objetivos = db.Column(db.Text)  # JSON string de objetivos seleccionados
     
-    # Historial médico
-    diagnosticos = db.Column(db.Text)  # Diagnósticos médicos
+    # Historial mÃ©dico
+    diagnosticos = db.Column(db.Text)  # DiagnÃ³sticos mÃ©dicos
     medicamentos = db.Column(db.Text)  # Medicamentos actuales
     suplementos = db.Column(db.Text)   # Suplementos actuales
     alergias = db.Column(db.Text)      # Alergias alimentarias
     intolerancias = db.Column(db.Text) # Intolerancias
-    cirugias = db.Column(db.Text)      # Cirugías previas
+    cirugias = db.Column(db.Text)      # CirugÃ­as previas
     antecedentes_familiares = db.Column(db.Text)
     # Conducta y Entorno
     profesion = db.Column(db.String(100))
@@ -233,7 +233,7 @@ class PatientFile(db.Model):
     drogas = db.Column(db.String(10))
     duracion_ejercicio = db.Column(db.Integer)
 
-    # Síntomas Gastrointestinales
+    # SÃ­ntomas Gastrointestinales
     frecuencia_evacuacion = db.Column(db.String(50))
     reflujo = db.Column(db.String(10))
     reflujo_alimento = db.Column(db.Text)
@@ -248,13 +248,13 @@ class PatientFile(db.Model):
     # Frecuencia de consumo (almacenado como JSON)
     frecuencia_consumo = db.Column(db.JSON)
     
-    # ===== 2. EVALUACIÓN ANTROPOMÉTRICA =====
-    # Medidas básicas
+    # ===== 2. EVALUACIÃ“N ANTROPOMÃ‰TRICA =====
+    # Medidas bÃ¡sicas
     talla_m = db.Column(db.Float)      # Altura en metros
     peso_kg = db.Column(db.Float)      # Peso en kg
     peso_ideal = db.Column(db.Float)   # Peso ideal calculado
     
-    # Pliegues cutáneos (mm) - Método Durnin-Womersley
+    # Pliegues cutÃ¡neos (mm) - MÃ©todo Durnin-Womersley
     pliegue_bicipital = db.Column(db.Float)
     pliegue_tricipital = db.Column(db.Float)
     pliegue_subescapular = db.Column(db.Float)
@@ -263,7 +263,7 @@ class PatientFile(db.Model):
     pliegue_muslo = db.Column(db.Float)
     pliegue_pantorrilla = db.Column(db.Float)
     
-    # Perímetros (cm)
+    # PerÃ­metros (cm)
     perimetro_brazo = db.Column(db.Float)
     perimetro_brazo_contraido = db.Column(db.Float)
     perimetro_cintura = db.Column(db.Float)
@@ -272,13 +272,13 @@ class PatientFile(db.Model):
     perimetro_pantorrilla = db.Column(db.Float)
     perimetro_muneca = db.Column(db.Float)
     
-    # Diámetros óseos (cm)
+    # DiÃ¡metros Ã³seos (cm)
     diametro_humero = db.Column(db.Float)
     diametro_femur = db.Column(db.Float)
     diametro_muneca = db.Column(db.Float)
     
-    # Cálculos derivados (se calculan automáticamente)
-    imc = db.Column(db.Float)                    # Índice de Masa Corporal
+    # CÃ¡lculos derivados (se calculan automÃ¡ticamente)
+    imc = db.Column(db.Float)                    # Ãndice de Masa Corporal
     imc_categoria = db.Column(db.String(50))     # Bajo peso, Normal, Sobrepeso, etc.
     porcentaje_grasa = db.Column(db.Float)       # % Grasa corporal (Siri)
     masa_grasa_kg = db.Column(db.Float)          # Masa grasa en kg
@@ -287,7 +287,7 @@ class PatientFile(db.Model):
     indice_cintura_cadera = db.Column(db.Float)  # ICC
     riesgo_cardiovascular = db.Column(db.String(50))  # Bajo, Moderado, Alto
     
-    # ===== 3. EVALUACIÓN BIOQUÍMICA =====
+    # ===== 3. EVALUACIÃ“N BIOQUÃMICA =====
     glucosa_ayunas = db.Column(db.Float)
     hemoglobina_glicada = db.Column(db.Float)
     colesterol_total = db.Column(db.Float)
@@ -305,27 +305,27 @@ class PatientFile(db.Model):
     tsh = db.Column(db.Float)
     fecha_examenes = db.Column(db.String(20))
     
-    # ===== 4. EVALUACIÓN CLÍNICA =====
+    # ===== 4. EVALUACIÃ“N CLÃNICA =====
     presion_sistolica = db.Column(db.Integer)
     presion_diastolica = db.Column(db.Integer)
     frecuencia_cardiaca = db.Column(db.Integer)
     
-    # Signos clínicos (JSON)
-    signos_clinicos = db.Column(db.Text)  # Pelo, uñas, piel, etc.
+    # Signos clÃ­nicos (JSON)
+    signos_clinicos = db.Column(db.Text)  # Pelo, uÃ±as, piel, etc.
     
-    # Síntomas gastrointestinales
-    sintomas_gi = db.Column(db.Text)  # JSON: náuseas, vómitos, diarrea, etc.
+    # SÃ­ntomas gastrointestinales
+    sintomas_gi = db.Column(db.Text)  # JSON: nÃ¡useas, vÃ³mitos, diarrea, etc.
     frecuencia_evacuacion = db.Column(db.String(50))
     consistencia_heces = db.Column(db.String(50))  # Escala Bristol
     
-    # ===== 5. EVALUACIÓN DIETÉTICA =====
+    # ===== 5. EVALUACIÃ“N DIETÃ‰TICA =====
     # Recordatorio 24 horas (JSON)
     recordatorio_24h = db.Column(db.Text)
     
     # Frecuencia de consumo (JSON)
     frecuencia_consumo = db.Column(db.Text)
     
-    # Hábitos alimentarios
+    # HÃ¡bitos alimentarios
     comidas_por_dia = db.Column(db.Integer)
     horario_desayuno = db.Column(db.String(10))
     horario_almuerzo = db.Column(db.String(10))
@@ -336,7 +336,7 @@ class PatientFile(db.Model):
     quien_cocina = db.Column(db.String(100))
     donde_come = db.Column(db.String(100))
     
-    # Consumo de líquidos
+    # Consumo de lÃ­quidos
     consumo_agua_litros = db.Column(db.Float)
     consumo_cafe_tazas = db.Column(db.Integer)
     consumo_te_tazas = db.Column(db.Integer)
@@ -349,20 +349,20 @@ class PatientFile(db.Model):
     calidad_sueno = db.Column(db.Integer)  # 1-10
     nivel_estres = db.Column(db.Integer)   # 1-10
     
-    # Actividad física
+    # Actividad fÃ­sica
     actividad_fisica = db.Column(db.String(50))  # sedentario, ligero, moderado, etc.
     tipo_ejercicio = db.Column(db.String(200))
     frecuencia_ejercicio = db.Column(db.String(50))
     duracion_ejercicio = db.Column(db.String(50))
     
-    # Hábitos
+    # HÃ¡bitos
     fuma = db.Column(db.Boolean, default=False)
     cigarrillos_dia = db.Column(db.Integer)
     
     # ===== 7. REQUERIMIENTOS NUTRICIONALES =====
-    # Calculados automáticamente
-    get_kcal = db.Column(db.Float)           # Gasto Energético Total
-    geb_kcal = db.Column(db.Float)           # Gasto Energético Basal (Harris-Benedict)
+    # Calculados automÃ¡ticamente
+    get_kcal = db.Column(db.Float)           # Gasto EnergÃ©tico Total
+    geb_kcal = db.Column(db.Float)           # Gasto EnergÃ©tico Basal (Harris-Benedict)
     factor_actividad = db.Column(db.Float)
     factor_estres = db.Column(db.Float)
     
@@ -374,11 +374,13 @@ class PatientFile(db.Model):
     grasas_g = db.Column(db.Float)
     grasas_porcentaje = db.Column(db.Float)
     fibra_g = db.Column(db.Float)
+    liquido_porcentaje = db.Column(db.Float)  # Porcentaje de líquido en distribución
+    liquido_ml = db.Column(db.Float)          # Líquido recomendado en ml
     
-    # ===== 8. DIAGNÓSTICO NUTRICIONAL =====
+    # ===== 8. DIAGNÃ“STICO NUTRICIONAL =====
     diagnostico_nutricional = db.Column(db.Text)
     
-    # ===== 9. PLAN DE INTERVENCIÓN =====
+    # ===== 9. PLAN DE INTERVENCIÃ“N =====
     objetivos_nutricionales = db.Column(db.Text)  # JSON de objetivos SMART
     plan_alimentario = db.Column(db.Text)          # JSON del plan
     indicaciones = db.Column(db.Text)
@@ -399,7 +401,7 @@ class PatientFile(db.Model):
     recipes = db.relationship('UserRecipe', backref='patient', lazy='dynamic')
     
     # ============================================
-    # MÉTODOS DE CÁLCULO AUTOMÁTICO
+    # MÃ‰TODOS DE CÃLCULO AUTOMÃTICO
     # ============================================
     
     def calcular_edad(self):
@@ -414,7 +416,7 @@ class PatientFile(db.Model):
             return None
     
     def calcular_imc(self):
-        """Calcular IMC y categoría"""
+        """Calcular IMC y categorÃ­a"""
         if self.peso_kg and self.talla_m and self.talla_m > 0:
             self.imc = round(self.peso_kg / (self.talla_m ** 2), 1)
             
@@ -457,7 +459,7 @@ class PatientFile(db.Model):
         
         edad = self.calcular_edad() or 30
         
-        # Coeficientes Durnin-Womersley según sexo y edad
+        # Coeficientes Durnin-Womersley segÃºn sexo y edad
         if self.sexo == 'Masculino':
             if edad < 17:
                 c, m = 1.1533, 0.0643
@@ -490,7 +492,7 @@ class PatientFile(db.Model):
     
     def calcular_porcentaje_grasa(self):
         """
-        Calcular % de grasa corporal usando ecuación de Siri
+        Calcular % de grasa corporal usando ecuaciÃ³n de Siri
         % Grasa = (495 / Densidad) - 450
         """
         if not self.densidad_corporal:
@@ -508,7 +510,7 @@ class PatientFile(db.Model):
         return None
     
     def calcular_icc(self):
-        """Calcular Índice Cintura-Cadera y riesgo cardiovascular"""
+        """Calcular Ãndice Cintura-Cadera y riesgo cardiovascular"""
         if self.perimetro_cintura and self.perimetro_cadera and self.perimetro_cadera > 0:
             self.indice_cintura_cadera = round(self.perimetro_cintura / self.perimetro_cadera, 2)
             
@@ -533,7 +535,7 @@ class PatientFile(db.Model):
     
     def calcular_geb(self):
         """
-        Calcular Gasto Energético Basal usando Harris-Benedict revisada
+        Calcular Gasto EnergÃ©tico Basal usando Harris-Benedict revisada
         """
         if not self.peso_kg or not self.talla_m:
             return None
@@ -550,8 +552,8 @@ class PatientFile(db.Model):
     
     def calcular_get(self):
         """
-        Calcular Gasto Energético Total
-        GET = GEB × Factor Actividad × Factor Estrés
+        Calcular Gasto EnergÃ©tico Total
+        GET = GEB Ã— Factor Actividad Ã— Factor EstrÃ©s
         """
         if not self.geb_kcal:
             self.calcular_geb()
@@ -569,15 +571,16 @@ class PatientFile(db.Model):
         }
         
         self.factor_actividad = factores_actividad.get(self.actividad_fisica, 1.2)
-        self.factor_estres = 1.0  # Por defecto, ajustar según patología
+        self.factor_estres = 1.0  # Por defecto, ajustar segÃºn patologÃ­a
         
         self.get_kcal = round(self.geb_kcal * self.factor_actividad * self.factor_estres)
         
         return self.get_kcal
     
-    def calcular_macronutrientes(self, proteinas_pct=20, carbohidratos_pct=50, grasas_pct=30):
+    def calcular_macronutrientes(self, proteinas_pct=20, carbohidratos_pct=50, grasas_pct=30, liquido_pct=5):
         """
         Calcular distribución de macronutrientes según GET
+        Incluye cálculo de líquido recomendado
         """
         if not self.get_kcal:
             self.calcular_get()
@@ -588,6 +591,7 @@ class PatientFile(db.Model):
         self.proteinas_porcentaje = proteinas_pct
         self.carbohidratos_porcentaje = carbohidratos_pct
         self.grasas_porcentaje = grasas_pct
+        self.liquido_porcentaje = liquido_pct
         
         # Proteínas: 4 kcal/g
         self.proteinas_g = round((self.get_kcal * proteinas_pct / 100) / 4)
@@ -601,27 +605,40 @@ class PatientFile(db.Model):
         # Fibra: 14g por cada 1000 kcal
         self.fibra_g = round(self.get_kcal * 14 / 1000)
         
+        # Líquido: 35ml por kg de peso, ajustado por porcentaje
+        if self.peso_kg:
+            liquido_base = self.peso_kg * 35
+            self.liquido_ml = round(liquido_base * (liquido_pct / 5))  # 5% = 100% del requerimiento
+        
         return {
             'proteinas_g': self.proteinas_g,
             'carbohidratos_g': self.carbohidratos_g,
             'grasas_g': self.grasas_g,
-            'fibra_g': self.fibra_g
+            'fibra_g': self.fibra_g,
+            'liquido_ml': self.liquido_ml
         }
     
     def calcular_todo(self):
-        """Ejecutar todos los cálculos"""
+        """Ejecutar todos los cálculos - PRESERVA valores de macros personalizados"""
         self.calcular_imc()
         self.calcular_densidad_corporal()
         self.calcular_porcentaje_grasa()
         self.calcular_icc()
         self.calcular_geb()
         self.calcular_get()
-        self.calcular_macronutrientes()
+        
+        # Usar valores existentes si hay, sino usar defaults
+        prot_pct = self.proteinas_porcentaje if self.proteinas_porcentaje else 20
+        carb_pct = self.carbohidratos_porcentaje if self.carbohidratos_porcentaje else 50
+        gras_pct = self.grasas_porcentaje if self.grasas_porcentaje else 25
+        liq_pct = self.liquido_porcentaje if self.liquido_porcentaje else 5
+        
+        self.calcular_macronutrientes(prot_pct, carb_pct, gras_pct, liq_pct)
     
     def to_dict(self):
         """Convertir a diccionario COMPLETO para API - RETORNA TODOS LOS CAMPOS"""
         return {
-            # ===== IDENTIFICACIÓN =====
+            # ===== IDENTIFICACIÃ“N =====
             'id': self.id,
             'ficha_numero': self.ficha_numero,
             'nutricionista_id': self.nutricionista_id,
@@ -652,7 +669,7 @@ class PatientFile(db.Model):
             'con_quien_vive': self.con_quien_vive,
             'donde_come': self.donde_come,
             
-            # ===== 3. SALUD GENERAL Y HÁBITOS =====
+            # ===== 3. SALUD GENERAL Y HÃBITOS =====
             'horas_sueno': self.horas_sueno,
             'calidad_sueno': self.calidad_sueno,
             'observaciones_sueno': self.observaciones_sueno,
@@ -667,7 +684,7 @@ class PatientFile(db.Model):
             'tipo_ejercicio': self.tipo_ejercicio,
             'duracion_ejercicio': self.duracion_ejercicio,
             
-            # ===== 4. SÍNTOMAS GASTROINTESTINALES =====
+            # ===== 4. SÃNTOMAS GASTROINTESTINALES =====
             'frecuencia_evacuacion': self.frecuencia_evacuacion,
             'reflujo': self.reflujo,
             'reflujo_alimento': self.reflujo_alimento,
@@ -680,7 +697,7 @@ class PatientFile(db.Model):
             'registro_24h': self.registro_24h,
             'frecuencia_consumo': self.frecuencia_consumo,
             
-            # ===== 6. EVALUACIÓN ANTROPOMÉTRICA =====
+            # ===== 6. EVALUACIÃ“N ANTROPOMÃ‰TRICA =====
             'talla_m': self.talla_m,
             'peso_kg': self.peso_kg,
             'peso_ideal': self.peso_ideal,
@@ -710,7 +727,7 @@ class PatientFile(db.Model):
             'indice_cintura_cadera': self.indice_cintura_cadera,
             'riesgo_cardiovascular': self.riesgo_cardiovascular,
             
-            # ===== 7. EVALUACIÓN BIOQUÍMICA =====
+            # ===== 7. EVALUACIÃ“N BIOQUÃMICA =====
             'glucosa_ayunas': self.glucosa_ayunas,
             'hemoglobina_glicada': self.hemoglobina_glicada,
             'colesterol_total': self.colesterol_total,
@@ -728,7 +745,7 @@ class PatientFile(db.Model):
             'tsh': self.tsh,
             'fecha_examenes': self.fecha_examenes,
             
-            # ===== 8. EVALUACIÓN CLÍNICA =====
+            # ===== 8. EVALUACIÃ“N CLÃNICA =====
             'presion_sistolica': self.presion_sistolica,
             'presion_diastolica': self.presion_diastolica,
             'frecuencia_cardiaca': self.frecuencia_cardiaca,
@@ -736,7 +753,7 @@ class PatientFile(db.Model):
             'sintomas_gi': self.sintomas_gi,
             'consistencia_heces': self.consistencia_heces,
             
-            # ===== 9. EVALUACIÓN DIETÉTICA =====
+            # ===== 9. EVALUACIÃ“N DIETÃ‰TICA =====
             'recordatorio_24h': self.recordatorio_24h,
             'comidas_por_dia': self.comidas_por_dia,
             'horario_desayuno': self.horario_desayuno,
@@ -762,8 +779,10 @@ class PatientFile(db.Model):
             'grasas_g': self.grasas_g,
             'grasas_porcentaje': self.grasas_porcentaje,
             'fibra_g': self.fibra_g,
+            'liquido_porcentaje': self.liquido_porcentaje,
+            'liquido_ml': self.liquido_ml,
             
-            # ===== 11. DIAGNÓSTICO Y PLAN =====
+            # ===== 11. DIAGNÃ“STICO Y PLAN =====
             'diagnostico_nutricional': self.diagnostico_nutricional,
             'objetivos_nutricionales': self.objetivos_nutricionales,
             'plan_alimentario': self.plan_alimentario,

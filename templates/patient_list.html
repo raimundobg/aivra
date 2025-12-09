@@ -11,7 +11,782 @@
     
     <link rel="stylesheet" href="/css/modern-style.css">
     <link rel="stylesheet" href="/css/dashboard-common.css">
-    <link rel="stylesheet" href="/css/patient-list.css">
+    
+    <!-- jsPDF para descarga de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --zenlab-teal: #14b8a6;
+            --zenlab-light-blue: #e0f2fe;
+            --primary: #2563eb;
+            --dark-bg: #0f172a;
+            --light-bg: #f9fafb;
+            --border: #e5e7eb;
+            --text-muted: #6b7280;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ============================================
+           NAVBAR
+           ============================================ */
+        .navbar-custom {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand-custom {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: white;
+        }
+
+        .navbar-logo {
+            height: 50px;
+            width: auto;
+        }
+
+        .navbar-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .navbar-user {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* ============================================
+           HEADER
+           ============================================ */
+        .page-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 2.5rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 1.5rem 1.5rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-content h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-content p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .btn-modern {
+            background: linear-gradient(135deg, var(--zenlab-teal), #14b8a6);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(20, 184, 166, 0.3);
+            color: white;
+        }
+
+        /* ============================================
+           STATS SECTION
+           ============================================ */
+        .page-wrapper {
+            padding: 0 1rem 2rem 1rem;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            transition: all 0.3s;
+            border-left: 4px solid var(--zenlab-teal);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--zenlab-teal), #14b8a6);
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #1f2937;
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* ============================================
+           SEARCH, FILTERS & SORT
+           ============================================ */
+        .search-filters-container {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .search-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            border: 2px solid var(--border);
+            border-radius: 0.75rem;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--zenlab-teal);
+            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+        }
+
+        /* Sort dropdown */
+        .sort-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sort-container label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+            white-space: nowrap;
+        }
+
+        .sort-select {
+            padding: 0.75rem 2.5rem 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            background: white url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") right 0.75rem center/1.25em no-repeat;
+            cursor: pointer;
+            transition: all 0.3s;
+            appearance: none;
+            min-width: 200px;
+        }
+
+        .sort-select:focus {
+            outline: none;
+            border-color: var(--zenlab-teal);
+        }
+
+        .sort-order-btn {
+            width: 42px;
+            height: 42px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-muted);
+        }
+
+        .sort-order-btn:hover {
+            border-color: var(--zenlab-teal);
+            color: var(--zenlab-teal);
+        }
+
+        .sort-order-btn.desc i {
+            transform: rotate(180deg);
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .date-filter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .date-filter label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+            white-space: nowrap;
+        }
+
+        .date-filter input {
+            padding: 0.5rem 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .date-filter input:focus {
+            outline: none;
+            border-color: var(--zenlab-teal);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--zenlab-teal);
+            color: var(--zenlab-teal);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--zenlab-teal), #14b8a6);
+            border-color: var(--zenlab-teal);
+            color: white;
+        }
+
+        /* ============================================
+           VIEW MODE TOGGLE
+           ============================================ */
+        .view-toggle {
+            display: flex;
+            gap: 0.25rem;
+            background: var(--light-bg);
+            padding: 0.25rem;
+            border-radius: 0.5rem;
+        }
+
+        .view-toggle-btn {
+            padding: 0.5rem 0.75rem;
+            border: none;
+            background: transparent;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-muted);
+        }
+
+        .view-toggle-btn.active {
+            background: white;
+            color: var(--zenlab-teal);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ============================================
+           PATIENTS GRID
+           ============================================ */
+        .patients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Vista lista */
+        .patients-grid.list-view {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .patients-grid.list-view .patient-card {
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .patients-grid.list-view .patient-card-header {
+            width: 60px;
+            height: 60px;
+            padding: 0;
+            border-radius: 0.75rem;
+            margin: 1rem;
+        }
+
+        .patients-grid.list-view .patient-card-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            padding: 1rem;
+        }
+
+        .patients-grid.list-view .patient-info-grid {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 0;
+            padding: 0;
+            background: none;
+        }
+
+        .patients-grid.list-view .patient-dates,
+        .patients-grid.list-view .patient-motivo {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .patients-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            }
+            
+            .patients-grid.list-view .patient-card {
+                flex-direction: column;
+            }
+            
+            .patients-grid.list-view .patient-card-header {
+                width: 100%;
+                height: auto;
+                border-radius: 1rem 1rem 0 0;
+                margin: 0;
+                padding: 1rem;
+            }
+            
+            .patients-grid.list-view .patient-card-body {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .patients-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ============================================
+           PATIENT CARD
+           ============================================ */
+        .patient-card {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .patient-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+            border-color: var(--zenlab-teal);
+        }
+
+        .patient-card-header {
+            background: linear-gradient(135deg, var(--zenlab-teal), #14b8a6);
+            padding: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .patient-avatar {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .patient-card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+            color: white;
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.8);
+        }
+
+        .patient-card-body {
+            padding: 1.25rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .patient-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0 0 0.25rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .patient-ficha {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0 0 1rem 0;
+            font-weight: 500;
+        }
+
+        .patient-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: var(--light-bg);
+            border-radius: 0.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .info-value.imc-normal {
+            color: #10b981;
+        }
+
+        .info-value.imc-warning {
+            color: #f59e0b;
+        }
+
+        .info-value.imc-danger {
+            color: #ef4444;
+        }
+
+        .patient-dates {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .date-item {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            font-size: 0.85rem;
+        }
+
+        .date-item i {
+            color: var(--zenlab-teal);
+            margin-top: 0.15rem;
+            font-size: 0.9rem;
+        }
+
+        .date-item small {
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .date-item p {
+            font-weight: 500;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .patient-motivo {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+        }
+
+        /* ============================================
+           EMPTY & LOADING STATES
+           ============================================ */
+        .loading-state,
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .loading-state .spinner-border {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1rem;
+            color: var(--zenlab-teal);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--border);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h4 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        /* ============================================
+           PAGINATION
+           ============================================ */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .pagination-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1rem;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            border-color: var(--zenlab-teal);
+            color: var(--zenlab-teal);
+            background: rgba(20, 184, 166, 0.05);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ============================================
+           ALERTS
+           ============================================ */
+        .alert {
+            border-radius: 0.75rem;
+            border: none;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .alert-info {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        /* ============================================
+           MODAL STYLES
+           ============================================ */
+        .modal-content {
+            border: none;
+            border-radius: 1rem;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border-radius: 1rem 1rem 0 0;
+            border: none;
+        }
+
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        /* ============================================
+           RESPONSIVE FIXES
+           ============================================ */
+        @media (max-width: 640px) {
+            .search-row {
+                flex-direction: column;
+            }
+            
+            .sort-container {
+                width: 100%;
+            }
+            
+            .sort-select {
+                flex: 1;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -39,25 +814,16 @@
         <div class="container">
             <div class="header-content">
                 <div>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb breadcrumb-custom">
-                            <li class="breadcrumb-item">
-                                <a href="{{ url_for('nutritionist_dashboard') }}">
-                                    <i class="fas fa-home me-1"></i>Dashboard
-                                </a>
-                            </li>
-                            <li class="breadcrumb-item active">Mis Pacientes</li>
-                        </ol>
-                    </nav>
                     <h1>
-                        <i class="fas fa-users me-2"></i>
+                        <i class="fas fa-folder-open"></i>
                         Mis Pacientes
                     </h1>
-                    <p>Gestiona las fichas de tus pacientes</p>
+                    <p>Gestiona, busca y edita las fichas de tus pacientes</p>
                 </div>
                 <div>
-                    <a href="{{ url_for('patient_intake_form') }}" class="btn-modern">
-                        <i class="fas fa-user-plus me-2"></i>
+                    <!-- âœ… RUTA CORREGIDA: patient_intake_wtf -->
+                    <a href="{{ url_for('patient_intake_wtf') }}" class="btn-modern">
+                        <i class="fas fa-user-plus"></i>
                         Nuevo Paciente
                     </a>
                 </div>
@@ -70,99 +836,139 @@
         <!-- Stats Cards -->
         <div class="stats-row">
             <div class="stat-card">
-                <div class="stat-icon green">
+                <div class="stat-icon">
                     <i class="fas fa-users"></i>
                 </div>
-                <div class="stat-info">
-                    <div class="stat-value" id="totalPacientes">-</div>
-                    <div class="stat-label">Total Pacientes</div>
-                </div>
+                <div class="stat-value" id="totalPacientes">-</div>
+                <div class="stat-label">Pacientes Totales</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon blue">
+                <div class="stat-icon">
                     <i class="fas fa-calendar-check"></i>
                 </div>
-                <div class="stat-info">
-                    <div class="stat-value" id="citasHoy">0</div>
-                    <div class="stat-label">Citas Hoy</div>
-                </div>
+                <div class="stat-value" id="citasHoy">0</div>
+                <div class="stat-label">Creados Hoy</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon orange">
+                <div class="stat-icon">
                     <i class="fas fa-clock"></i>
                 </div>
-                <div class="stat-info">
-                    <div class="stat-value" id="citasPendientes">0</div>
-                    <div class="stat-label">Citas Pendientes</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Search and Filters -->
-        <div class="search-container">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Buscar paciente por nombre..." 
-                       onkeyup="handleSearch(event)">
-            </div>
-            <div class="filter-buttons">
-                <button class="filter-btn active" data-filter="all" onclick="filterPatients('all')">
-                    Todos
-                </button>
-                <button class="filter-btn" data-filter="recent" onclick="filterPatients('recent')">
-                    Recientes
-                </button>
-                <button class="filter-btn" data-filter="pending" onclick="filterPatients('pending')">
-                    Con Cita Pendiente
-                </button>
-            </div>
-        </div>
-        
-        <!-- Patients List -->
-        <div class="patients-container">
-            <div class="patients-header">
-                <span>Nombre</span>
-                <span>Edad</span>
-                <span>IMC</span>
-                <span>Última Actualización</span>
-                <span>Próxima Cita</span>
-                <span>Acciones</span>
+                <div class="stat-value" id="citasPendientes">0</div>
+                <div class="stat-label">Esta Semana</div>
             </div>
             
-            <div id="patientsList">
-                <!-- Loading State -->
-                <div class="loading-state" id="loadingState">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <p>Cargando pacientes...</p>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
                 </div>
-                
-                <!-- Empty State (hidden by default) -->
-                <div class="empty-state" id="emptyState" style="display: none;">
-                    <i class="fas fa-users"></i>
-                    <h4>No hay pacientes</h4>
-                    <p>Aún no has registrado ningún paciente</p>
-                    <a href="{{ url_for('patient_intake_form') }}" class="btn-modern">
-                        <i class="fas fa-user-plus me-2"></i>
-                        Registrar Primer Paciente
-                    </a>
-                </div>
-                
-                <!-- Patients will be inserted here -->
+                <div class="stat-value" id="fichasActivas">0</div>
+                <div class="stat-label">Fichas Activas</div>
             </div>
+        </div>
+        
+        <!-- Search, Sort and Filters -->
+        <div class="search-filters-container">
+            <div class="search-row">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar por nombre o NÂ° de ficha..." 
+                           onkeyup="handleSearch(event)">
+                </div>
+                
+                <div class="sort-container">
+                    <label for="sortSelect">
+                        <i class="fas fa-sort me-1"></i>Ordenar:
+                    </label>
+                    <select id="sortSelect" class="sort-select" onchange="handleSortChange()">
+                        <option value="created_at">Fecha de Creación</option>
+                        <option value="updated_at">Última Actualización</option>
+                        <option value="ficha_numero">NÂ° de Ficha</option>
+                        <option value="nombre">Nombre (A-Z)</option>
+                        <option value="fecha_nacimiento">Edad</option>
+                    </select>
+                    <button class="sort-order-btn desc" id="sortOrderBtn" onclick="toggleSortOrder()" title="Cambiar orden">
+                        <i class="fas fa-arrow-down"></i>
+                    </button>
+                </div>
+                
+                <div class="view-toggle">
+                    <button class="view-toggle-btn active" data-view="grid" onclick="setViewMode('grid')" title="Vista cuadrícula">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button class="view-toggle-btn" data-view="list" onclick="setViewMode('list')" title="Vista lista">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <div class="date-filter">
+                    <i class="fas fa-calendar"></i>
+                    <label for="dateFilterFrom">Desde:</label>
+                    <input type="date" id="dateFilterFrom" onchange="handleDateFilter()">
+                    <label for="dateFilterTo">Hasta:</label>
+                    <input type="date" id="dateFilterTo" onchange="handleDateFilter()">
+                </div>
+                
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all" onclick="filterPatients('all')">
+                        <i class="fas fa-list"></i>
+                        Todos
+                    </button>
+                    <button class="filter-btn" data-filter="recent" onclick="filterPatients('recent')">
+                        <i class="fas fa-clock"></i>
+                        Recientes
+                    </button>
+                    <button class="filter-btn" data-filter="today" onclick="filterPatients('today')">
+                        <i class="fas fa-calendar-day"></i>
+                        Hoy
+                    </button>
+                    <button class="filter-btn" data-filter="week" onclick="filterPatients('week')">
+                        <i class="fas fa-calendar-week"></i>
+                        Esta Semana
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Patients Grid -->
+        <div class="patients-container">
+            <!-- Loading State -->
+            <div class="loading-state" id="loadingState">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p>Cargando pacientes...</p>
+            </div>
+            
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <i class="fas fa-inbox"></i>
+                <h4>No hay pacientes</h4>
+                <p>Aún no has registrado ningún paciente</p>
+                <!-- âœ… RUTA CORREGIDA: patient_intake_wtf -->
+                <a href="{{ url_for('patient_intake_wtf') }}" class="btn-modern">
+                    <i class="fas fa-user-plus"></i>
+                    Registrar Primer Paciente
+                </a>
+            </div>
+            
+            <!-- Patients Grid -->
+            <div class="patients-grid" id="patientsGrid"></div>
             
             <!-- Pagination -->
             <div class="pagination-container" id="paginationContainer" style="display: none;">
                 <button class="pagination-btn" id="prevBtn" onclick="changePage(-1)" disabled>
                     <i class="fas fa-chevron-left"></i>
+                    Anterior
                 </button>
                 <span class="pagination-info">
                     Página <span id="currentPage">1</span> de <span id="totalPages">1</span>
                 </span>
                 <button class="pagination-btn" id="nextBtn" onclick="changePage(1)">
+                    Siguiente
                     <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
@@ -173,21 +979,25 @@
     <div class="modal fade" id="deleteModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header border-0">
+                <div class="modal-header">
                     <h5 class="modal-title">
-                        <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                        <i class="fas fa-exclamation-triangle me-2"></i>
                         Confirmar Eliminación
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <p>¿Estás seguro de que deseas eliminar la ficha de <strong id="deletePatientName"></strong>?</p>
-                    <p class="text-muted small">Esta acción no se puede deshacer.</p>
+                <div class="modal-body text-center py-4">
+                    <i class="fas fa-user-slash fa-3x text-danger mb-3"></i>
+                    <p class="mb-1">Â¿Estás seguro de eliminar la ficha de:</p>
+                    <h5 class="text-danger" id="deletePatientName"></h5>
+                    <p class="text-muted small mt-3">Esta acción no se puede deshacer.</p>
                 </div>
                 <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
                     <button type="button" class="btn btn-danger" onclick="confirmDelete()">
-                        <i class="fas fa-trash me-2"></i>Eliminar
+                        <i class="fas fa-trash me-1"></i>Eliminar
                     </button>
                 </div>
             </div>
@@ -197,16 +1007,92 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // ============================================
-        // ESTADO
+        // âš ï¸ RUTAS CORREGIDAS - MUY IMPORTANTE
+        // ============================================
+        const ROUTES = {
+            // âœ… Ver ficha completa â†’ patient_file.html
+            VIEW_PATIENT: (id) => `/nutritionist/patient/${id}/edit?readonly=1`,
+            
+            // âœ… Editar paciente â†’ patient_intake_wtf.html
+            EDIT_PATIENT: (id) => `/nutritionist/patient/${id}/edit`,
+            
+            // API endpoints
+            API_PATIENTS: '/api/patients'
+        };
+        
+        // ============================================
+        // ESTADO GLOBAL
         // ============================================
         let state = {
             patients: [],
+            filteredPatients: [],
             currentPage: 1,
             totalPages: 1,
             searchQuery: '',
+            dateFilterFrom: '',
+            dateFilterTo: '',
             filter: 'all',
-            deletePatientId: null
+            sortBy: 'created_at',
+            sortOrder: 'desc',
+            viewMode: 'grid',
+            deletePatientId: null,
+            debounceTimer: null
         };
+        
+        const CONFIG = {
+            ITEMS_PER_PAGE: 12,
+            DEBOUNCE_DELAY: 300
+        };
+        
+        // ============================================
+        // ELEMENTOS DEL DOM
+        // ============================================
+        const elements = {
+            searchInput: document.getElementById('searchInput'),
+            sortSelect: document.getElementById('sortSelect'),
+            sortOrderBtn: document.getElementById('sortOrderBtn'),
+            patientsGrid: document.getElementById('patientsGrid'),
+            loadingState: document.getElementById('loadingState'),
+            emptyState: document.getElementById('emptyState'),
+            paginationContainer: document.getElementById('paginationContainer'),
+            currentPageSpan: document.getElementById('currentPage'),
+            totalPagesSpan: document.getElementById('totalPages'),
+            prevBtn: document.getElementById('prevBtn'),
+            nextBtn: document.getElementById('nextBtn'),
+            totalPacientes: document.getElementById('totalPacientes'),
+            citasHoy: document.getElementById('citasHoy'),
+            citasPendientes: document.getElementById('citasPendientes'),
+            fichasActivas: document.getElementById('fichasActivas')
+        };
+        
+        // ============================================
+        // INICIALIZACIÍ“N
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('ðŸš€ Patient List - RUTAS CORREGIDAS');
+            console.log('ðŸ‘ï¸ Ver ficha:', ROUTES.VIEW_PATIENT('{id}'));
+            console.log('âœï¸ Editar:', ROUTES.EDIT_PATIENT('{id}'));
+            
+            // Cargar estado guardado
+            const savedSort = localStorage.getItem('patientListSort');
+            const savedOrder = localStorage.getItem('patientListOrder');
+            const savedView = localStorage.getItem('patientListView');
+            
+            if (savedSort) {
+                state.sortBy = savedSort;
+                elements.sortSelect.value = savedSort;
+            }
+            if (savedOrder) {
+                state.sortOrder = savedOrder;
+                updateSortOrderButton();
+            }
+            if (savedView) {
+                state.viewMode = savedView;
+                setViewMode(savedView, false);
+            }
+            
+            loadPatients();
+        });
         
         // ============================================
         // CARGAR PACIENTES
@@ -217,19 +1103,32 @@
                 
                 const params = new URLSearchParams({
                     page: state.currentPage,
-                    per_page: 10,
-                    search: state.searchQuery
+                    per_page: CONFIG.ITEMS_PER_PAGE,
+                    search: state.searchQuery,
+                    sort_by: state.sortBy,
+                    sort_order: state.sortOrder
                 });
                 
-                const response = await fetch(`/api/patients?${params}`);
+                if (state.dateFilterFrom) {
+                    params.append('date_from', state.dateFilterFrom);
+                }
+                if (state.dateFilterTo) {
+                    params.append('date_to', state.dateFilterTo);
+                }
+                
+                const response = await fetch(`${ROUTES.API_PATIENTS}?${params}`);
                 const data = await response.json();
                 
                 if (data.success) {
-                    state.patients = data.patients;
-                    state.totalPages = data.pages;
+                    state.patients = data.patients || [];
+                    state.totalPages = data.pages || 1;
                     
-                    document.getElementById('totalPacientes').textContent = data.total;
+                    // Actualizar estadísticas
+                    elements.totalPacientes.textContent = data.total || 0;
+                    updateStats(state.patients);
                     
+                    // Aplicar filtros locales y renderizar
+                    applyFilters();
                     renderPatients();
                     updatePagination();
                 } else {
@@ -242,131 +1141,320 @@
         }
         
         // ============================================
-        // RENDERIZAR PACIENTES
+        // ACTUALIZAR ESTADÍSTICAS
+        // ============================================
+        function updateStats(patients) {
+            const today = new Date().toISOString().split('T')[0];
+            const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            
+            let createdToday = 0;
+            let createdThisWeek = 0;
+            let activeCount = patients.length;
+            
+            patients.forEach(p => {
+                const createdDate = p.created_at ? p.created_at.split('T')[0] : '';
+                if (createdDate === today) createdToday++;
+                if (createdDate >= weekAgo) createdThisWeek++;
+            });
+            
+            elements.citasHoy.textContent = createdToday;
+            elements.citasPendientes.textContent = createdThisWeek;
+            elements.fichasActivas.textContent = activeCount;
+        }
+        
+        // ============================================
+        // APLICAR FILTROS LOCALES
+        // ============================================
+        function applyFilters() {
+            let filtered = [...state.patients];
+            
+            // Filtro por tipo
+            const today = new Date().toISOString().split('T')[0];
+            const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            
+            switch(state.filter) {
+                case 'recent':
+                    filtered = filtered.slice(0, 10);
+                    break;
+                case 'today':
+                    filtered = filtered.filter(p => {
+                        const createdDate = p.created_at ? p.created_at.split('T')[0] : '';
+                        return createdDate === today;
+                    });
+                    break;
+                case 'week':
+                    filtered = filtered.filter(p => {
+                        const createdDate = p.created_at ? p.created_at.split('T')[0] : '';
+                        return createdDate >= weekAgo;
+                    });
+                    break;
+            }
+            
+            state.filteredPatients = filtered;
+        }
+        
+        // ============================================
+        // RENDERIZAR PACIENTES - âœ… RUTAS CORREGIDAS
         // ============================================
         function renderPatients() {
-            const container = document.getElementById('patientsList');
-            const loadingState = document.getElementById('loadingState');
-            const emptyState = document.getElementById('emptyState');
+            const container = elements.patientsGrid;
             
-            loadingState.style.display = 'none';
-            
-            if (state.patients.length === 0) {
-                emptyState.style.display = 'flex';
+            if (state.filteredPatients.length === 0) {
+                elements.loadingState.style.display = 'none';
+                elements.emptyState.style.display = 'flex';
+                elements.paginationContainer.style.display = 'none';
+                container.innerHTML = '';
                 return;
             }
             
-            emptyState.style.display = 'none';
+            elements.emptyState.style.display = 'none';
+            elements.loadingState.style.display = 'none';
             
             let html = '';
             
-            state.patients.forEach(patient => {
-                const imcClass = getIMCClass(patient.imc);
+            state.filteredPatients.forEach(patient => {
+                const imc = parseFloat(patient.imc) || 0;
+                const imcClass = getIMCClass(imc);
+                const edad = patient.edad || calculateAge(patient.fecha_nacimiento);
+                const fichaNumero = patient.ficha_numero || patient.id;
+                const nombreEscapado = escapeHtml(patient.nombre || 'Sin nombre');
                 
+                // âœ… RUTAS CORREGIDAS EN TODAS LAS ACCIONES
                 html += `
-                    <div class="patient-row" onclick="window.location.href='/nutritionist/patient/${patient.id}'">
-                        <div class="patient-name">
+                    <div class="patient-card" onclick="goToPatientFile(${patient.id})">
+                        <div class="patient-card-header">
                             <div class="patient-avatar">
-                                ${patient.nombre.charAt(0).toUpperCase()}
+                                <i class="fas fa-user-circle"></i>
                             </div>
-                            <div>
-                                <strong>Ficha #${patient.ficha_numero}</strong>
-                                <span>${patient.nombre}</span>
+                            <div class="patient-card-actions">
+                                <!-- âœ… EDITAR: /nutritionist/patient/{id}/edit -->
+                                <!-- VER PAUTA -->
+                                <button class="action-btn pauta-btn" 
+                                        onclick="event.stopPropagation(); verPautaPaciente(${patient.id}, '${nombreEscapado.replace(/'/g, "\\'")}')" 
+                                        title="Ver Pauta Alimentaria"
+                                        style="color: #14b8a6;">
+                                    <i class="fas fa-utensils"></i>
+                                </button>
+                                <a href="${ROUTES.EDIT_PATIENT(patient.id)}" 
+                                   class="action-btn" 
+                                   onclick="event.stopPropagation()" 
+                                   title="Editar ficha">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <!-- âœ… VER: /dashboard/nutritionist/patient/{id} -->
+                                <a href="${ROUTES.VIEW_PATIENT(patient.id)}" 
+                                   class="action-btn" 
+                                   onclick="event.stopPropagation()" 
+                                   title="Ver ficha completa">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button class="action-btn" 
+                                        onclick="event.stopPropagation(); downloadPatientPdf(${patient.id})" 
+                                        title="Descargar PDF">
+                                    <i class="fas fa-file-pdf"></i>
+                                </button>
+                                <button class="action-btn delete" 
+                                        onclick="event.stopPropagation(); showDeleteConfirm(${patient.id}, '${nombreEscapado.replace(/'/g, "\\'")}')" 
+                                        title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </div>
-                        <div class="patient-age">
-                            ${patient.edad || '-'} años
-                        </div>
-                        <div class="patient-imc ${imcClass}">
-                            ${patient.imc || '-'}
-                        </div>
-                        <div class="patient-updated">
-                            ${patient.updated_at || patient.created_at}
-                        </div>
-                        <div class="patient-appointment">
-                            ${patient.fecha_proxima_cita || '<span class="text-muted">Sin agendar</span>'}
-                        </div>
-                        <div class="patient-actions" onclick="event.stopPropagation()">
-                            <a href="/nutritionist/patient/${patient.id}" class="action-btn view" title="Ver ficha">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <button class="action-btn delete" onclick="showDeleteModal(${patient.id}, '${patient.nombre}')" title="Eliminar">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        
+                        <div class="patient-card-body">
+                            <h5 class="patient-name">
+                                <i class="fas fa-file-medical"></i>
+                                ${nombreEscapado}
+                            </h5>
+                            <p class="patient-ficha">Ficha #${fichaNumero}</p>
+                            
+                            <div class="patient-info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">Edad</span>
+                                    <span class="info-value">${edad || '-'} años</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Sexo</span>
+                                    <span class="info-value">${patient.sexo || '-'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">IMC</span>
+                                    <span class="info-value ${imcClass}">${imc ? imc.toFixed(1) : '-'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">% Grasa</span>
+                                    <span class="info-value">${patient.porcentaje_grasa ? patient.porcentaje_grasa + '%' : '-'}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="patient-dates">
+                                <div class="date-item">
+                                    <i class="fas fa-plus-circle"></i>
+                                    <div>
+                                        <small>Fecha Creación</small>
+                                        <p>${formatDate(patient.created_at)}</p>
+                                    </div>
+                                </div>
+                                <div class="date-item">
+                                    <i class="fas fa-edit"></i>
+                                    <div>
+                                        <small>Última Actualización</small>
+                                        <p>${formatDate(patient.updated_at)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${patient.motivo_consulta ? `
+                                <div class="patient-motivo">
+                                    <strong>Motivo:</strong> ${escapeHtml(patient.motivo_consulta.substring(0, 80))}${patient.motivo_consulta.length > 80 ? '...' : ''}
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 `;
             });
             
-            // Remover loading y empty state, agregar pacientes
-            const existingRows = container.querySelectorAll('.patient-row');
-            existingRows.forEach(row => row.remove());
+            container.innerHTML = html;
             
-            container.insertAdjacentHTML('beforeend', html);
-        }
-        
-        function getIMCClass(imc) {
-            if (!imc) return '';
-            if (imc < 18.5) return 'imc-bajo';
-            if (imc < 25) return 'imc-normal';
-            if (imc < 30) return 'imc-sobrepeso';
-            return 'imc-obesidad';
-        }
-        
-        // ============================================
-        // BÚSQUEDA Y FILTROS
-        // ============================================
-        function handleSearch(event) {
-            if (event.key === 'Enter' || event.type === 'input') {
-                state.searchQuery = event.target.value;
-                state.currentPage = 1;
-                loadPatients();
+            if (state.totalPages > 1) {
+                elements.paginationContainer.style.display = 'flex';
+            } else {
+                elements.paginationContainer.style.display = 'none';
             }
         }
         
-        function filterPatients(filter) {
-            state.filter = filter;
+        // ============================================
+        // âœ… NAVEGACIÍ“N - RUTAS CORREGIDAS
+        // ============================================
+        
+        /**
+         * Ir a la ficha completa del paciente (patient_file.html)
+         * RUTA CORRECTA: /dashboard/nutritionist/patient/{id}
+         */
+        function goToPatientFile(patientId) {
+            console.log('ðŸ“„ Navegando a ficha:', ROUTES.VIEW_PATIENT(patientId));
+            window.location.href = ROUTES.EDIT_PATIENT(patientId);
+        }
+        
+        /**
+         * Ir a editar el paciente (patient_intake_wtf.html)
+         * RUTA CORRECTA: /nutritionist/patient/{id}/edit
+         */
+        function goToEditPatient(patientId) {
+            console.log('âœï¸ Navegando a editar:', ROUTES.EDIT_PATIENT(patientId));
+            window.location.href = ROUTES.EDIT_PATIENT(patientId);
+        }
+        
+        // ============================================
+        // ORDENAMIENTO
+        // ============================================
+        function handleSortChange() {
+            state.sortBy = elements.sortSelect.value;
             state.currentPage = 1;
+            localStorage.setItem('patientListSort', state.sortBy);
+            loadPatients();
+        }
+        
+        function toggleSortOrder() {
+            state.sortOrder = state.sortOrder === 'desc' ? 'asc' : 'desc';
+            localStorage.setItem('patientListOrder', state.sortOrder);
+            updateSortOrderButton();
+            loadPatients();
+        }
+        
+        function updateSortOrderButton() {
+            const btn = elements.sortOrderBtn;
+            if (state.sortOrder === 'desc') {
+                btn.classList.add('desc');
+                btn.classList.remove('asc');
+                btn.title = 'Ordenar ascendente';
+            } else {
+                btn.classList.remove('desc');
+                btn.classList.add('asc');
+                btn.title = 'Ordenar descendente';
+            }
+        }
+        
+        // ============================================
+        // MODO DE VISTA
+        // ============================================
+        function setViewMode(mode, save = true) {
+            state.viewMode = mode;
             
-            // Actualizar botones activos
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.filter === filter);
+            document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === mode);
             });
             
-            loadPatients();
-        }
-        
-        // ============================================
-        // PAGINACIÓN
-        // ============================================
-        function updatePagination() {
-            const container = document.getElementById('paginationContainer');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
+            elements.patientsGrid.classList.toggle('list-view', mode === 'list');
             
-            if (state.totalPages <= 1) {
-                container.style.display = 'none';
-                return;
+            if (save) {
+                localStorage.setItem('patientListView', mode);
             }
-            
-            container.style.display = 'flex';
-            
-            document.getElementById('currentPage').textContent = state.currentPage;
-            document.getElementById('totalPages').textContent = state.totalPages;
-            
-            prevBtn.disabled = state.currentPage <= 1;
-            nextBtn.disabled = state.currentPage >= state.totalPages;
         }
         
-        function changePage(delta) {
-            state.currentPage += delta;
+        // ============================================
+        // BÚSQUEDA
+        // ============================================
+        function handleSearch(event) {
+            clearTimeout(state.debounceTimer);
+            state.searchQuery = event.target.value;
+            
+            state.debounceTimer = setTimeout(() => {
+                state.currentPage = 1;
+                loadPatients();
+            }, CONFIG.DEBOUNCE_DELAY);
+        }
+        
+        // ============================================
+        // FILTRO POR FECHA
+        // ============================================
+        function handleDateFilter() {
+            state.dateFilterFrom = document.getElementById('dateFilterFrom').value;
+            state.dateFilterTo = document.getElementById('dateFilterTo').value;
+            state.currentPage = 1;
             loadPatients();
+        }
+        
+        // ============================================
+        // FILTROS POR TIPO
+        // ============================================
+        function filterPatients(filterType) {
+            state.filter = filterType;
+            state.currentPage = 1;
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-filter="${filterType}"]`).classList.add('active');
+            
+            applyFilters();
+            renderPatients();
+        }
+        
+        // ============================================
+        // PAGINACIÍ“N
+        // ============================================
+        function changePage(direction) {
+            const newPage = state.currentPage + direction;
+            if (newPage >= 1 && newPage <= state.totalPages) {
+                state.currentPage = newPage;
+                loadPatients();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+        
+        function updatePagination() {
+            elements.currentPageSpan.textContent = state.currentPage;
+            elements.totalPagesSpan.textContent = state.totalPages;
+            
+            elements.prevBtn.disabled = state.currentPage === 1;
+            elements.nextBtn.disabled = state.currentPage === state.totalPages;
         }
         
         // ============================================
         // ELIMINAR PACIENTE
         // ============================================
-        function showDeleteModal(patientId, patientName) {
+        function showDeleteConfirm(patientId, patientName) {
             state.deletePatientId = patientId;
             document.getElementById('deletePatientName').textContent = patientName;
             
@@ -378,64 +1466,577 @@
             if (!state.deletePatientId) return;
             
             try {
-                const response = await fetch(`/api/patients/${state.deletePatientId}`, {
-                    method: 'DELETE'
+                const response = await fetch(`${ROUTES.API_PATIENTS}/${state.deletePatientId}`, {
+                    method: 'DELETE',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Cerrar modal
                     bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-                    
-                    // Recargar lista
+                    showNotification('Paciente eliminado correctamente', 'success');
                     loadPatients();
-                    
-                    showToast('Paciente eliminado exitosamente', 'success');
                 } else {
-                    showToast('Error al eliminar paciente', 'danger');
+                    showError(data.error || 'Error al eliminar paciente');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showToast('Error de conexión', 'danger');
+                showError('Error de conexión');
             }
         }
         
         // ============================================
-        // UI HELPERS
+        // DESCARGAR PDF
         // ============================================
-        function showLoading() {
-            document.getElementById('loadingState').style.display = 'flex';
-            document.getElementById('emptyState').style.display = 'none';
+        async function downloadPatientPdf(patientId) {
+            try {
+                const patient = state.patients.find(p => p.id === patientId);
+                if (!patient) {
+                    showError("Paciente no encontrado");
+                    return;
+                }
+                
+                showNotification('Generando PDF...', 'info');
+                
+                const element = document.createElement("div");
+                element.style.padding = "20px";
+                element.style.fontFamily = "Arial, sans-serif";
+                element.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="color: #14b8a6; margin-bottom: 5px;">ZenLab Pro</h1>
+                        <p style="color: #6b7280;">Ficha Nutricional</p>
+                    </div>
+                    
+                    <h2 style="color: #1f2937; border-bottom: 2px solid #14b8a6; padding-bottom: 10px;">
+                        ${escapeHtml(patient.nombre || 'Sin nombre')}
+                    </h2>
+                    <p style="color: #6b7280;">Ficha #${patient.ficha_numero || patient.id} | Generado el ${new Date().toLocaleDateString("es-CL")}</p>
+
+                    <h3 style="color: #1f2937; margin-top: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">
+                        Datos Generales
+                    </h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;"><strong>Nombre:</strong></td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">${escapeHtml(patient.nombre || '-')}</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;"><strong>Sexo:</strong></td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">${patient.sexo || '-'}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;"><strong>Edad:</strong></td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">${patient.edad || '-'} años</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;"><strong>Fecha Nacimiento:</strong></td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">${formatDate(patient.fecha_nacimiento)}</td>
+                        </tr>
+                    </table>
+
+                    <h3 style="color: #1f2937; margin-top: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">
+                        Evaluación Antropométrica
+                    </h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;"><strong>Peso:</strong></td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">${patient.peso_kg || '-'} kg</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;"><strong>Talla:</strong></td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">${patient.talla_m || '-'} m</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;"><strong>IMC:</strong></td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">${patient.imc ? parseFloat(patient.imc).toFixed(1) : '-'}</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb;"><strong>% Grasa:</strong></td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">${patient.porcentaje_grasa || '-'}%</td>
+                        </tr>
+                    </table>
+
+                    ${patient.motivo_consulta ? `
+                        <h3 style="color: #1f2937; margin-top: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">
+                            Motivo de Consulta
+                        </h3>
+                        <p style="padding: 10px; background: #f9fafb; border-radius: 5px;">${escapeHtml(patient.motivo_consulta)}</p>
+                    ` : ''}
+
+                    <div style="margin-top: 40px; text-align: center; color: #6b7280; font-size: 12px;">
+                        <p>Documento generado por ZenLab Pro</p>
+                        <p>${new Date().toLocaleString("es-CL")}</p>
+                    </div>
+                `;
+
+                const options = {
+                    margin: 10,
+                    filename: `Ficha-${(patient.nombre || 'paciente').replace(/\s+/g, "_")}-${patient.ficha_numero || patient.id}.pdf`,
+                    image: { type: "jpeg", quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { orientation: "portrait", unit: "mm", format: "a4" },
+                };
+
+                await html2pdf().set(options).from(element).save();
+                showNotification("PDF descargado correctamente", "success");
+
+            } catch (error) {
+                console.error("Error:", error);
+                showError("Error al descargar PDF");
+            }
+        }
+        
+        // ============================================
+        // UTILIDADES
+        // ============================================
+        function calculateAge(birthDate) {
+            if (!birthDate) return null;
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
             
-            const rows = document.querySelectorAll('.patient-row');
-            rows.forEach(row => row.remove());
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            
+            return age;
+        }
+        
+        function formatDate(date) {
+            if (!date) return '-';
+            // Si ya viene formateado como YYYY-MM-DD o ISO
+            if (typeof date === 'string' && date.includes('-')) {
+                const parts = date.split('T')[0].split('-');
+                if (parts.length === 3) {
+                    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+            }
+            // Si es objeto Date o string con otro formato
+            const d = new Date(date);
+            if (isNaN(d.getTime())) return date;
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+        
+        function getIMCClass(imc) {
+            if (!imc || imc === 0) return '';
+            if (imc < 18.5) return 'imc-warning';
+            if (imc < 25) return 'imc-normal';
+            if (imc < 30) return 'imc-warning';
+            return 'imc-danger';
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+        
+        function showLoading() {
+            elements.loadingState.style.display = 'flex';
+            elements.emptyState.style.display = 'none';
+            elements.patientsGrid.innerHTML = '';
+        }
+        
+        function showNotification(message, type = 'info') {
+            const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+            
+            const alertHTML = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-${icon} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            const container = document.querySelector('.page-wrapper');
+            const alertDiv = document.createElement('div');
+            alertDiv.innerHTML = alertHTML;
+            container.insertBefore(alertDiv.firstElementChild, container.firstChild);
+            
+            setTimeout(() => {
+                const alert = document.querySelector('.alert');
+                if (alert) alert.remove();
+            }, 5000);
         }
         
         function showError(message) {
-            console.error(message);
-            showToast(message, 'danger');
+            showNotification(message, 'error');
         }
-        
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            toast.className = `alert alert-${type} position-fixed top-0 start-50 translate-middle-x mt-3`;
-            toast.style.zIndex = '9999';
-            toast.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
-                <strong>${message}</strong>
-            `;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => toast.remove(), 3000);
-        }
-        
-        // ============================================
-        // INICIALIZACIÓN
-        // ============================================
-        document.addEventListener('DOMContentLoaded', function() {
-            loadPatients();
-        });
     </script>
+
+<!-- Modal Ver Pauta -->
+<div class="modal fade" id="verPautaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white;">
+                <h5 class="modal-title"><i class="fas fa-utensils me-2"></i>Pauta Alimentaria - <span id="pautaPacienteNombre"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="pautaModalBody">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Cargando pauta...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Variable para guardar el ID del paciente actual en el modal
+let currentPautaPatientId = null;
+
+async function verPautaPaciente(patientId, nombre) {
+    currentPautaPatientId = patientId; // Guardar para exportar PDF
+    const modal = new bootstrap.Modal(document.getElementById("verPautaModal"));
+    document.getElementById("pautaPacienteNombre").textContent = nombre;
+    document.getElementById("pautaModalBody").innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Cargando pauta...</p>
+        </div>
+    `;
+    modal.show();
+    
+    try {
+        const response = await fetch(`/api/ver-pauta/${patientId}`);
+        const data = await response.json();
+        
+        if (data.success && data.pauta) {
+            renderPautaModal(data.pauta);
+        } else {
+            document.getElementById("pautaModalBody").innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard-list fa-4x text-muted mb-3" style="display:block;"></i>
+                    <h5>No hay pauta generada</h5>
+                    <p class="text-muted">Este paciente aun no tiene una pauta alimentaria.</p>
+                    <a href="/dashboard/nutritionist" class="btn btn-primary mt-2">
+                        <i class="fas fa-plus me-2"></i>Generar Pauta
+                    </a>
+                </div>
+            `;
+        }
+    } catch (error) {
+        document.getElementById("pautaModalBody").innerHTML = `
+            <div class="text-center py-5 text-danger">
+                <i class="fas fa-exclamation-triangle fa-3x mb-3" style="display:block;"></i>
+                <h5>Error al cargar la pauta</h5>
+                <p>${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function renderPautaModal(pauta) {
+    const tiempoIcons = {
+        desayuno: {icon: "fa-sun", color: "#f59e0b"},
+        colacion_am: {icon: "fa-apple-alt", color: "#10b981"},
+        almuerzo: {icon: "fa-utensils", color: "#ef4444"},
+        colacion_pm: {icon: "fa-cookie", color: "#8b5cf6"},
+        cena: {icon: "fa-moon", color: "#3b82f6"}
+    };
+    
+    const diasConfig = {
+        lunes: {nombre: "Lunes", color: "#3b82f6"},
+        martes: {nombre: "Martes", color: "#8b5cf6"},
+        miercoles: {nombre: "Miercoles", color: "#ec4899"},
+        jueves: {nombre: "Jueves", color: "#f59e0b"},
+        viernes: {nombre: "Viernes", color: "#10b981"},
+        sabado: {nombre: "Sabado", color: "#06b6d4"},
+        domingo: {nombre: "Domingo", color: "#ef4444"}
+    };
+    
+    // Detectar si es pauta semanal o diaria
+    const esSemanal = pauta.tipo === "semanal" || pauta.dias;
+    
+    let html = `
+        <div class="row mb-4">
+            <div class="col-md-3 text-center">
+                <strong style="color: #14b8a6; font-size: 1.5rem;">${pauta.requerimientos?.get_kcal || 0}</strong>
+                <br><small>GET kcal</small>
+            </div>
+            <div class="col-md-3 text-center">
+                <strong style="color: #ef4444; font-size: 1.5rem;">${pauta.requerimientos?.proteinas_g || 0}g</strong>
+                <br><small>Proteinas</small>
+            </div>
+            <div class="col-md-3 text-center">
+                <strong style="color: #3b82f6; font-size: 1.5rem;">${pauta.requerimientos?.carbohidratos_g || 0}g</strong>
+                <br><small>Carbohidratos</small>
+            </div>
+            <div class="col-md-3 text-center">
+                <strong style="color: #8b5cf6; font-size: 1.5rem;">${pauta.requerimientos?.grasas_g || 0}g</strong>
+                <br><small>Grasas</small>
+            </div>
+        </div>
+    `;
+    
+    if (esSemanal) {
+        // Tabs de dias
+        html += `<ul class="nav nav-pills nav-fill mb-3" id="diasTabs" role="tablist" style="gap: 5px;">`;
+        const diasOrder = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
+        diasOrder.forEach((dia, idx) => {
+            const config = diasConfig[dia];
+            const diaData = pauta.dias?.[dia];
+            const isActive = idx === 0;
+            const activeStyle = "background: linear-gradient(135deg, #14b8a6, #0d9488); color: white; border: none;";
+            const inactiveStyle = "background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1;";
+            html += `
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link ${isActive ? "active" : ""}" id="${dia}-tab" 
+                            data-bs-toggle="pill" data-bs-target="#${dia}-content" type="button" 
+                            role="tab" style="${isActive ? activeStyle : inactiveStyle} border-radius: 8px; padding: 10px 5px;">
+                        <span style="font-weight: 600;">${config.nombre}</span>
+                        <br><small>${diaData?.totales?.kcal || 0} kcal</small>
+                    </button>
+                </li>
+            `;
+        });
+        html += `</ul><div class="tab-content" id="diasTabContent">`;
+        
+        diasOrder.forEach((dia, diaIdx) => {
+            const diaData = pauta.dias?.[dia];
+            if (!diaData) return;
+            
+            html += `<div class="tab-pane fade ${diaIdx === 0 ? "show active" : ""}" id="${dia}-content" role="tabpanel">
+                    <div class="accordion" id="accordion-${dia}">`;
+            
+            const tiemposOrder = ["desayuno", "colacion_am", "almuerzo", "colacion_pm", "cena"];
+            tiemposOrder.forEach((tiempoKey, idx) => {
+                const tiempo = diaData.tiempos?.[tiempoKey];
+                if (!tiempo) return;
+                const config = tiempoIcons[tiempoKey];
+                
+                html += `
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button ${idx !== 0 ? "collapsed" : ""}" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#${dia}-${tiempoKey}">
+                                <i class="fas ${config.icon} me-2" style="color: ${config.color};"></i>
+                                <strong>${tiempo.nombre}</strong>
+                                <span class="ms-auto me-3">
+                                    <span class="badge bg-warning text-dark">${tiempo.totales?.kcal || 0} kcal</span>
+                                </span>
+                            </button>
+                        </h2>
+                        <div id="${dia}-${tiempoKey}" class="accordion-collapse collapse ${idx === 0 ? "show" : ""}">
+                            <div class="accordion-body p-2">
+                                <table class="table table-sm mb-0">
+                                    <thead><tr><th>Alimento</th><th>Cant.</th><th>Kcal</th><th>Prot</th></tr></thead>
+                                    <tbody>
+                                        ${(tiempo.alimentos || []).map(a => `
+                                            <tr>
+                                                <td><small>${a.nombre}</small></td>
+                                                <td><small>${a.cantidad}</small></td>
+                                                <td><small>${a.kcal}</small></td>
+                                                <td><small>${a.proteinas}g</small></td>
+                                            </tr>
+                                        `).join("")}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>
+                    <div class="mt-2 p-2 rounded text-center" style="background: #f0fdfa;">
+                        <strong style="color: #14b8a6;">${diaData.totales?.kcal || 0} kcal</strong> | 
+                        <span class="text-danger">${diaData.totales?.proteinas || 0}g prot</span> | 
+                        <span class="text-primary">${diaData.totales?.carbohidratos || 0}g carbs</span>
+                    </div>
+                </div>`;
+        });
+        
+        html += `</div>`;
+        
+        // Resumen semanal
+        html += `
+            <div class="mt-4 p-3 rounded text-white" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);">
+                <h6 class="mb-2"><i class="fas fa-chart-pie me-2"></i>Resumen Semanal</h6>
+                <div class="row text-center">
+                    <div class="col-3"><strong style="font-size:1.25rem;">${pauta.resumen_semanal?.promedio_diario?.kcal || 0}</strong><br><small>Prom. kcal/dia</small></div>
+                    <div class="col-3"><strong style="font-size:1.25rem;">${pauta.resumen_semanal?.promedio_diario?.proteinas || 0}g</strong><br><small>Prot/dia</small></div>
+                    <div class="col-3"><strong style="font-size:1.25rem;">${pauta.resumen_semanal?.cumplimiento_promedio || 0}%</strong><br><small>Cumplimiento</small></div>
+                    <div class="col-3"><strong style="font-size:1.25rem;">${pauta.resumen_semanal?.total_semanal?.kcal || 0}</strong><br><small>Total semana</small></div>
+                </div>
+            </div>
+            
+            <!-- Botón Exportar PDF -->
+            <div class="mt-4 text-center">
+                <button class="btn btn-lg" onclick="exportarPautaPDF()" 
+                        style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; border: none; padding: 12px 30px; border-radius: 10px;">
+                    <i class="fas fa-file-pdf me-2"></i>Exportar a PDF
+                </button>
+            </div>
+        `;
+    } else {
+        // Pauta diaria (compatibilidad)
+        html += `<div class="accordion" id="pautaAccordion">`;
+        
+        const tiemposOrder = ["desayuno", "colacion_am", "almuerzo", "colacion_pm", "cena"];
+        tiemposOrder.forEach((tiempoKey, idx) => {
+            const tiempo = pauta.tiempos?.[tiempoKey];
+            if (!tiempo) return;
+            const config = tiempoIcons[tiempoKey];
+            
+            html += `
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button ${idx !== 0 ? "collapsed" : ""}" type="button" 
+                                data-bs-toggle="collapse" data-bs-target="#pauta-${tiempoKey}">
+                            <i class="fas ${config.icon} me-2" style="color: ${config.color};"></i>
+                            <strong>${tiempo.nombre}</strong>
+                            <span class="ms-auto me-3">
+                                <span class="badge bg-warning text-dark">${tiempo.totales?.kcal || 0} kcal</span>
+                            </span>
+                        </button>
+                    </h2>
+                    <div id="pauta-${tiempoKey}" class="accordion-collapse collapse ${idx === 0 ? "show" : ""}">
+                        <div class="accordion-body">
+                            <table class="table table-sm">
+                                <thead><tr><th>Alimento</th><th>Cant.</th><th>Kcal</th><th>Prot</th></tr></thead>
+                                <tbody>
+                                    ${(tiempo.alimentos || []).map(a => `
+                                        <tr>
+                                            <td>${a.nombre}</td>
+                                            <td>${a.cantidad} ${a.medida_casera}</td>
+                                            <td>${a.kcal}</td>
+                                            <td>${a.proteinas}g</td>
+                                        </tr>
+                                    `).join("")}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `</div>
+            <div class="mt-4 p-3 rounded text-white" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);">
+                <div class="row text-center">
+                    <div class="col-3"><strong style="font-size:1.5rem;">${pauta.totales?.kcal || 0}</strong><br><small>Calorias</small></div>
+                    <div class="col-3"><strong style="font-size:1.5rem;">${pauta.totales?.proteinas || 0}g</strong><br><small>Proteinas</small></div>
+                    <div class="col-3"><strong style="font-size:1.5rem;">${pauta.totales?.carbohidratos || 0}g</strong><br><small>Carbs</small></div>
+                    <div class="col-3"><strong style="font-size:1.5rem;">${pauta.totales?.lipidos || 0}g</strong><br><small>Lipidos</small></div>
+                </div>
+            </div>
+            
+            <!-- Botón Exportar PDF -->
+            <div class="mt-4 text-center">
+                <button class="btn btn-lg" onclick="exportarPautaPDF()" 
+                        style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; border: none; padding: 12px 30px; border-radius: 10px;">
+                    <i class="fas fa-file-pdf me-2"></i>Exportar a PDF
+                </button>
+            </div>
+        `;
+    }
+    
+    document.getElementById("pautaModalBody").innerHTML = html;
+    
+    // Si es pauta semanal, agregar eventos para actualizar estilos de tabs
+    if (pauta.tipo === "semanal" || pauta.dias) {
+        setTimeout(() => {
+            const tabs = document.querySelectorAll('#diasTabs .nav-link');
+            const activeStyle = {
+                background: 'linear-gradient(135deg, #14b8a6, #0d9488)',
+                color: 'white',
+                border: 'none'
+            };
+            const inactiveStyle = {
+                background: '#e2e8f0',
+                color: '#475569',
+                border: '1px solid #cbd5e1'
+            };
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function(e) {
+                    // Resetear todos los tabs a estilo inactivo
+                    tabs.forEach(t => {
+                        t.style.background = inactiveStyle.background;
+                        t.style.color = inactiveStyle.color;
+                        t.style.border = inactiveStyle.border;
+                    });
+                    // Estilizar tab activo
+                    e.target.style.background = activeStyle.background;
+                    e.target.style.color = activeStyle.color;
+                    e.target.style.border = activeStyle.border;
+                });
+            });
+        }, 100);
+    }
+}
+
+// Función para exportar la pauta a PDF
+async function exportarPautaPDF() {
+    if (!currentPautaPatientId) {
+        alert('Error: No se pudo identificar al paciente');
+        return;
+    }
+    
+    // Mostrar loading
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generando PDF...';
+    btn.disabled = true;
+    
+    try {
+        // Descargar el PDF directamente
+        const response = await fetch(`/api/exportar-pauta-pdf/${currentPautaPatientId}`);
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Error al generar PDF');
+        }
+        
+        // Crear blob y descargar
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        // Obtener nombre del archivo del header o usar default
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'pauta_alimentaria.pdf';
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (match && match[1]) {
+                filename = match[1].replace(/['"]/g, '');
+            }
+        }
+        
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        // Mostrar éxito
+        btn.innerHTML = '<i class="fas fa-check me-2"></i>¡PDF Descargado!';
+        btn.style.background = 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)';
+            btn.disabled = false;
+        }, 3000);
+        
+    } catch (error) {
+        console.error('Error exportando PDF:', error);
+        alert('Error al exportar PDF: ' + error.message);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+</script>
 </body>
 </html>

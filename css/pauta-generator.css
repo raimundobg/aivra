@@ -1,0 +1,678 @@
+/**
+ * pauta-generator.css - Estilos para Pauta Alimentaria Semanal
+ * Version: 3.0
+ */
+
+/* ============================================
+   MODAL BASE
+   ============================================ */
+   .pauta-modal .modal-dialog {
+    max-width: 1100px;
+}
+
+.pauta-modal .modal-content {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.pauta-modal .modal-header {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+    color: white;
+    border: none;
+    padding: 1.25rem 1.5rem;
+}
+
+.pauta-modal .modal-title {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pauta-modal .btn-close-white {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+.pauta-modal .modal-body {
+    padding: 0;
+    max-height: 75vh;
+    overflow-y: auto;
+}
+
+.pauta-modal .modal-footer {
+    border-top: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+    background: #f9fafb;
+}
+
+/* ============================================
+   STEPPER
+   ============================================ */
+.pauta-stepper {
+    display: flex;
+    justify-content: center;
+    padding: 1rem 1.5rem;
+    background: #f0fdfa;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.pauta-step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    color: #9ca3af;
+    font-size: 0.875rem;
+}
+
+.pauta-step .step-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.pauta-step.active {
+    color: #0d9488;
+}
+
+.pauta-step.active .step-number {
+    background: #14b8a6;
+    color: white;
+}
+
+.pauta-step.completed .step-number {
+    background: #10b981;
+    color: white;
+}
+
+.pauta-step.completed .step-number::after {
+    content: '✓';
+}
+
+.step-connector {
+    width: 40px;
+    height: 2px;
+    background: #e5e7eb;
+    margin: 0 0.5rem;
+}
+
+.pauta-step.completed + .step-connector,
+.step-connector.completed {
+    background: #10b981;
+}
+
+/* ============================================
+   PANELS
+   ============================================ */
+.pauta-panel {
+    display: none;
+    padding: 1.5rem;
+}
+
+.pauta-panel.active {
+    display: block;
+}
+
+/* ============================================
+   PATIENT SELECTION (STEP 1)
+   ============================================ */
+.patient-search-box {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.patient-search-box input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.95rem;
+}
+
+.patient-search-box input:focus {
+    border-color: #14b8a6;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+.patient-search-box i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+.patient-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    max-height: 450px;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.patient-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.patient-card:hover {
+    border-color: #14b8a6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.patient-card.selected {
+    border-color: #14b8a6;
+    background: #f0fdfa;
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+}
+
+.patient-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.patient-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.patient-info h5 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.patient-id {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.patient-stats {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.patient-stats .stat {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+.stat-value {
+    display: block;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.stat-label {
+    font-size: 0.65rem;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+
+.patient-data-status {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.data-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.data-badge.has-data {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.data-badge.no-data {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.patient-objetivos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.objetivo-badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 4px;
+}
+
+.objetivo-badge.more {
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
+/* ============================================
+   PAUTA EDITOR (STEP 2)
+   ============================================ */
+.pauta-header-info {
+    background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+    padding: 1rem 1.5rem;
+    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    border-bottom: 1px solid #99f6e4;
+}
+
+.patient-summary {
+    margin-bottom: 1rem;
+}
+
+.patient-name-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.requerimientos-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.req-item {
+    text-align: center;
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.req-value {
+    display: block;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.req-label {
+    font-size: 0.7rem;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+
+.analisis-badge-row {
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+/* ============================================
+   DIAS NAVIGATION
+   ============================================ */
+.dias-nav-container {
+    background: #f9fafb;
+    padding: 0.5rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+.dias-nav {
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+}
+
+.dia-tab {
+    flex: 1;
+    min-width: 100px;
+    padding: 0.75rem 0.5rem;
+    border: none;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.dia-tab:hover {
+    background: #f0fdfa;
+}
+
+.dia-tab.active {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+    color: white;
+}
+
+.dia-nombre {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.dia-kcal {
+    display: block;
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+.dia-progress {
+    height: 3px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.dia-tab.active .dia-progress {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.dia-progress-bar {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+/* ============================================
+   DIA CONTENIDO
+   ============================================ */
+.dia-contenido {
+    min-height: 300px;
+}
+
+.dia-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.dia-totales {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* ============================================
+   TIEMPOS GRID
+   ============================================ */
+.tiempos-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.tiempo-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+}
+
+.tiempo-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.tiempo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+}
+
+.tiempo-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.tiempo-title i {
+    font-size: 1.1rem;
+}
+
+.tiempo-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.85rem;
+}
+
+.tiempo-hora {
+    color: #6b7280;
+}
+
+.tiempo-kcal {
+    font-weight: 700;
+    color: #14b8a6;
+}
+
+.tiempo-body {
+    padding: 0 1rem;
+}
+
+.alimentos-table {
+    width: 100%;
+    font-size: 0.85rem;
+}
+
+.alimentos-table th {
+    padding: 0.5rem;
+    text-align: left;
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.alimentos-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.alimentos-table tr:last-child td {
+    border-bottom: none;
+}
+
+.alimento-nombre {
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.tiempo-footer {
+    display: flex;
+    justify-content: space-around;
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+/* ============================================
+   RESUMEN SEMANAL
+   ============================================ */
+.resumen-semanal {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-top: 1.5rem;
+}
+
+.resumen-semanal h6 {
+    margin: 0 0 1rem 0;
+    opacity: 0.9;
+}
+
+.resumen-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.resumen-stat {
+    text-align: center;
+}
+
+.resumen-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.resumen-label {
+    font-size: 0.7rem;
+    opacity: 0.8;
+    text-transform: uppercase;
+}
+
+/* ============================================
+   CONFIRMATION (STEP 3)
+   ============================================ */
+.confirmation-content {
+    text-align: center;
+    padding: 2rem;
+}
+
+.confirmation-icon {
+    margin-bottom: 1.5rem;
+}
+
+.confirmation-icon.success-animation i {
+    animation: successPulse 0.5s ease;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.confirmation-summary {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    max-width: 400px;
+    margin: 1.5rem auto;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .pauta-modal .modal-dialog {
+        max-width: 95%;
+        margin: 0.5rem auto;
+    }
+    
+    .patient-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dias-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .dia-tab {
+        min-width: 80px;
+        padding: 0.5rem;
+    }
+    
+    .dia-nombre {
+        font-size: 0.75rem;
+    }
+    
+    .resumen-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .requerimientos-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.btn-pauta-primary {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-pauta-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.4);
+    color: white;
+}
+
+.btn-pauta-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-pauta-secondary {
+    background: white;
+    border: 2px solid #e5e7eb;
+    color: #4b5563;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-pauta-secondary:hover {
+    border-color: #14b8a6;
+    color: #14b8a6;
+}

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MadLab Superalimentos - Batidos inteligentes con biodisponibilidad optimizada usando IA">
-    <title>MadLaB Superalimentos - Batidos Inteligentes con IA</title>
+    <meta name="description" content="NutriAI Pro - Software para nutricionistas que automatiza hasta el 70% del trabajo manual. Genera pautas alimentarias con IA y Big Data.">
+    <title>NutriAI Pro - Automatiza tu Consulta Nutricional con IA</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,41 +15,35 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- CSS Mejorado -->
+    <!-- CSS -->
     <link rel="stylesheet" href="css/style-improved.css">
-    
-    <!-- TUS CSS ORIGINALES (mantienen funcionalidad del modal) -->
     <link rel="stylesheet" href="css/modern-style.css">
-    <!-- 🔧 FIX: Estilos responsive para mobile -->
     <link rel="stylesheet" href="css/responsive-fixes.css">
 </head>
 <body>
 
     <!-- ========================================
-         NAVBAR CON SCROLL EFFECT
+         NAVBAR
     ========================================= -->
-<!-- ========================================
-     NAVBAR CON SCROLL EFFECT + AUTH BUTTONS
-========================================= -->
     <nav class="navbar-custom" id="mainNavbar">
         <div class="container">
             <div class="navbar-wrapper">
                 <!-- Logo -->
                 <a href="#inicio" class="navbar-brand-custom">
-                    <img src="images/logo.png" alt="MadLab Foodtech" class="logo-img">
+                    <img src="images/logo.png" alt="NutriAI Pro" class="logo-img">
                 </a>
 
                 <!-- Desktop Menu -->
                 <ul class="nav-menu-desktop">
                     <li><a href="#inicio" class="nav-link-custom">Inicio</a></li>
-                    <li><a href="#caracteristicas" class="nav-link-custom">Características</a></li>
-                    <li><a href="#audiencias" class="nav-link-custom">Soluciones</a></li>
-                    <li><a href="#como-funciona" class="nav-link-custom">Cómo Funciona</a></li>
+                    <li><a href="#caracteristicas" class="nav-link-custom">Caracteristicas</a></li>
+                    <li><a href="#beneficios" class="nav-link-custom">Beneficios</a></li>
+                    <li><a href="#como-funciona" class="nav-link-custom">Como Funciona</a></li>
                     <li><a href="#precios" class="nav-link-custom">Precios</a></li>
                     <li><a href="#testimonios" class="nav-link-custom">Testimonios</a></li>
                 </ul>
 
-                <!-- 🆕 Auth Buttons Desktop + Mobile Header -->
+                <!-- Auth Buttons -->
                 <div class="auth-buttons-always-visible">
                     <a href="/auth/login" class="btn-auth-login">
                         <i class="fas fa-sign-in-alt me-1"></i>
@@ -62,19 +56,19 @@
                 </div>
 
                 <!-- Mobile Hamburger -->
-                <button class="hamburger" id="hamburgerBtn" aria-label="Menú">
+                <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
                     <span></span>
                     <span></span>
                     <span></span>
                 </button>
             </div>
 
-            <!-- Mobile Menu (SOLO LINKS DE NAVEGACIÓN) -->
+            <!-- Mobile Menu -->
             <div class="mobile-menu" id="mobileMenu">
                 <a href="#inicio" class="mobile-menu-link">Inicio</a>
-                <a href="#caracteristicas" class="mobile-menu-link">Características</a>
-                <a href="#audiencias" class="mobile-menu-link">Soluciones</a>
-                <a href="#como-funciona" class="mobile-menu-link">Cómo Funciona</a>
+                <a href="#caracteristicas" class="mobile-menu-link">Caracteristicas</a>
+                <a href="#beneficios" class="mobile-menu-link">Beneficios</a>
+                <a href="#como-funciona" class="mobile-menu-link">Como Funciona</a>
                 <a href="#precios" class="mobile-menu-link">Precios</a>
                 <a href="#testimonios" class="mobile-menu-link">Testimonios</a>
             </div>
@@ -91,31 +85,32 @@
                 <div class="col-lg-6 hero-content-left">
                     <!-- Badge -->
                     <div class="hero-badge">
-                        <i class="fas fa-sparkles me-2"></i>
-                        Tecnología IA + Ciencia Nutricional
+                        <i class="fas fa-robot me-2"></i>
+                        Inteligencia Artificial + Big Data Nutricional
                     </div>
 
                     <!-- Main Title -->
                     <h1 class="hero-title-improved">
-                        Batidos <span class="text-gradient-improved">inteligentes</span> 
-                        con biodisponibilidad optimizada
+                        Automatiza hasta el <span class="text-gradient-improved">70%</span> 
+                        de tu trabajo como nutricionista
                     </h1>
 
                     <!-- Subtitle -->
                     <p class="hero-subtitle-improved">
-                        Nuestro algoritmo científico combina superalimentos maximizando sinergias positivas 
-                        y eliminando interacciones inhibidoras. Cada batido es único y respaldado por miles de papers científicos.
+                        Genera pautas alimentarias personalizadas de 7 dias en minutos, no horas. 
+                        Nuestro algoritmo analiza datos antropometricos, preferencias del paciente y 
+                        miles de combinaciones de alimentos para crear planes perfectos.
                     </p>
 
                     <!-- CTA Buttons -->
                     <div class="hero-cta-group">
-                        <button class="btn-primary-large" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
-                            <i class="fas fa-flask me-2"></i>
-                            Crear Mi Batido Personalizado
-                        </button>
+                        <a href="/auth/register" class="btn-primary-large">
+                            <i class="fas fa-rocket me-2"></i>
+                            Comenzar Gratis Ahora
+                        </a>
                         <a href="#como-funciona" class="btn-secondary-large">
                             <i class="fas fa-play-circle me-2"></i>
-                            Ver Cómo Funciona
+                            Ver Demo
                         </a>
                     </div>
 
@@ -123,15 +118,15 @@
                     <div class="trust-badges">
                         <div class="trust-item">
                             <i class="fas fa-check-circle text-success"></i>
-                            <span>+2000% absorción con sinergias</span>
+                            <span>Ahorra 15+ horas semanales</span>
                         </div>
                         <div class="trust-item">
-                            <i class="fas fa-shield-alt text-info"></i>
-                            <span>Sin interacciones inhibidoras</span>
+                            <i class="fas fa-database text-info"></i>
+                            <span>+4,000 alimentos en base de datos</span>
                         </div>
                         <div class="trust-item">
                             <i class="fas fa-certificate text-warning"></i>
-                            <span>100% natural y científico</span>
+                            <span>Basado en evidencia cientifica</span>
                         </div>
                     </div>
                 </div>
@@ -139,49 +134,49 @@
                 <!-- Right Visual -->
                 <div class="col-lg-6 hero-visual-right">
                     <div class="hero-image-container">
-                        <!-- TÍTULO ACTUALIZADO -->
+                        <!-- Titulo -->
                         <div class="text-center mb-4" style="position: relative; z-index: 10;">
                             <h3 class="text-white fw-bold" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
-                                <i class="fas fa-atom me-2"></i>
-                                El Computador Cuántico de los Alimentos
+                                <i class="fas fa-brain me-2"></i>
+                                El Cerebro Digital del Nutricionista
                             </h3>
                         </div>
 
-                        <!-- Floating Cards ACTUALIZADAS -->
+                        <!-- Floating Cards -->
                         <div class="floating-stat-card card-1">
                             <div class="stat-icon">
-                                <i class="fas fa-book-open"></i>
+                                <i class="fas fa-clock"></i>
                             </div>
                             <div class="stat-content">
-                                <h3>Miles</h3>
-                                <p>Papers Académicos</p>
+                                <h3>70%</h3>
+                                <p>Tiempo Ahorrado</p>
                             </div>
                         </div>
 
                         <div class="floating-stat-card card-2">
                             <div class="stat-icon">
-                                <i class="fas fa-seedling"></i>
+                                <i class="fas fa-utensils"></i>
                             </div>
                             <div class="stat-content">
                                 <h3>+4000</h3>
-                                <p>Ingredientes</p>
+                                <p>Alimentos</p>
                             </div>
                         </div>
 
                         <div class="floating-stat-card card-3">
                             <div class="stat-icon">
-                                <i class="fas fa-brain"></i>
+                                <i class="fas fa-calendar-week"></i>
                             </div>
                             <div class="stat-content">
-                                <h3>IA</h3>
-                                <p>Miles de Data Points</p>
+                                <h3>7 Dias</h3>
+                                <p>Pautas Completas</p>
                             </div>
                         </div>
 
-                        <!-- Main Illustration (puedes reemplazar con tu imagen) -->
+                        <!-- Main Illustration -->
                         <div class="hero-main-illustration">
                             <div class="illustration-placeholder">
-                                <i class="fas fa-blender fa-5x text-success"></i>
+                                <i class="fas fa-user-md fa-5x text-success"></i>
                             </div>
                         </div>
                     </div>
@@ -196,15 +191,15 @@
     </section>
 
     <!-- ========================================
-         FEATURES OVERVIEW
+         PROBLEMA / SOLUCION
     ========================================= -->
     <section id="caracteristicas" class="features-section-improved">
         <div class="container">
             <!-- Section Header -->
             <div class="section-header-center">
-                <span class="section-badge">¿Por qué somos diferentes?</span>
-                <h2 class="section-title">No basta con mezclar superalimentos</h2>
-                <p class="section-subtitle">La biodisponibilidad y las sinergias son la clave del éxito nutricional</p>
+                <span class="section-badge">El problema que resolvemos</span>
+                <h2 class="section-title">Deja de perder tiempo en tareas repetitivas</h2>
+                <p class="section-subtitle">Los nutricionistas pierden hasta 60% de su tiempo en documentacion y calculos manuales</p>
             </div>
 
             <!-- Features Grid -->
@@ -213,16 +208,16 @@
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card-improved">
                         <div class="feature-icon-improved bg-success">
-                            <i class="fas fa-arrows-alt"></i>
+                            <i class="fas fa-file-medical"></i>
                         </div>
-                        <h3 class="feature-title-improved">Sinergias Potenciadoras</h3>
+                        <h3 class="feature-title-improved">Fichas Digitales Inteligentes</h3>
                         <p class="feature-desc-improved">
-                            Combinamos ingredientes que se potencian mutuamente. 
-                            <strong>Ejemplo:</strong> Curcumina + Piperina aumenta absorción 20x.
+                            Registra datos antropometricos, historial clinico y preferencias alimentarias. 
+                            <strong>Calculos automaticos</strong> de IMC, GET, requerimientos caloricos y mas.
                         </p>
                         <div class="feature-metric">
-                            <span class="metric-number-small">+2000%</span>
-                            <span class="metric-label-small">Absorción mejorada</span>
+                            <span class="metric-number-small">100%</span>
+                            <span class="metric-label-small">Digital y en la nube</span>
                         </div>
                     </div>
                 </div>
@@ -230,17 +225,17 @@
                 <!-- Feature 2 -->
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card-improved">
-                        <div class="feature-icon-improved bg-danger">
-                            <i class="fas fa-ban"></i>
+                        <div class="feature-icon-improved bg-primary">
+                            <i class="fas fa-calendar-alt"></i>
                         </div>
-                        <h3 class="feature-title-improved">Sin Interacciones Negativas</h3>
+                        <h3 class="feature-title-improved">Pautas de 7 Dias con IA</h3>
                         <p class="feature-desc-improved">
-                            Evitamos combinaciones que reducen absorción. 
-                            <strong>Ejemplo:</strong> Separamos hierro de té verde para evitar inhibición.
+                            Genera planes alimentarios semanales personalizados en minutos. 
+                            El algoritmo considera <strong>GET, preferencias y registro 24h</strong> del paciente.
                         </p>
                         <div class="feature-metric">
-                            <span class="metric-number-small">0</span>
-                            <span class="metric-label-small">Inhibidores detectados</span>
+                            <span class="metric-number-small">5 min</span>
+                            <span class="metric-label-small">vs 2+ horas manual</span>
                         </div>
                     </div>
                 </div>
@@ -248,17 +243,17 @@
                 <!-- Feature 3 -->
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card-improved">
-                        <div class="feature-icon-improved bg-primary">
-                            <i class="fas fa-brain"></i>
+                        <div class="feature-icon-improved bg-warning">
+                            <i class="fas fa-file-pdf"></i>
                         </div>
-                        <h3 class="feature-title-improved">Algoritmo Inteligente</h3>
+                        <h3 class="feature-title-improved">Exporta PDFs Profesionales</h3>
                         <p class="feature-desc-improved">
-                            Cada batido es único, generado en tiempo real según tus objetivos 
-                            de salud y las mejores interacciones científicas.
+                            Entrega a tus pacientes documentos con tu marca personal. 
+                            <strong>Pautas, menus y recomendaciones</strong> listas para imprimir o enviar.
                         </p>
                         <div class="feature-metric">
-                            <span class="metric-number-small">∞</span>
-                            <span class="metric-label-small">Combinaciones posibles</span>
+                            <span class="metric-number-small">1 clic</span>
+                            <span class="metric-label-small">Descarga instantanea</span>
                         </div>
                     </div>
                 </div>
@@ -267,107 +262,108 @@
     </section>
 
     <!-- ========================================
-         AUDIENCES SECTION
+         BENEFICIOS
     ========================================= -->
-    <section id="audiencias" class="audiences-section-improved">
+    <section id="beneficios" class="audiences-section-improved">
         <div class="container">
             <!-- Section Header -->
             <div class="section-header-center">
-                <span class="section-badge">Soluciones para todos</span>
-                <h2 class="section-title">Diseñado para distintos profesionales</h2>
+                <span class="section-badge">Beneficios concretos</span>
+                <h2 class="section-title">Mas tiempo para lo que importa: tus pacientes</h2>
             </div>
 
             <div class="row g-4">
-                <!-- Audience 1: Nutricionistas -->
+                <!-- Beneficio 1 -->
                 <div class="col-lg-6">
                     <div class="audience-card-improved">
                         <div class="audience-header">
                             <div class="audience-icon">
-                                <i class="fas fa-user-md"></i>
+                                <i class="fas fa-clock"></i>
                             </div>
                             <div>
-                                <h3 class="audience-title">Para Nutricionistas</h3>
-                                <p class="audience-subtitle">Herramienta profesional basada en evidencia</p>
+                                <h3 class="audience-title">Ahorra 15+ Horas Semanales</h3>
+                                <p class="audience-subtitle">Tiempo que puedes invertir en mas pacientes o en ti</p>
                             </div>
                         </div>
 
                         <ul class="audience-features-list">
-                            <li><i class="fas fa-check-circle"></i> Base de datos con miles de superalimentos e ingredientes</li>
-                            <li><i class="fas fa-check-circle"></i> Algoritmo respaldado por miles de papers académicos</li>
-                            <li><i class="fas fa-check-circle"></i> Genera recetas personalizadas en segundos</li>
-                            <li><i class="fas fa-check-circle"></i> Exporta informes nutricionales completos</li>
-                            <li><i class="fas fa-check-circle"></i> Considera restricciones dietéticas</li>
+                            <li><i class="fas fa-check-circle"></i> Pautas semanales generadas en 5 minutos</li>
+                            <li><i class="fas fa-check-circle"></i> Calculos nutricionales automaticos</li>
+                            <li><i class="fas fa-check-circle"></i> Fichas pre-llenadas con datos inteligentes</li>
+                            <li><i class="fas fa-check-circle"></i> Copiar y adaptar pautas anteriores</li>
+                            <li><i class="fas fa-check-circle"></i> Historial completo por paciente</li>
                         </ul>
 
                         <div class="audience-stats">
                             <div class="stat-item-inline">
-                                <strong>92%</strong>
-                                <span>Satisfacción profesional</span>
+                                <strong>70%</strong>
+                                <span>Reduccion trabajo manual</span>
                             </div>
                             <div class="stat-item-inline">
-                                <strong>5x</strong>
-                                <span>Más rápido que manual</span>
+                                <strong>3x</strong>
+                                <span>Mas pacientes atendidos</span>
                             </div>
                         </div>
 
-                        <button class="btn-audience-cta" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
-                            Probar Gratis
+                        <a href="/auth/register" class="btn-audience-cta">
+                            Comenzar Gratis
                             <i class="fas fa-arrow-right ms-2"></i>
-                        </button>
+                        </a>
                     </div>
                 </div>
 
-                <!-- Audience 2: Empresas -->
+                <!-- Beneficio 2 -->
                 <div class="col-lg-6">
                     <div class="audience-card-improved">
                         <div class="audience-header">
                             <div class="audience-icon">
-                                <i class="fas fa-building"></i>
+                                <i class="fas fa-brain"></i>
                             </div>
                             <div>
-                                <h3 class="audience-title">Para Empresas</h3>
-                                <p class="audience-subtitle">Desarrolla productos funcionales innovadores</p>
+                                <h3 class="audience-title">Big Data Nutricional</h3>
+                                <p class="audience-subtitle">Miles de datos trabajando para ti</p>
                             </div>
                         </div>
 
                         <ul class="audience-features-list">
-                            <li><i class="fas fa-check-circle"></i> API para integración en tu plataforma</li>
-                            <li><i class="fas fa-check-circle"></i> White-label para tu marca</li>
-                            <li><i class="fas fa-check-circle"></i> Escalabilidad para producción masiva</li>
-                            <li><i class="fas fa-check-circle"></i> Dashboard analytics en tiempo real</li>
-                            <li><i class="fas fa-check-circle"></i> Soporte técnico prioritario 24/7</li>
+                            <li><i class="fas fa-check-circle"></i> +4,000 alimentos con valores nutricionales</li>
+                            <li><i class="fas fa-check-circle"></i> Porciones estandarizadas chilenas</li>
+                            <li><i class="fas fa-check-circle"></i> Algoritmo que aprende de preferencias</li>
+                            <li><i class="fas fa-check-circle"></i> Deteccion de alergias e intolerancias</li>
+                            <li><i class="fas fa-check-circle"></i> Sugerencias basadas en frecuencia de consumo</li>
                         </ul>
 
                         <div class="audience-stats">
                             <div class="stat-item-inline">
-                                <strong>30%</strong>
-                                <span>Reducción de costos R&D</span>
+                                <strong>+4000</strong>
+                                <span>Alimentos en DB</span>
                             </div>
                             <div class="stat-item-inline">
-                                <strong>10x</strong>
-                                <span>ROI promedio</span>
+                                <strong>100%</strong>
+                                <span>Personalizado</span>
                             </div>
                         </div>
 
-                        <button class="btn-audience-cta" onclick="window.location.href='#contacto'">
-                            Contactar Ventas
+                        <a href="/auth/register" class="btn-audience-cta">
+                            Ver Demo
                             <i class="fas fa-arrow-right ms-2"></i>
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
     <!-- ========================================
-         HOW IT WORKS SECTION
+         COMO FUNCIONA
     ========================================= -->
     <section id="como-funciona" class="how-it-works-section">
         <div class="container">
             <!-- Section Header -->
             <div class="section-header-center">
                 <span class="section-badge">Proceso Simple</span>
-                <h2 class="section-title">Cómo funciona nuestro algoritmo</h2>
-                <p class="section-subtitle">4 pasos para tu batido optimizado científicamente</p>
+                <h2 class="section-title">3 pasos para automatizar tu consulta</h2>
+                <p class="section-subtitle">Sin curva de aprendizaje. Intuitivo desde el primer dia.</p>
             </div>
 
             <!-- Steps -->
@@ -376,12 +372,12 @@
                 <div class="step-item">
                     <div class="step-number">01</div>
                     <div class="step-icon">
-                        <i class="fas fa-user-check"></i>
+                        <i class="fas fa-user-plus"></i>
                     </div>
-                    <h3 class="step-title">Registra tus Objetivos</h3>
+                    <h3 class="step-title">Registra al Paciente</h3>
                     <p class="step-description">
-                        Selecciona tu objetivo principal (energía, inmunidad, rendimiento) 
-                        y restricciones dietéticas.
+                        Ingresa datos basicos, antropometria, historial clinico y preferencias. 
+                        El sistema calcula automaticamente IMC, GET y requerimientos.
                     </p>
                 </div>
 
@@ -392,12 +388,12 @@
                 <div class="step-item">
                     <div class="step-number">02</div>
                     <div class="step-icon">
-                        <i class="fas fa-sliders-h"></i>
+                        <i class="fas fa-magic"></i>
                     </div>
-                    <h3 class="step-title">Ingresa tus Preferencias</h3>
+                    <h3 class="step-title">Genera la Pauta con IA</h3>
                     <p class="step-description">
-                        Define número de ingredientes, fuentes preferidas 
-                        (hongos, frutas, semillas) y tamaño del envase.
+                        Un clic y el algoritmo genera una pauta de 7 dias 
+                        considerando todos los datos del paciente y tu base de alimentos.
                     </p>
                 </div>
 
@@ -408,52 +404,36 @@
                 <div class="step-item">
                     <div class="step-number">03</div>
                     <div class="step-icon">
-                        <i class="fas fa-brain"></i>
+                        <i class="fas fa-file-download"></i>
                     </div>
-                    <h3 class="step-title">IA Genera la Fórmula</h3>
+                    <h3 class="step-title">Revisa, Ajusta y Exporta</h3>
                     <p class="step-description">
-                        El algoritmo analiza 35 interacciones científicas 
-                        y optimiza biodisponibilidad en tiempo real.
-                    </p>
-                </div>
-
-                <!-- Connector -->
-                <div class="step-connector"></div>
-
-                <!-- Step 4 -->
-                <div class="step-item">
-                    <div class="step-number">04</div>
-                    <div class="step-icon">
-                        <i class="fas fa-download"></i>
-                    </div>
-                    <h3 class="step-title">Exporta y Disfruta</h3>
-                    <p class="step-description">
-                        Descarga tu receta personalizada con cantidades exactas, 
-                        sinergias detectadas e instrucciones.
+                        Personaliza lo que necesites, agrega notas y exporta 
+                        un PDF profesional listo para entregar a tu paciente.
                     </p>
                 </div>
             </div>
 
             <!-- CTA -->
             <div class="text-center mt-5">
-                <button class="btn-primary-large" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
+                <a href="/auth/register" class="btn-primary-large">
                     <i class="fas fa-rocket me-2"></i>
-                    Comenzar Ahora Gratis
-                </button>
+                    Probar Gratis - Sin Tarjeta
+                </a>
             </div>
         </div>
     </section>
 
     <!-- ========================================
-         PRICING SECTION
+         PRECIOS
     ========================================= -->
     <section id="precios" class="pricing-section">
         <div class="container">
             <!-- Section Header -->
             <div class="section-header-center">
-                <span class="section-badge">Planes Flexibles</span>
-                <h2 class="section-title">Elige el plan perfecto para ti</h2>
-                <p class="section-subtitle">Sin compromisos. Cancela cuando quieras.</p>
+                <span class="section-badge">Planes Accesibles</span>
+                <h2 class="section-title">Invierte en tu productividad</h2>
+                <p class="section-subtitle">Recupera el costo en la primera semana de uso</p>
             </div>
 
             <div class="row g-4 justify-content-center">
@@ -461,109 +441,87 @@
                 <div class="col-lg-4 col-md-6">
                     <div class="pricing-card">
                         <div class="pricing-header">
-                            <h3 class="pricing-plan-name">Free</h3>
+                            <h3 class="pricing-plan-name">Starter</h3>
                             <div class="pricing-price">
                                 <span class="price-currency">$</span>
                                 <span class="price-amount">0</span>
                                 <span class="price-period">/mes</span>
                             </div>
-                            <p class="pricing-description">Perfecto para empezar a experimentar</p>
+                            <p class="pricing-description">Perfecto para comenzar a probar</p>
                         </div>
 
                         <ul class="pricing-features">
-                            <li><i class="fas fa-check"></i> 5 recetas por mes</li>
-                            <li><i class="fas fa-check"></i> Acceso a 30 superalimentos</li>
-                            <li><i class="fas fa-check"></i> Algoritmo básico</li>
-                            <li><i class="fas fa-check"></i> Exportar en PDF</li>
-                            <li class="feature-disabled"><i class="fas fa-times"></i> Sin restricciones dietéticas</li>
-                            <li class="feature-disabled"><i class="fas fa-times"></i> Sin análisis de sinergias</li>
+                            <li><i class="fas fa-check"></i> Hasta 5 pacientes</li>
+                            <li><i class="fas fa-check"></i> 3 pautas semanales/mes</li>
+                            <li><i class="fas fa-check"></i> Fichas digitales completas</li>
+                            <li><i class="fas fa-check"></i> Calculos automaticos</li>
+                            <li class="feature-disabled"><i class="fas fa-times"></i> Export PDF</li>
+                            <li class="feature-disabled"><i class="fas fa-times"></i> Soporte prioritario</li>
                         </ul>
 
-                        <button class="btn-pricing" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
-                            Empezar Gratis
-                        </button>
+                        <a href="/auth/register" class="btn-pricing">
+                            Comenzar Gratis
+                        </a>
                     </div>
                 </div>
 
                 <!-- Plan Pro (Destacado) -->
                 <div class="col-lg-4 col-md-6">
                     <div class="pricing-card pricing-card-featured">
-                        <div class="pricing-badge">Más Popular</div>
+                        <div class="pricing-badge">Mas Popular</div>
                         
                         <div class="pricing-header">
-                            <h3 class="pricing-plan-name">Pro</h3>
+                            <h3 class="pricing-plan-name">Professional</h3>
                             <div class="pricing-price">
                                 <span class="price-currency">$</span>
-                                <span class="price-amount">29</span>
+                                <span class="price-amount">19.990</span>
                                 <span class="price-period">/mes</span>
                             </div>
-                            <p class="pricing-description">Ideal para profesionales y entusiastas</p>
+                            <p class="pricing-description">Para nutricionistas activos</p>
                         </div>
 
                         <ul class="pricing-features">
-                            <li><i class="fas fa-check"></i> Recetas ilimitadas</li>
-                            <li><i class="fas fa-check"></i> Acceso a +1000 ingredientes y superalimentos</li>
-                            <li><i class="fas fa-check"></i> Algoritmo avanzado con IA</li>
-                            <li><i class="fas fa-check"></i> Análisis completo de sinergias</li>
-                            <li><i class="fas fa-check"></i> Todas las restricciones dietéticas</li>
-                            <li><i class="fas fa-check"></i> Exportar PDF + JSON + Excel</li>
+                            <li><i class="fas fa-check"></i> Pacientes ilimitados</li>
+                            <li><i class="fas fa-check"></i> Pautas ilimitadas</li>
+                            <li><i class="fas fa-check"></i> Export PDF profesional</li>
+                            <li><i class="fas fa-check"></i> Base de +4000 alimentos</li>
+                            <li><i class="fas fa-check"></i> Algoritmo IA avanzado</li>
                             <li><i class="fas fa-check"></i> Soporte prioritario</li>
+                            <li><i class="fas fa-check"></i> Actualizaciones incluidas</li>
                         </ul>
 
-                        <button class="btn-pricing btn-pricing-featured">
-                            Comenzar Prueba 14 Días
-                        </button>
+                        <a href="/auth/register" class="btn-pricing btn-pricing-featured">
+                            Comenzar Prueba 14 Dias
+                        </a>
                     </div>
                 </div>
 
-                <!-- Plan Premium -->
+                <!-- Plan Clinica -->
                 <div class="col-lg-4 col-md-6">
                     <div class="pricing-card">
                         <div class="pricing-header">
-                            <h3 class="pricing-plan-name">Premium</h3>
+                            <h3 class="pricing-plan-name">Clinica</h3>
                             <div class="pricing-price">
                                 <span class="price-currency">$</span>
-                                <span class="price-amount">99</span>
+                                <span class="price-amount">49.990</span>
                                 <span class="price-period">/mes</span>
                             </div>
-                            <p class="pricing-description">Para equipos y empresas</p>
+                            <p class="pricing-description">Para equipos y clinicas</p>
                         </div>
 
                         <ul class="pricing-features">
-                            <li><i class="fas fa-check"></i> Todo lo de Pro +</li>
-                            <li><i class="fas fa-check"></i> API access ilimitado</li>
-                            <li><i class="fas fa-check"></i> White-label personalizado</li>
-                            <li><i class="fas fa-check"></i> 10 usuarios incluidos</li>
-                            <li><i class="fas fa-check"></i> Dashboard analytics</li>
+                            <li><i class="fas fa-check"></i> Todo lo de Professional +</li>
+                            <li><i class="fas fa-check"></i> Hasta 5 nutricionistas</li>
+                            <li><i class="fas fa-check"></i> Dashboard de equipo</li>
+                            <li><i class="fas fa-check"></i> Marca personalizada (logo)</li>
+                            <li><i class="fas fa-check"></i> Reportes de productividad</li>
                             <li><i class="fas fa-check"></i> Soporte 24/7</li>
-                            <li><i class="fas fa-check"></i> Capacitación personalizada</li>
+                            <li><i class="fas fa-check"></i> Capacitacion incluida</li>
                         </ul>
 
-                        <button class="btn-pricing">
+                        <a href="/auth/register" class="btn-pricing">
                             Contactar Ventas
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Enterprise Banner -->
-            <div class="enterprise-banner">
-                <div class="row align-items-center">
-                    <div class="col-lg-8">
-                        <h3 class="enterprise-title">
-                            <i class="fas fa-building me-2"></i>
-                            ¿Necesitas un plan Enterprise?
-                        </h3>
-                        <p class="enterprise-description">
-                            Soluciones personalizadas para grandes equipos y corporativos. 
-                            Integración completa, SLA garantizado, y soporte dedicado.
-                        </p>
-                    </div>
-                    <div class="col-lg-4 text-lg-end">
-                        <button class="btn-enterprise">
-                            Hablar con un Experto
-                            <i class="fas fa-arrow-right ms-2"></i>
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -571,7 +529,7 @@
     </section>
 
     <!-- ========================================
-         TESTIMONIALS SECTION
+         TESTIMONIOS
     ========================================= -->
     <section id="testimonios" class="testimonials-section">
         <div class="container">
@@ -579,7 +537,7 @@
             <div class="section-header-center">
                 <span class="section-badge">Testimonios</span>
                 <h2 class="section-title">Lo que dicen nuestros usuarios</h2>
-                <p class="section-subtitle">Miles de profesionales ya confían en MadLab</p>
+                <p class="section-subtitle">Nutricionistas que ya transformaron su practica</p>
             </div>
 
             <div class="row g-4">
@@ -594,17 +552,16 @@
                             <i class="fas fa-star"></i>
                         </div>
                         <p class="testimonial-text">
-                            "Como nutricionista, MadLab me ahorra horas de investigación. 
-                            Las combinaciones de superalimentos son científicamente precisas 
-                            y mis clientes ven resultados increíbles."
+                            "Antes me tomaba 2 horas hacer una pauta semanal. Ahora la genero en 5 minutos 
+                            y solo ajusto detalles. Puedo atender el doble de pacientes sin trabajar mas horas."
                         </p>
                         <div class="testimonial-author">
                             <div class="author-avatar">
                                 <i class="fas fa-user-circle"></i>
                             </div>
                             <div>
-                                <h4 class="author-name">Dra. María González</h4>
-                                <p class="author-role">Nutricionista Clínica</p>
+                                <h4 class="author-name">Dra. Carolina Munoz</h4>
+                                <p class="author-role">Nutricionista Clinica, Santiago</p>
                             </div>
                         </div>
                     </div>
@@ -621,17 +578,16 @@
                             <i class="fas fa-star"></i>
                         </div>
                         <p class="testimonial-text">
-                            "Implementamos la API en nuestra app de wellness y la tasa de 
-                            retención aumentó 40%. Los usuarios aman las recetas personalizadas. 
-                            Mejor inversión del año."
+                            "La base de datos de alimentos es increible. Tiene todo lo que necesito 
+                            con porciones chilenas reales. Mis pacientes notan la diferencia en la calidad de las pautas."
                         </p>
                         <div class="testimonial-author">
                             <div class="author-avatar">
                                 <i class="fas fa-user-circle"></i>
                             </div>
                             <div>
-                                <h4 class="author-name">Carlos Méndez</h4>
-                                <p class="author-role">CEO.</p>
+                                <h4 class="author-name">Nut. Felipe Soto</h4>
+                                <p class="author-role">Nutricionista Deportivo</p>
                             </div>
                         </div>
                     </div>
@@ -648,17 +604,16 @@
                             <i class="fas fa-star"></i>
                         </div>
                         <p class="testimonial-text">
-                            "Antes tardaba días en formular un batido funcional. Ahora lo hago 
-                            en minutos con garantía científica. El algoritmo detecta interacciones 
-                            que yo no conocía."
+                            "Como recien egresada, esta herramienta me dio confianza. El algoritmo 
+                            me ayuda a no olvidar nada y entregar pautas profesionales desde el dia uno."
                         </p>
                         <div class="testimonial-author">
                             <div class="author-avatar">
                                 <i class="fas fa-user-circle"></i>
                             </div>
                             <div>
-                                <h4 class="author-name">Ana Ruiz</h4>
-                                <p class="author-role">Formuladora de Productos</p>
+                                <h4 class="author-name">Nut. Valentina Reyes</h4>
+                                <p class="author-role">Nutricionista, Concepcion</p>
                             </div>
                         </div>
                     </div>
@@ -669,29 +624,29 @@
             <div class="testimonials-stats">
                 <div class="stat-item-testimonial">
                     <h3 class="stat-number-testimonial">4.9/5</h3>
-                    <p class="stat-label-testimonial">Valoración promedio</p>
+                    <p class="stat-label-testimonial">Valoracion promedio</p>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item-testimonial">
-                    <h3 class="stat-number-testimonial">10k+</h3>
-                    <p class="stat-label-testimonial">Usuarios activos</p>
+                    <h3 class="stat-number-testimonial">500+</h3>
+                    <p class="stat-label-testimonial">Nutricionistas activos</p>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item-testimonial">
-                    <h3 class="stat-number-testimonial">50k+</h3>
-                    <p class="stat-label-testimonial">Recetas generadas</p>
+                    <h3 class="stat-number-testimonial">15k+</h3>
+                    <p class="stat-label-testimonial">Pautas generadas</p>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item-testimonial">
-                    <h3 class="stat-number-testimonial">1000+</h3>
-                    <p class="stat-label-testimonial">Papers científicos</p>
+                    <h3 class="stat-number-testimonial">70%</h3>
+                    <p class="stat-label-testimonial">Tiempo ahorrado</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- ========================================
-         FINAL CTA SECTION
+         FINAL CTA
     ========================================= -->
     <section class="final-cta-section">
         <div class="container">
@@ -699,24 +654,24 @@
                 <div class="row align-items-center">
                     <div class="col-lg-8">
                         <h2 class="cta-title">
-                            ¿Listo para crear tu primer batido optimizado?
+                            Listo para recuperar tu tiempo?
                         </h2>
                         <p class="cta-subtitle">
-                            Únete a miles de nutricionistas y empresas que ya usan MadLab. 
-                            Comienza gratis, sin tarjeta de crédito.
+                            Unete a cientos de nutricionistas que ya automatizaron su consulta. 
+                            Comienza gratis hoy, sin tarjeta de credito.
                         </p>
                         <div class="cta-features-inline">
-                            <span><i class="fas fa-check-circle"></i> Sin compromisos</span>
-                            <span><i class="fas fa-check-circle"></i> 14 días de prueba</span>
+                            <span><i class="fas fa-check-circle"></i> Gratis para comenzar</span>
+                            <span><i class="fas fa-check-circle"></i> Sin tarjeta requerida</span>
                             <span><i class="fas fa-check-circle"></i> Soporte incluido</span>
                         </div>
                     </div>
                     <div class="col-lg-4 text-lg-end">
-                        <button class="btn-cta-final" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
-                            <i class="fas fa-flask me-2"></i>
-                            Crear Mi Batido Ahora
-                        </button>
-                        <p class="cta-note">Gratis • Sin tarjeta requerida</p>
+                        <a href="/auth/register" class="btn-cta-final">
+                            <i class="fas fa-rocket me-2"></i>
+                            Crear Mi Cuenta Gratis
+                        </a>
+                        <p class="cta-note">Setup en 2 minutos</p>
                     </div>
                 </div>
             </div>
@@ -732,53 +687,49 @@
                 <!-- Column 1: Brand -->
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="footer-brand">
-                        <img src="images/logo.png" alt="MadLab Logo" height="40" class="mb-3">
+                        <img src="images/logo.png" alt="NutriAI Pro" height="40" class="mb-3">
                         <p class="footer-description">
-                            Batidos inteligentes con biodisponibilidad optimizada. 
-                            Tecnología IA + Ciencia Nutricional al servicio de tu salud.
+                            Software para nutricionistas que automatiza hasta el 70% del trabajo manual. 
+                            Genera pautas alimentarias con IA y Big Data.
                         </p>
                         <div class="social-links">
                             <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
                             <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
-                            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
                             <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Column 2: Product -->
+                <!-- Column 2: Producto -->
                 <div class="col-lg-2 col-md-6 mb-4">
                     <h4 class="footer-title">Producto</h4>
                     <ul class="footer-links">
-                        <li><a href="#caracteristicas">Características</a></li>
+                        <li><a href="#caracteristicas">Caracteristicas</a></li>
                         <li><a href="#precios">Precios</a></li>
-                        <li><a href="productos.html">Nuestros Productos</a></li>
-                        <li><a href="superalimentos.html">Superalimentos</a></li>
-                        <li><a href="#" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">Generador</a></li>
+                        <li><a href="#como-funciona">Como Funciona</a></li>
+                        <li><a href="/auth/register">Crear Cuenta</a></li>
                     </ul>
                 </div>
 
-                <!-- Column 3: Company -->
+                <!-- Column 3: Empresa -->
                 <div class="col-lg-2 col-md-6 mb-4">
                     <h4 class="footer-title">Empresa</h4>
                     <ul class="footer-links">
-                        <li><a href="#audiencias">Soluciones</a></li>
-                        <li><a href="#testimonios">Casos de Éxito</a></li>
                         <li><a href="#">Sobre Nosotros</a></li>
+                        <li><a href="#testimonios">Testimonios</a></li>
                         <li><a href="#">Blog</a></li>
                         <li><a href="#">Contacto</a></li>
                     </ul>
                 </div>
 
-                <!-- Column 4: Resources -->
+                <!-- Column 4: Recursos -->
                 <div class="col-lg-2 col-md-6 mb-4">
                     <h4 class="footer-title">Recursos</h4>
                     <ul class="footer-links">
-                        <li><a href="#">Documentación API</a></li>
-                        <li><a href="#">Base Científica</a></li>
-                        <li><a href="#">Guías y Tutoriales</a></li>
                         <li><a href="#">Centro de Ayuda</a></li>
-                        <li><a href="#">Status</a></li>
+                        <li><a href="#">Tutoriales</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Soporte</a></li>
                     </ul>
                 </div>
 
@@ -786,10 +737,9 @@
                 <div class="col-lg-2 col-md-6 mb-4">
                     <h4 class="footer-title">Legal</h4>
                     <ul class="footer-links">
-                        <li><a href="#">Términos de Uso</a></li>
-                        <li><a href="#">Política de Privacidad</a></li>
-                        <li><a href="#">Política de Cookies</a></li>
-                        <li><a href="#">GDPR</a></li>
+                        <li><a href="#">Terminos de Uso</a></li>
+                        <li><a href="#">Privacidad</a></li>
+                        <li><a href="#">Cookies</a></li>
                     </ul>
                 </div>
             </div>
@@ -797,306 +747,38 @@
             <!-- Footer Bottom -->
             <div class="footer-bottom">
                 <p class="copyright">
-                    © 2025 MadLab AI. Todos los derechos reservados.
+                    2025 NutriAI Pro. Todos los derechos reservados.
                 </p>
                 <p class="made-with">
-                    Hecho con <i class="fas fa-heart text-danger"></i> y ciencia
+                    Hecho con <i class="fas fa-heart text-danger"></i> para nutricionistas
                 </p>
             </div>
         </div>
     </footer>
-    <!-- ========================================
-         MODAL DEL GENERADOR DE RECETAS (TU CÓDIGO ORIGINAL)
-    ========================================= -->
-    <div class="modal fade" id="recipeGeneratorModal" tabindex="-1" aria-labelledby="recipeGeneratorModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title" id="recipeGeneratorModalLabel">
-                        <i class="fas fa-flask me-2 text-primary"></i>
-                        Generador de Batidos con Biodisponibilidad Optimizada
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <!-- Form Section -->
-                        <div class="col-lg-6">
-                            <div class="generator-form">
-                                <!-- UX: Callout informativo -->
-                                <div class="alert alert-info mb-4" role="alert">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    <strong>Modo actual:</strong> Polvos para batidos con biodisponibilidad optimizada
-                                </div>
-                                
-                                <form id="recipeForm">
-                                    <!-- Primary Objective -->
-                                    <div class="form-group mb-4">
-                                        <label class="form-label" for="primaryObjective">
-                                            <i class="fas fa-bullseye me-1"></i> Objetivo Principal
-                                        </label>
-                                        <select class="form-select" id="primaryObjective" required aria-required="true">
-                                            <option value="">Selecciona un objetivo</option>
-                                            <option value="immune">🛡️ Fortalecer sistema inmunológico</option>
-                                            <option value="energy">⚡ Aumentar energía y vitalidad</option>
-                                            <option value="cognitive">🧠 Mejorar rendimiento cognitivo</option>
-                                            <option value="physical">💪 Potenciar rendimiento físico</option>
-                                            <option value="muscle">🏋️ Aumentar masa muscular</option>
-                                            <option value="detox">🌿 Desintoxicación y limpieza</option>
-                                            <option value="stress">😌 Reducir estrés y mejorar sueño</option>
-                                            <option value="digestion">🥗 Mejorar digestión</option>
-                                            <option value="beauty">💅 Mejorar piel, cabello y uñas</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Secondary Objectives -->
-                                    <div class="form-group mb-4">
-                                        <label class="form-label">
-                                            <i class="fas fa-list-check me-1"></i> Objetivos Secundarios (Opcional)
-                                        </label>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <label class="form-label small" for="secondaryObjective1">Salud general</label>
-                                                <select class="form-select mb-2" id="secondaryObjective1">
-                                                    <option value="">Ninguno</option>
-                                                    <option value="cardiovascular">Apoyar la salud cardiovascular</option>
-                                                    <option value="brain_health">Mejorar salud cerebral</option>
-                                                    <option value="inflammation">Reducir inflamación</option>
-                                                    <option value="blood_sugar">Regular niveles de azúcar</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label small" for="secondaryObjective2">Bienestar específico</label>
-                                                <select class="form-select" id="secondaryObjective2">
-                                                    <option value="">Ninguno</option>
-                                                    <option value="weight_control">Apoyar control de peso</option>
-                                                    <option value="hormonal">Equilibrar hormonas</option>
-                                                    <option value="joint_health">Fortalecer articulaciones</option>
-                                                    <option value="visual_health">Mejorar salud visual</option>
-                                                    <option value="intestinal_health">Optimizar salud intestinal</option>
-                                                    <option value="bone_health">Fortalecer huesos</option>
-                                                    <option value="liver_function">Apoyar función hepática</option>
-                                                    <option value="mood">Mejorar estado de ánimo</option>
-                                                    <option value="mental_clarity">Aumentar claridad mental</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Dietary Restrictions -->
-                                    <div class="form-group mb-4">
-                                        <label class="form-label">
-                                            <i class="fas fa-shield-halved me-1"></i> Restricciones Dietéticas
-                                        </label>
-                                        <div class="restriction-buttons" role="group" aria-label="Restricciones dietéticas">
-                                            <button type="button" class="btn btn-outline-secondary restriction-btn" data-restriction="vegan" aria-pressed="false">
-                                                <i class="fas fa-leaf me-1"></i> Vegano
-                                            </button>
-                                            <button type="button" class="btn btn-outline-secondary restriction-btn" data-restriction="gluten_free" aria-pressed="false">
-                                                <i class="fas fa-wheat me-1"></i> Sin Gluten
-                                            </button>
-                                            <button type="button" class="btn btn-outline-secondary restriction-btn" data-restriction="nut_free" aria-pressed="false">
-                                                <i class="fas fa-ban me-1"></i> Sin Frutos Secos
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- Number of Ingredients -->
-                                    <div class="form-group mb-4">
-                                        <label class="form-label" for="numIngredients">
-                                            <i class="fas fa-layer-group me-1"></i> Número de Ingredientes: 
-                                            <span id="ingredientCount" class="text-primary fw-bold">5</span>
-                                        </label>
-                                        <input type="range" class="form-range" id="numIngredients" 
-                                               min="3" max="8" value="5" 
-                                               aria-valuemin="3" aria-valuemax="8" aria-valuenow="5">
-                                        <div class="d-flex justify-content-between">
-                                            <small class="text-muted">Mínimo (3)</small>
-                                            <small class="text-muted">Óptimo (5-6)</small>
-                                            <small class="text-muted">Máximo (8)</small>
-                                        </div>
-                                    </div>
-
-                                    <!-- Package Size Selector -->
-                                    <div class="form-group mb-4">
-                                        <label class="form-label" for="packageSize">
-                                            <i class="fas fa-box me-1"></i> Tamaño del Envase
-                                        </label>
-                                        <select class="form-select" id="packageSize" aria-label="Seleccionar tamaño de envase">
-                                            <option value="100" selected>100g (Personal - 30 porciones)</option>
-                                            <option value="200">200g (Familiar - 60 porciones)</option>
-                                        </select>
-                                        <div class="form-text">
-                                            <small class="text-muted">
-                                                <i class="fas fa-calculator me-1"></i>
-                                                El algoritmo calculará las cantidades proporcionalmente
-                                            </small>
-                                        </div>
-                                    </div>
-
-                                    <!-- Food Sources -->
-                                    <div class="form-group mb-4">
-                                        <label class="form-label">
-                                            <i class="fas fa-filter me-1"></i> Fuentes de Alimentos (Opcional)
-                                        </label>
-                                        <div class="source-buttons" role="group" aria-label="Fuentes de alimentos">
-                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="hongos_medicinales" aria-pressed="false">
-                                                <i class="fas fa-mushroom me-1"></i> Hongos Medicinales
-                                            </button>
-                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="frutas_bayas" aria-pressed="false">
-                                                <i class="fas fa-apple-alt me-1"></i> Frutas y Bayas
-                                            </button>
-                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="frutos_secos" aria-pressed="false">
-                                                <i class="fas fa-seedling me-1"></i> Frutos Secos
-                                            </button>
-                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="algas_marinas" aria-pressed="false">
-                                                <i class="fas fa-water me-1"></i> Algas Marinas
-                                            </button>
-                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="semillas" aria-pressed="false">
-                                                <i class="fas fa-seed me-1"></i> Semillas
-                                            </button>
-                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="vegetales_verdes" aria-pressed="false">
-                                                <i class="fas fa-leaf me-1"></i> Vegetales Verdes
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- Selector de Tipo de Producto -->
-                                    <div class="mb-4">
-                                        <label class="form-label fw-bold">
-                                            <i class="fas fa-box-open me-2"></i>
-                                            Tipo de Producto
-                                        </label>
-                                        <select class="form-select form-select-lg" id="productType" required>
-                                            <option value="polvo_batidos" selected>
-                                                🥤 Polvo para Batidos (Suplemento en Polvo)
-                                            </option>
-                                            <option value="jugo_funcional">
-                                                🧋 Jugo Funcional (Bebida Lista)
-                                            </option>
-                                            <option value="capsula_suplemento">
-                                                💊 Cápsulas (Suplemento Encapsulado)
-                                            </option>
-                                            <option value="polvo_hidratacion">
-                                                💧 Polvo de Hidratación (Electrolitos)
-                                            </option>
-                                            <option value="golden_milk">
-                                                ☕ Golden Milk (Bebida Caliente)
-                                            </option>
-                                            <option value="supergreens">
-                                                🌿 Supergreens (Mezcla Verde)
-                                            </option>
-                                        </select>
-                                        <small class="form-text text-muted">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            El tipo de producto afecta las proporciones y formato de los ingredientes
-                                        </small>
-                                    </div>
-
-                                    <!-- Generate Button -->
-                                    <button type="submit" class="btn btn-primary btn-lg w-100">
-                                        <i class="fas fa-flask me-2"></i>
-                                        Generar Mi Batido Optimizado
-                                    </button>
-                                    
-                                    <!-- UX: Hint sobre el proceso -->
-                                    <div class="mt-3 text-center">
-                                        <small class="text-muted">
-                                            <i class="fas fa-atom me-1"></i>
-                                            El algoritmo analizará <strong>35 interacciones científicas</strong> para maximizar la absorción
-                                        </small>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <!-- Results Section -->
-                        <div class="col-lg-6">
-                            <!-- UX: Estado vacío mejorado -->
-                            <div id="emptyState" class="text-center py-5">
-                                <i class="fas fa-blender fa-3x text-muted mb-3"></i>
-                                <h5 class="text-muted">Tu batido personalizado aparecerá aquí</h5>
-                                <p class="text-muted small">Completa el formulario y haz clic en "Generar Mi Batido Optimizado"</p>
-                                
-                                <!-- UX: Preview de qué esperar -->
-                                <div class="mt-4">
-                                    <div class="d-flex justify-content-center gap-3 flex-wrap">
-                                        <span class="badge bg-light text-dark">
-                                            <i class="fas fa-check text-success"></i> Sinergias potenciadoras
-                                        </span>
-                                        <span class="badge bg-light text-dark">
-                                            <i class="fas fa-times text-danger"></i> Sin inhibidores
-                                        </span>
-                                        <span class="badge bg-light text-dark">
-                                            <i class="fas fa-chart-line text-info"></i> Biodisponibilidad optimizada
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- UX: Loading state mejorado -->
-                            <div id="loadingSpinner" class="text-center py-5 d-none" role="status" aria-live="polite">
-                                <div class="spinner-border text-primary mb-3" role="status">
-                                    <span class="visually-hidden">Generando batido...</span>
-                                </div>
-                                <h6>Analizando interacciones...</h6>
-                                <p class="text-muted small">Optimizando biodisponibilidad y sinergias</p>
-                            </div>
-                            
-                            <!-- UX: Results container -->
-                            <div id="recipeResults" class="recipe-results d-none" role="region" aria-label="Resultados del batido">
-                                <!-- Recipe content will be populated here by JavaScript -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- ========================================
          SCRIPTS
     ========================================= -->
-    
-    <!-- Bootstrap Bundle (includes Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- TU JAVASCRIPT ORIGINAL DEL GENERADOR -->
-    <script src="js/modern-recipe-generator.js"></script>
-    
-    <!-- NUEVO JAVASCRIPT MEJORADO PARA NAVBAR Y ANIMACIONES -->
+    <!-- JavaScript para Navbar y Animaciones -->
     <script>
-    // ============================================
-    // JAVASCRIPT MEJORADO INTEGRADO
-    // ============================================
-    
     (function() {
         'use strict';
         
-        // ============================================
-        // 1. NAVBAR SCROLL EFFECT
-        // ============================================
+        // Navbar Scroll Effect
         const navbar = document.getElementById('mainNavbar');
         if (navbar) {
-            let lastScrollTop = 0;
-            const scrollThreshold = 50;
-
             window.addEventListener('scroll', () => {
-                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                
-                if (scrollTop > scrollThreshold) {
+                if (window.pageYOffset > 50) {
                     navbar.classList.add('scrolled');
                 } else {
                     navbar.classList.remove('scrolled');
                 }
-                
-                lastScrollTop = scrollTop;
             });
         }
 
-        // ============================================
-        // 2. MOBILE HAMBURGER MENU
-        // ============================================
+        // Mobile Menu
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const mobileMenu = document.getElementById('mobileMenu');
 
@@ -1104,12 +786,9 @@
             hamburgerBtn.addEventListener('click', () => {
                 hamburgerBtn.classList.toggle('active');
                 mobileMenu.classList.toggle('active');
-                
-                // Prevent body scroll when menu is open
                 document.body.style.overflow = hamburgerBtn.classList.contains('active') ? 'hidden' : '';
             });
             
-            // Close menu when clicking on a link
             const mobileMenuLinks = mobileMenu.querySelectorAll('.mobile-menu-link');
             mobileMenuLinks.forEach(link => {
                 link.addEventListener('click', () => {
@@ -1118,34 +797,19 @@
                     document.body.style.overflow = '';
                 });
             });
-            
-            // Close menu when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!hamburgerBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
-                    hamburgerBtn.classList.remove('active');
-                    mobileMenu.classList.remove('active');
-                    document.body.style.overflow = '';
-                }
-            });
         }
 
-        // ============================================
-        // 3. SMOOTH SCROLL FOR NAVIGATION LINKS
-        // ============================================
-        const allNavLinks = document.querySelectorAll('.nav-link-custom, .mobile-menu-link, a[href^="#"]');
+        // Smooth Scroll
+        const allNavLinks = document.querySelectorAll('a[href^="#"]');
         allNavLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 const href = link.getAttribute('href');
-                
                 if (href && href.startsWith('#') && href !== '#') {
                     e.preventDefault();
-                    const targetId = href.substring(1);
-                    const targetElement = document.getElementById(targetId);
-                    
+                    const targetElement = document.getElementById(href.substring(1));
                     if (targetElement) {
-                        const offsetTop = targetElement.offsetTop - 80;
                         window.scrollTo({
-                            top: offsetTop,
+                            top: targetElement.offsetTop - 80,
                             behavior: 'smooth'
                         });
                     }
@@ -1153,31 +817,21 @@
             });
         });
 
-        // ============================================
-        // 4. SCROLL INDICATOR (HERO SECTION)
-        // ============================================
+        // Scroll Indicator
         const scrollIndicator = document.querySelector('.scroll-indicator');
         if (scrollIndicator) {
             scrollIndicator.addEventListener('click', () => {
                 const featuresSection = document.getElementById('caracteristicas');
                 if (featuresSection) {
-                    const offsetTop = featuresSection.offsetTop - 80;
                     window.scrollTo({
-                        top: offsetTop,
+                        top: featuresSection.offsetTop - 80,
                         behavior: 'smooth'
                     });
                 }
             });
         }
 
-        // ============================================
-        // 5. INTERSECTION OBSERVER FOR ANIMATIONS
-        // ============================================
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
+        // Intersection Observer for Animations
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -1185,54 +839,14 @@
                     entry.target.style.transform = 'translateY(0)';
                 }
             });
-        }, observerOptions);
+        }, { threshold: 0.1 });
 
-        // Observe all cards and sections
-        const observeElements = document.querySelectorAll(`
-            .feature-card-improved,
-            .audience-card-improved,
-            .step-item,
-            .pricing-card,
-            .testimonial-card
-        `);
-
-        observeElements.forEach(el => {
+        document.querySelectorAll('.feature-card-improved, .audience-card-improved, .step-item, .pricing-card, .testimonial-card').forEach(el => {
             el.style.opacity = '0';
             el.style.transform = 'translateY(30px)';
             el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
             observer.observe(el);
         });
-
-        // ============================================
-        // 6. ACTIVE NAVIGATION HIGHLIGHT
-        // ============================================
-        const sections = document.querySelectorAll('section[id]');
-        const navItems = document.querySelectorAll('.nav-link-custom, .mobile-menu-link');
-
-        window.addEventListener('scroll', () => {
-            const scrollY = window.pageYOffset;
-            
-            sections.forEach(current => {
-                const sectionHeight = current.offsetHeight;
-                const sectionTop = current.offsetTop - 100;
-                const sectionId = current.getAttribute('id');
-                
-                if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
-                    navItems.forEach(item => {
-                        item.classList.remove('active');
-                        if (item.getAttribute('href') === `#${sectionId}`) {
-                            item.classList.add('active');
-                        }
-                    });
-                }
-            });
-        });
-
-        // ============================================
-        // 7. CONSOLE MESSAGE
-        // ============================================
-        console.log('%c🧪 MadLab AI', 'color: #10b981; font-size: 24px; font-weight: bold;');
-        console.log('%c✨ Sistema cargado correctamente', 'color: #14b8a6; font-size: 14px;');
 
     })();
     </script>
