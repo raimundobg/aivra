@@ -923,7 +923,7 @@
             </div>
             
             <!-- ============================================
-                 SECCION 4: SÍNTOMAS GI
+                 SECCION 4: SÍNTOMAS GI
                  ============================================ -->
             <div class="section-card">
                 <div class="section-header">
@@ -982,7 +982,7 @@
             
 
             <!-- ============================================
-                 SECCION 5: REGISTRO ALIMENTACIÓN 24 HORAS
+                 SECCION 5: REGISTRO ALIMENTACIÍ“N 24 HORAS
                  ============================================ -->
             <div class="section-card">
                 <div class="section-header">
@@ -1365,7 +1365,7 @@
 
 
             <!-- ============================================
-                 SECCION 7: ANTROPOMETRÍA
+                 SECCION 7: ANTROPOMETRÍA
                  ============================================ -->
             <div class="section-card">
                 <div class="section-header">
@@ -1476,7 +1476,7 @@
                                 <div class="col-md-4">
                                     <div class="calculated-field">
                                         <span class="label">IMC</span>
-                                        <span class="value">{{ "%.1f"|format(patient.imc) }} kg/m²</span>
+                                        <span class="value">{{ "%.1f"|format(patient.imc) }} kg/mÂ²</span>
                                         <span class="category">{{ patient.imc_categoria or '' }}</span>
                                     </div>
                                 </div>
@@ -1528,7 +1528,7 @@
             
             {% if is_edit %}
             <!-- ============================================
-                 SECCION 8: EVALUACIÓN BIOQUÍMICA (Solo Edición)
+                 SECCION 8: EVALUACIÍ“N BIOQUÍMICA (Solo Edición)
                  ============================================ -->
             <div class="section-card">
                 <div class="section-header">
@@ -1710,7 +1710,7 @@
             </div>
             
             <!-- ============================================
-                 SECCION 10: DIAGNÓSTICO Y PLAN (Solo Edición)
+                 SECCION 10: DIAGNÍ“STICO Y PLAN (Solo Edición)
                  ============================================ -->
             <div class="section-card">
                 <div class="section-header">
@@ -1831,7 +1831,7 @@
                         form.insertBefore(banner, form.firstChild);
                     }
                     
-                    console.log('📖 Modo readonly activado');
+                    console.log('ðŸ“– Modo readonly activado');
                 });
             }
         })();
@@ -1936,7 +1936,7 @@
         }
         
         // ============================================
-        // VALIDACIÓN DEL FORMULARIO
+        // VALIDACIÍ“N DEL FORMULARIO
         // ============================================
         document.getElementById('patientForm').addEventListener('submit', function(e) {
             const nombre = document.querySelector('input[name="nombre"]');
@@ -1969,7 +1969,7 @@
         });
         
         // ============================================
-        // MACRONUTRIENTES DINÁMICOS
+        // MACRONUTRIENTES DINÍMICOS
         // ============================================
         
         // Variables globales para macros (se inicializan en DOMContentLoaded)
@@ -2174,7 +2174,7 @@
                 adjustMacrosForLiquid();
                 // Luego actualizar displays y cálculos
                 updateMacros('init');
-                console.log('✓ Macros dinámicos activados');
+                console.log('âœ“ Macros dinámicos activados');
             }
         });
     </script>

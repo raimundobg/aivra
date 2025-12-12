@@ -110,7 +110,7 @@ def load_alimentos_database():
         def find_column(df, keywords):
             import unicodedata
             def normalize(text):
-                # Quitar acentos y convertir a minÃƒÂºsculas
+                # Quitar acentos y convertir a minúsculas
                 text = unicodedata.normalize('NFD', text)
                 text = ''.join(c for c in text if unicodedata.category(c) != 'Mn')
                 return text.lower()
@@ -949,7 +949,7 @@ def patient_intake_wtf():
     form = PatientIntakeForm()
     
     if request.method == 'POST':
-        # ValidaciÃƒÂ³n mÃƒÂ­nima: solo nombre es requerido
+        # Validación mínima: solo nombre es requerido
         nombre = request.form.get('nombre', '').strip()
         if not nombre:
             flash('El nombre del paciente es obligatorio', 'danger')
@@ -990,7 +990,7 @@ def patient_intake_wtf():
                 patient.fecha_nacimiento = fecha_nac
             
             # =========================================
-            # 3. FECHA PRÃƒ"XIMA CITA - CORREGIDO
+            # 3. FECHA PRÍƒ"XIMA CITA - CORREGIDO
             # =========================================
             fecha_cita = request.form.get('fecha_proxima_cita', '')
             if fecha_cita:
@@ -1004,7 +1004,7 @@ def patient_intake_wtf():
                            'pliegue_subescapular', 'pliegue_supracrestideo',
                            'perimetro_brazo', 'perimetro_cintura', 'perimetro_cadera',
                            'perimetro_pantorrilla', 'perimetro_muneca',
-                           # BioquÃƒÂ­micos
+                           # Bioquímicos
                            'glucosa_ayunas', 'hemoglobina_glicada', 'colesterol_total',
                            'colesterol_hdl', 'colesterol_ldl', 'trigliceridos',
                            'hemoglobina', 'hematocrito', 'ferritina', 'vitamina_d', 'vitamina_b12',
@@ -1126,7 +1126,7 @@ def patient_intake_wtf():
                     patient.registro_24h = parsed_data
                     print(f"DEBUG: Registro 24h guardado (nuevo paciente)")
                 except json.JSONDecodeError as e:
-                    print(f"DEBUG ERROR: registro_24h no es JSON vÃ¡lido: {e}")
+                    print(f"DEBUG ERROR: registro_24h no es JSON válido: {e}")
             
             # =========================================
             # 11. CALCULAR Y GUARDAR
@@ -1229,7 +1229,7 @@ def patient_edit_wtf(patient_id):
     form = PatientFileForm()
     
     if request.method == 'POST':
-        # ValidaciÃƒÂ³n mÃƒÂ­nima: nombre es requerido
+        # Validación mínima: nombre es requerido
         nombre = request.form.get('nombre', '').strip()
         if not nombre:
             flash('El nombre del paciente es obligatorio', 'danger')
@@ -1264,7 +1264,7 @@ def patient_edit_wtf(patient_id):
                 patient.fecha_nacimiento = fecha_nac
             
             # =========================================
-            # 3. FECHA PRÃƒ"XIMA CITA - CORREGIDO
+            # 3. FECHA PRÍƒ"XIMA CITA - CORREGIDO
             # =========================================
             fecha_cita = request.form.get('fecha_proxima_cita', '')
             if fecha_cita:
@@ -1402,11 +1402,11 @@ def patient_edit_wtf(patient_id):
             print(f"\n{'='*50}")
             print(f"DEBUG REGISTRO 24H [EDIT]")
             print(f"{'='*50}")
-            print(f"  Recibido: {registro_24h_data[:200] if registro_24h_data else '(vacÃ­o)'}...")
+            print(f"  Recibido: {registro_24h_data[:200] if registro_24h_data else '(vacío)'}...")
             
             if registro_24h_data and registro_24h_data.strip():
                 try:
-                    # Validar que es JSON vÃ¡lido
+                    # Validar que es JSON válido
                     parsed_data = json.loads(registro_24h_data)
                     patient.registro_24h = parsed_data
                     
@@ -1775,7 +1775,7 @@ def calcular_antropometria_htmx():
                 <div class="col-md-4">
                     <div class="calculated-field">
                         <span class="label">IMC</span>
-                        <span class="value {resultados.get("imc_clase", "")}">{resultados["imc"]} kg/mÃ‚Â²</span>
+                        <span class="value {resultados.get("imc_clase", "")}">{resultados["imc"]} kg/mÍ‚Â²</span>
                         <span class="category">{resultados.get("imc_categoria", "")}</span>
                     </div>
                 </div>
@@ -1984,9 +1984,15 @@ def serve_data(filename):
 def not_found_error(error):
     if request.path.startswith('/api/'):
         return jsonify({'error': 'Recurso no encontrado'}), 404
-    # Mostrar mensaje de error en lugar de login
-    flash('Página no encontrada', 'warning')
-    return redirect(url_for('index'))
+    # Devolver una pagina de error simple, no redirigir
+    return '''
+    <!DOCTYPE html>
+    <html><head><meta charset="UTF-8"><title>404</title>
+    <style>body{font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#f5f5f5;}
+    .error{text-align:center;}.error h1{font-size:72px;color:#14b8a6;margin:0;}.error p{color:#666;margin:20px 0;}
+    .error a{color:#14b8a6;text-decoration:none;}</style></head>
+    <body><div class="error"><h1>404</h1><p>Pagina no encontrada</p><a href="/">Volver al inicio</a></div></body></html>
+    ''', 404
 
 
 @app.errorhandler(500)
@@ -1995,11 +2001,15 @@ def internal_error(error):
     log_debug(f"[ERROR] Error interno: {str(error)}")
     if request.path.startswith('/api/'):
         return jsonify({'error': 'Error interno del servidor'}), 500
-    # Mostrar mensaje de error y redirigir al dashboard si está autenticado
-    flash('Ha ocurrido un error interno. Por favor intenta de nuevo.', 'danger')
-    if current_user and current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('index'))
+    # Devolver una pagina de error simple
+    return '''
+    <!DOCTYPE html>
+    <html><head><meta charset="UTF-8"><title>500</title>
+    <style>body{font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#f5f5f5;}
+    .error{text-align:center;}.error h1{font-size:72px;color:#ef4444;margin:0;}.error p{color:#666;margin:20px 0;}
+    .error a{color:#14b8a6;text-decoration:none;}</style></head>
+    <body><div class="error"><h1>500</h1><p>Error interno del servidor</p><a href="/">Volver al inicio</a></div></body></html>
+    ''', 500
 
 
 # ============================================
@@ -2257,7 +2267,7 @@ def api_exportar_pauta_pdf(patient_id):
 def api_generar_pdf_pauta(patient_id):
     """
     Genera PDF desde datos de pauta enviados en el request
-    (Ãºtil para generar PDF antes de guardar)
+    (útil para generar PDF antes de guardar)
     """
     try:
         patient = PatientFile.query.filter_by(
