@@ -1600,7 +1600,7 @@
                 </div>
                 <div class="section-body">
                     <!-- GET guardado para cálculos JS -->
-                    <input type="hidden" id="patientGET" value="{{ patient.get_kcal|default(2000)|int }}">
+                    <input type="hidden" id="patientGET" value="{{ (patient.get_kcal or 2000)|int }}">
                     <input type="hidden" id="patientPeso" value="{{ patient.peso_kg|default(70) }}">
                     
                     <div class="macros-container">
@@ -1679,30 +1679,30 @@
                     <div class="calculated-values-grid" id="calculatedValues">
                         <div class="calc-item protein">
                             <span class="calc-label">Proteínas</span>
-                            <span class="calc-value" id="calcProtein">{{ patient.proteinas_g|default(0)|int }} g</span>
+                            <span class="calc-value" id="calcProtein">{{ (patient.proteinas_g or 0)|int }} g</span>
                         </div>
                         <div class="calc-item carbs">
                             <span class="calc-label">Carbohidratos</span>
-                            <span class="calc-value" id="calcCarbs">{{ patient.carbohidratos_g|default(0)|int }} g</span>
+                            <span class="calc-value" id="calcCarbs">{{ (patient.carbohidratos_g or 0)|int }} g</span>
                         </div>
                         <div class="calc-item fat">
                             <span class="calc-label">Grasas</span>
-                            <span class="calc-value" id="calcFat">{{ patient.grasas_g|default(0)|int }} g</span>
+                            <span class="calc-value" id="calcFat">{{ (patient.grasas_g or 0)|int }} g</span>
                         </div>
                         <div class="calc-item fiber">
                             <span class="calc-label">Fibra</span>
-                            <span class="calc-value" id="calcFiber">{{ patient.fibra_g|default(25)|int }} g</span>
+                            <span class="calc-value" id="calcFiber">{{ (patient.fibra_g or 25)|int }} g</span>
                         </div>
                         <div class="calc-item liquid">
                             <span class="calc-label">Líquido</span>
-                            <span class="calc-value" id="calcLiquid">{{ ((patient.get_kcal|default(2000)) * 1)|int }} ml</span>
+                            <span class="calc-value" id="calcLiquid">{{ ((patient.get_kcal or 2000) * 1)|int }} ml</span>
                         </div>
                     </div>
                     
                     <div class="alert alert-info mt-3" role="alert">
                         <i class="fas fa-info-circle me-2"></i>
                         <small>
-                            <strong>Nota:</strong> Los gramos se calculan basados en el GET ({{ patient.get_kcal|default(2000)|int }} kcal). 
+                            <strong>Nota:</strong> Los gramos se calculan basados en el GET ({{ (patient.get_kcal or 2000)|int }} kcal). 
                             El líquido recomendado es aprox. 1 ml por kcal del GET.
                         </small>
                     </div>
