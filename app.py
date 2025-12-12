@@ -110,7 +110,7 @@ def load_alimentos_database():
         def find_column(df, keywords):
             import unicodedata
             def normalize(text):
-                # Quitar acentos y convertir a minÃºsculas
+                # Quitar acentos y convertir a minÃƒÂºsculas
                 text = unicodedata.normalize('NFD', text)
                 text = ''.join(c for c in text if unicodedata.category(c) != 'Mn')
                 return text.lower()
@@ -949,7 +949,7 @@ def patient_intake_wtf():
     form = PatientIntakeForm()
     
     if request.method == 'POST':
-        # ValidaciÃ³n mÃ­nima: solo nombre es requerido
+        # ValidaciÃƒÂ³n mÃƒÂ­nima: solo nombre es requerido
         nombre = request.form.get('nombre', '').strip()
         if not nombre:
             flash('El nombre del paciente es obligatorio', 'danger')
@@ -990,7 +990,7 @@ def patient_intake_wtf():
                 patient.fecha_nacimiento = fecha_nac
             
             # =========================================
-            # 3. FECHA PRÃ"XIMA CITA - CORREGIDO
+            # 3. FECHA PRÃƒ"XIMA CITA - CORREGIDO
             # =========================================
             fecha_cita = request.form.get('fecha_proxima_cita', '')
             if fecha_cita:
@@ -1004,7 +1004,7 @@ def patient_intake_wtf():
                            'pliegue_subescapular', 'pliegue_supracrestideo',
                            'perimetro_brazo', 'perimetro_cintura', 'perimetro_cadera',
                            'perimetro_pantorrilla', 'perimetro_muneca',
-                           # BioquÃ­micos
+                           # BioquÃƒÂ­micos
                            'glucosa_ayunas', 'hemoglobina_glicada', 'colesterol_total',
                            'colesterol_hdl', 'colesterol_ldl', 'trigliceridos',
                            'hemoglobina', 'hematocrito', 'ferritina', 'vitamina_d', 'vitamina_b12',
@@ -1126,7 +1126,7 @@ def patient_intake_wtf():
                     patient.registro_24h = parsed_data
                     print(f"DEBUG: Registro 24h guardado (nuevo paciente)")
                 except json.JSONDecodeError as e:
-                    print(f"DEBUG ERROR: registro_24h no es JSON válido: {e}")
+                    print(f"DEBUG ERROR: registro_24h no es JSON vÃ¡lido: {e}")
             
             # =========================================
             # 11. CALCULAR Y GUARDAR
@@ -1229,7 +1229,7 @@ def patient_edit_wtf(patient_id):
     form = PatientFileForm()
     
     if request.method == 'POST':
-        # ValidaciÃ³n mÃ­nima: nombre es requerido
+        # ValidaciÃƒÂ³n mÃƒÂ­nima: nombre es requerido
         nombre = request.form.get('nombre', '').strip()
         if not nombre:
             flash('El nombre del paciente es obligatorio', 'danger')
@@ -1264,7 +1264,7 @@ def patient_edit_wtf(patient_id):
                 patient.fecha_nacimiento = fecha_nac
             
             # =========================================
-            # 3. FECHA PRÃ"XIMA CITA - CORREGIDO
+            # 3. FECHA PRÃƒ"XIMA CITA - CORREGIDO
             # =========================================
             fecha_cita = request.form.get('fecha_proxima_cita', '')
             if fecha_cita:
@@ -1402,11 +1402,11 @@ def patient_edit_wtf(patient_id):
             print(f"\n{'='*50}")
             print(f"DEBUG REGISTRO 24H [EDIT]")
             print(f"{'='*50}")
-            print(f"  Recibido: {registro_24h_data[:200] if registro_24h_data else '(vacío)'}...")
+            print(f"  Recibido: {registro_24h_data[:200] if registro_24h_data else '(vacÃ­o)'}...")
             
             if registro_24h_data and registro_24h_data.strip():
                 try:
-                    # Validar que es JSON válido
+                    # Validar que es JSON vÃ¡lido
                     parsed_data = json.loads(registro_24h_data)
                     patient.registro_24h = parsed_data
                     
@@ -1420,12 +1420,12 @@ def patient_edit_wtf(patient_id):
                     if 'totales' in parsed_data:
                         print(f"  Totales: {parsed_data['totales']}")
                     
-                    print(f"✅ Registro 24h guardado correctamente")
+                    print(f"âœ… Registro 24h guardado correctamente")
                 except json.JSONDecodeError as e:
-                    print(f"❌ ERROR JSON: {e}")
+                    print(f"âŒ ERROR JSON: {e}")
                     print(f"   Valor recibido: {registro_24h_data[:100]}")
             else:
-                print(f"  ℹ️ No hay datos de registro 24h para guardar")
+                print(f"  â„¹ï¸ No hay datos de registro 24h para guardar")
             print(f"{'='*50}\n")
             
             # =========================================
@@ -1463,7 +1463,12 @@ def patient_edit_wtf(patient_id):
             flash(f'Error al actualizar paciente: {str(e)}', 'danger')
     
     elif request.method == 'GET':
-        populate_form_from_patient(form, patient)
+        try:
+            populate_form_from_patient(form, patient)
+        except Exception as e:
+            print(f"[ERROR] Error poblando formulario: {str(e)}")
+            traceback.print_exc()
+            flash('Advertencia: Algunos campos no pudieron cargarse correctamente', 'warning')
     
     edad_calculada = None
     if hasattr(patient, 'calcular_edad'):
@@ -1480,123 +1485,140 @@ def patient_edit_wtf(patient_id):
 
 
 # ============================================
-# POPULATE FORM FROM PATIENT - CORREGIDO
+# POPULATE FORM FROM PATIENT - CORREGIDO V2
 # ============================================
 def populate_form_from_patient(form, patient):
-    """Poblar formulario WTForms con datos del paciente - VERSION CORREGIDA"""
-    
-    # DEBUG: Mostrar valores de macros del paciente
-    print("\n" + "="*50)
-    print("DEBUG POPULATE - Valores del paciente en BD:")
-    print("="*50)
-    print(f"  proteinas_porcentaje: {patient.proteinas_porcentaje}")
-    print(f"  carbohidratos_porcentaje: {patient.carbohidratos_porcentaje}")
-    print(f"  grasas_porcentaje: {patient.grasas_porcentaje}")
-    print(f"  liquido_porcentaje: {patient.liquido_porcentaje}")
-    print("="*50 + "\n")
-    
-    # 1. CAMPOS DE TEXTO
-    campos_texto = ['nombre', 'sexo', 'email', 'telefono', 'motivo_consulta',
-                   'profesion', 'ocupacion', 'teletrabajo',
-                   'horas_sueno', 'observaciones_sueno', 'gatillantes_estres', 'manejo_estres',
-                   'consumo_alcohol', 'tabaco', 'drogas', 'actividad_fisica',
-                   'tipo_ejercicio', 'duracion_ejercicio',
-                   'frecuencia_evacuacion', 'reflujo', 'reflujo_alimento',
-                   'hinchazon', 'hinchazon_alimento', 'tiene_alergias', 'alergias_alimento',
-                   'alergias', 'intolerancias', 'fecha_examenes',
-                   'diagnostico_nutricional', 'objetivos_nutricionales', 'indicaciones', 'notas_seguimiento',
-                   'imc_categoria', 'riesgo_cardiovascular']
-    
-    for campo in campos_texto:
-        if hasattr(form, campo) and hasattr(patient, campo):
-            valor = getattr(patient, campo)
-            if valor:
-                getattr(form, campo).data = valor
-    
-    # 2. FECHA DE NACIMIENTO
-    if hasattr(form, 'fecha_nacimiento') and patient.fecha_nacimiento:
-        form.fecha_nacimiento.data = patient.fecha_nacimiento
-    
-    # 3. FECHA PRÃ"XIMA CITA
-    if hasattr(form, 'fecha_proxima_cita') and hasattr(patient, 'fecha_proxima_cita'):
-        if patient.fecha_proxima_cita:
-            if isinstance(patient.fecha_proxima_cita, datetime):
-                form.fecha_proxima_cita.data = patient.fecha_proxima_cita.strftime('%Y-%m-%dT%H:%M')
-            else:
-                form.fecha_proxima_cita.data = patient.fecha_proxima_cita
-    
-    # 4. CAMPOS FLOAT
-    campos_float = ['talla_m', 'peso_kg', 'peso_ideal',
-                   'pliegue_bicipital', 'pliegue_tricipital',
-                   'pliegue_subescapular', 'pliegue_supracrestideo',
-                   'perimetro_brazo', 'perimetro_cintura', 'perimetro_cadera',
-                   'perimetro_pantorrilla', 'perimetro_muneca',
-                   'glucosa_ayunas', 'hemoglobina_glicada', 'colesterol_total',
-                   'colesterol_hdl', 'colesterol_ldl', 'trigliceridos',
-                   'hemoglobina', 'hematocrito', 'ferritina', 'vitamina_d', 'vitamina_b12',
-                   'acido_urico', 'creatinina', 'albumina', 'tsh',
-                   'proteinas_porcentaje', 'carbohidratos_porcentaje', 'grasas_porcentaje', 'liquido_porcentaje',
-                   'imc', 'porcentaje_grasa', 'masa_grasa_kg', 'masa_libre_grasa_kg',
-                   'indice_cintura_cadera', 'geb_kcal', 'get_kcal',
-                   'proteinas_g', 'carbohidratos_g', 'grasas_g', 'fibra_g', 'liquido_ml']
-    
-    for campo in campos_float:
-        if hasattr(form, campo) and hasattr(patient, campo):
-            valor = getattr(patient, campo)
-            if valor is not None:
-                try:
-                    getattr(form, campo).data = float(valor)
-                except:
-                    pass
-    
-    # DEBUG: Verificar valores de macros en el formulario
-    print("\nDEBUG POPULATE - Valores asignados al formulario:")
-    print(f"  form.proteinas_porcentaje.data: {form.proteinas_porcentaje.data}")
-    print(f"  form.carbohidratos_porcentaje.data: {form.carbohidratos_porcentaje.data}")
-    print(f"  form.grasas_porcentaje.data: {form.grasas_porcentaje.data}")
-    print(f"  form.liquido_porcentaje.data: {getattr(form, 'liquido_porcentaje', None) and form.liquido_porcentaje.data}")
-    
-    # 5. CAMPOS INT
-    campos_int = ['calidad_sueno', 'nivel_estres', 'presion_sistolica', 
-                 'presion_diastolica', 'frecuencia_cardiaca']
-    
-    for campo in campos_int:
-        if hasattr(form, campo) and hasattr(patient, campo):
-            valor = getattr(patient, campo)
-            if valor is not None:
-                try:
-                    getattr(form, campo).data = int(valor)
-                except:
-                    pass
-    
-    # 6. CAMPOS DE LISTA (string -> list)
-    campos_lista = ['diagnosticos', 'medicamentos', 'suplementos', 
-                   'quien_cocina', 'con_quien_vive', 'donde_come', 'tipo_alcohol']
-    
-    for campo in campos_lista:
-        if hasattr(form, campo) and hasattr(patient, campo):
-            valor = getattr(patient, campo)
-            if valor and isinstance(valor, str):
-                getattr(form, campo).data = [v.strip() for v in valor.split(',') if v.strip()]
-    
-    # 7. OBJETIVOS (JSON string)
-    if hasattr(form, 'objetivos') and hasattr(patient, 'objetivos'):
-        if patient.objetivos:
-            form.objetivos.data = patient.objetivos
-    
-    # 8. FRECUENCIA DE CONSUMO (JSON string)
-    if hasattr(form, 'frecuencia_consumo') and hasattr(patient, 'frecuencia_consumo'):
-        if patient.frecuencia_consumo:
-            form.frecuencia_consumo.data = patient.frecuencia_consumo if isinstance(patient.frecuencia_consumo, str) else json.dumps(patient.frecuencia_consumo)
-    
-    # 9. REGISTRO 24H
-    if hasattr(form, 'registro_24h') and hasattr(patient, 'registro_24h'):
-        if patient.registro_24h:
-            form.registro_24h.data = patient.registro_24h
-    
-    # 10. BOOLEAN
-    if hasattr(form, 'is_active') and hasattr(patient, 'is_active'):
-        form.is_active.data = patient.is_active
+    """Poblar formulario WTForms con datos del paciente - VERSION ROBUSTA"""
+    try:
+        # 1. CAMPOS DE TEXTO
+        campos_texto = ['nombre', 'sexo', 'email', 'telefono', 'motivo_consulta',
+                       'profesion', 'ocupacion', 'teletrabajo',
+                       'horas_sueno', 'observaciones_sueno', 'gatillantes_estres', 'manejo_estres',
+                       'consumo_alcohol', 'tabaco', 'drogas', 'actividad_fisica',
+                       'tipo_ejercicio', 'duracion_ejercicio',
+                       'frecuencia_evacuacion', 'reflujo', 'reflujo_alimento',
+                       'hinchazon', 'hinchazon_alimento', 'tiene_alergias', 'alergias_alimento',
+                       'alergias', 'intolerancias', 'fecha_examenes',
+                       'diagnostico_nutricional', 'objetivos_nutricionales', 'indicaciones', 'notas_seguimiento',
+                       'imc_categoria', 'riesgo_cardiovascular']
+        
+        for campo in campos_texto:
+            try:
+                if hasattr(form, campo) and hasattr(patient, campo):
+                    valor = getattr(patient, campo)
+                    if valor:
+                        getattr(form, campo).data = valor
+            except Exception as e:
+                print(f"[WARN] Error poblando campo texto {campo}: {e}")
+        
+        # 2. FECHA DE NACIMIENTO
+        try:
+            if hasattr(form, 'fecha_nacimiento') and hasattr(patient, 'fecha_nacimiento'):
+                if patient.fecha_nacimiento:
+                    form.fecha_nacimiento.data = patient.fecha_nacimiento
+        except Exception as e:
+            print(f"[WARN] Error poblando fecha_nacimiento: {e}")
+        
+        # 3. FECHA PROXIMA CITA
+        try:
+            if hasattr(form, 'fecha_proxima_cita') and hasattr(patient, 'fecha_proxima_cita'):
+                if patient.fecha_proxima_cita:
+                    if isinstance(patient.fecha_proxima_cita, datetime):
+                        form.fecha_proxima_cita.data = patient.fecha_proxima_cita.strftime('%Y-%m-%dT%H:%M')
+                    else:
+                        form.fecha_proxima_cita.data = patient.fecha_proxima_cita
+        except Exception as e:
+            print(f"[WARN] Error poblando fecha_proxima_cita: {e}")
+        
+        # 4. CAMPOS FLOAT
+        campos_float = ['talla_m', 'peso_kg', 'peso_ideal',
+                       'pliegue_bicipital', 'pliegue_tricipital',
+                       'pliegue_subescapular', 'pliegue_supracrestideo',
+                       'perimetro_brazo', 'perimetro_cintura', 'perimetro_cadera',
+                       'perimetro_pantorrilla', 'perimetro_muneca',
+                       'glucosa_ayunas', 'hemoglobina_glicada', 'colesterol_total',
+                       'colesterol_hdl', 'colesterol_ldl', 'trigliceridos',
+                       'hemoglobina', 'hematocrito', 'ferritina', 'vitamina_d', 'vitamina_b12',
+                       'acido_urico', 'creatinina', 'albumina', 'tsh',
+                       'proteinas_porcentaje', 'carbohidratos_porcentaje', 'grasas_porcentaje', 'liquido_porcentaje',
+                       'imc', 'porcentaje_grasa', 'masa_grasa_kg', 'masa_libre_grasa_kg',
+                       'indice_cintura_cadera', 'geb_kcal', 'get_kcal',
+                       'proteinas_g', 'carbohidratos_g', 'grasas_g', 'fibra_g', 'liquido_ml']
+        
+        for campo in campos_float:
+            try:
+                if hasattr(form, campo) and hasattr(patient, campo):
+                    valor = getattr(patient, campo)
+                    if valor is not None:
+                        getattr(form, campo).data = float(valor)
+            except Exception as e:
+                print(f"[WARN] Error poblando campo float {campo}: {e}")
+        
+        # 5. CAMPOS INT
+        campos_int = ['calidad_sueno', 'nivel_estres', 'presion_sistolica', 
+                     'presion_diastolica', 'frecuencia_cardiaca']
+        
+        for campo in campos_int:
+            try:
+                if hasattr(form, campo) and hasattr(patient, campo):
+                    valor = getattr(patient, campo)
+                    if valor is not None:
+                        getattr(form, campo).data = int(valor)
+            except Exception as e:
+                print(f"[WARN] Error poblando campo int {campo}: {e}")
+        
+        # 6. CAMPOS DE LISTA (string -> list)
+        campos_lista = ['diagnosticos', 'medicamentos', 'suplementos', 
+                       'quien_cocina', 'con_quien_vive', 'donde_come', 'tipo_alcohol']
+        
+        for campo in campos_lista:
+            try:
+                if hasattr(form, campo) and hasattr(patient, campo):
+                    valor = getattr(patient, campo)
+                    if valor and isinstance(valor, str):
+                        getattr(form, campo).data = [v.strip() for v in valor.split(',') if v.strip()]
+            except Exception as e:
+                print(f"[WARN] Error poblando campo lista {campo}: {e}")
+        
+        # 7. OBJETIVOS (JSON string)
+        try:
+            if hasattr(form, 'objetivos') and hasattr(patient, 'objetivos'):
+                if patient.objetivos:
+                    form.objetivos.data = patient.objetivos
+        except Exception as e:
+            print(f"[WARN] Error poblando objetivos: {e}")
+        
+        # 8. FRECUENCIA DE CONSUMO (JSON string)
+        try:
+            if hasattr(form, 'frecuencia_consumo') and hasattr(patient, 'frecuencia_consumo'):
+                if patient.frecuencia_consumo:
+                    if isinstance(patient.frecuencia_consumo, str):
+                        form.frecuencia_consumo.data = patient.frecuencia_consumo
+                    else:
+                        form.frecuencia_consumo.data = json.dumps(patient.frecuencia_consumo)
+        except Exception as e:
+            print(f"[WARN] Error poblando frecuencia_consumo: {e}")
+        
+        # 9. REGISTRO 24H
+        try:
+            if hasattr(form, 'registro_24h') and hasattr(patient, 'registro_24h'):
+                if patient.registro_24h:
+                    form.registro_24h.data = patient.registro_24h
+        except Exception as e:
+            print(f"[WARN] Error poblando registro_24h: {e}")
+        
+        # 10. BOOLEAN
+        try:
+            if hasattr(form, 'is_active') and hasattr(patient, 'is_active'):
+                form.is_active.data = patient.is_active
+        except Exception as e:
+            print(f"[WARN] Error poblando is_active: {e}")
+        
+        print(f"[OK] Formulario poblado correctamente para paciente {patient.id}")
+        
+    except Exception as e:
+        print(f"[ERROR] Error general en populate_form_from_patient: {e}")
+        traceback.print_exc()
 
 
 # ============================================
@@ -1753,7 +1775,7 @@ def calcular_antropometria_htmx():
                 <div class="col-md-4">
                     <div class="calculated-field">
                         <span class="label">IMC</span>
-                        <span class="value {resultados.get("imc_clase", "")}">{resultados["imc"]} kg/mÂ²</span>
+                        <span class="value {resultados.get("imc_clase", "")}">{resultados["imc"]} kg/mÃ‚Â²</span>
                         <span class="category">{resultados.get("imc_categoria", "")}</span>
                     </div>
                 </div>
@@ -1962,7 +1984,9 @@ def serve_data(filename):
 def not_found_error(error):
     if request.path.startswith('/api/'):
         return jsonify({'error': 'Recurso no encontrado'}), 404
-    return render_template('login.html', error='Pagina no encontrada'), 404
+    # Mostrar mensaje de error en lugar de login
+    flash('Página no encontrada', 'warning')
+    return redirect(url_for('index'))
 
 
 @app.errorhandler(500)
@@ -1971,7 +1995,11 @@ def internal_error(error):
     log_debug(f"[ERROR] Error interno: {str(error)}")
     if request.path.startswith('/api/'):
         return jsonify({'error': 'Error interno del servidor'}), 500
-    return render_template('login.html', error='Error interno del servidor'), 500
+    # Mostrar mensaje de error y redirigir al dashboard si está autenticado
+    flash('Ha ocurrido un error interno. Por favor intenta de nuevo.', 'danger')
+    if current_user and current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('index'))
 
 
 # ============================================
@@ -2031,7 +2059,7 @@ def api_generar_pauta(patient_id):
         # Generar pauta con el nuevo algoritmo
         pauta = generar_pauta_alimentaria(patient_dict, alimentos_db)
         
-        print(f"✅ Pauta generada para paciente {patient.nombre}")
+        print(f"âœ… Pauta generada para paciente {patient.nombre}")
         print(f"   GET: {pauta['requerimientos']['get_kcal']} kcal")
         # Pauta semanal usa resumen_semanal
         if 'resumen_semanal' in pauta:
@@ -2045,7 +2073,7 @@ def api_generar_pauta(patient_id):
         })
         
     except Exception as e:
-        print(f"❌ Error generando pauta: {str(e)}")
+        print(f"âŒ Error generando pauta: {str(e)}")
         import traceback
         traceback.print_exc()
         return jsonify({
@@ -2089,7 +2117,7 @@ def api_guardar_pauta(patient_id):
         
         db.session.commit()
         
-        print(f"✅ Pauta guardada para paciente {patient.nombre}")
+        print(f"âœ… Pauta guardada para paciente {patient.nombre}")
         
         return jsonify({
             'success': True,
@@ -2098,7 +2126,7 @@ def api_guardar_pauta(patient_id):
         
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Error guardando pauta: {str(e)}")
+        print(f"âŒ Error guardando pauta: {str(e)}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -2195,13 +2223,13 @@ def api_exportar_pauta_pdf(patient_id):
         }
         
         # Generar PDF
-        print(f"📄 Generando PDF para paciente {patient.nombre}...")
+        print(f"ðŸ“„ Generando PDF para paciente {patient.nombre}...")
         pdf_buffer = generar_pdf_pauta(pauta_data, patient_data)
         
         # Nombre del archivo
         nombre_archivo = f"pauta_alimentaria_{patient.nombre.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf"
         
-        print(f"✅ PDF generado: {nombre_archivo}")
+        print(f"âœ… PDF generado: {nombre_archivo}")
         
         return send_file(
             pdf_buffer,
@@ -2211,7 +2239,7 @@ def api_exportar_pauta_pdf(patient_id):
         )
         
     except Exception as e:
-        print(f"❌ Error generando PDF: {str(e)}")
+        print(f"âŒ Error generando PDF: {str(e)}")
         import traceback
         traceback.print_exc()
         return jsonify({
@@ -2229,7 +2257,7 @@ def api_exportar_pauta_pdf(patient_id):
 def api_generar_pdf_pauta(patient_id):
     """
     Genera PDF desde datos de pauta enviados en el request
-    (útil para generar PDF antes de guardar)
+    (Ãºtil para generar PDF antes de guardar)
     """
     try:
         patient = PatientFile.query.filter_by(
@@ -2272,7 +2300,7 @@ def api_generar_pdf_pauta(patient_id):
         )
         
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
+        print(f"âŒ Error: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
     
 # ============================================

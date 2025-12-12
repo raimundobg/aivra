@@ -10,7 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style-improved.css') }}">
+    <!-- CSS CORREGIDO: usar /css/ en lugar de /static/css/ -->
+    <link rel="stylesheet" href="/css/style-improved.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -244,7 +245,7 @@
             <div class="login-logo">
                 <i class="fas fa-atom"></i>
             </div>
-            <h1>Iniciar Sesión</h1>
+            <h1>Iniciar SesiÃ³n</h1>
             <p>Bienvenido/a de vuelta a ZenLab Pro</p>
         </div>
         
@@ -272,9 +273,9 @@
             <div class="form-group">
                 <label class="form-label">
                     <i class="fas fa-lock me-1"></i>
-                    Contraseña
+                    ContraseÃ±a
                 </label>
-                <input type="password" class="form-control" name="password" placeholder="••••••••" required>
+                <input type="password" class="form-control" name="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required>
             </div>
             
             <div class="checkbox-group">
@@ -284,12 +285,12 @@
             
             <button type="submit" class="btn-submit">
                 <i class="fas fa-sign-in-alt"></i>
-                Iniciar Sesión
+                Iniciar SesiÃ³n
             </button>
         </form>
         
         <div class="divider">
-            <p>¿No tienes cuenta? <a href="{{ url_for('auth.register') }}">Regístrate aquí</a></p>
+            <p>Â¿No tienes cuenta? <a href="{{ url_for('auth.register') }}">RegÃ­strate aquÃ­</a></p>
             <a href="{{ url_for('index') }}" class="back-link">
                 <i class="fas fa-arrow-left"></i>
                 Volver al inicio
