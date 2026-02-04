@@ -1485,6 +1485,37 @@ if AUTH_ENABLED:
         try:
             db.create_all()
             print("Tablas de base de datos creadas/verificadas")
+
+            # Auto-migrar columnas nuevas
+            from sqlalchemy import text, inspect
+            inspector = inspect(db.engine)
+
+            new_columns = {
+                'patient_files': [
+                    ('intake_token', 'VARCHAR(64)'),
+                    ('intake_completed', 'BOOLEAN DEFAULT FALSE'),
+                    ('intake_completed_at', 'TIMESTAMP'),
+                    ('intake_url_sent', 'BOOLEAN DEFAULT FALSE'),
+                    ('intake_url_sent_at', 'TIMESTAMP'),
+                    ('menstruacion', 'VARCHAR(50)'),
+                    ('restricciones_alimentarias', 'TEXT'),
+                    ('delivery_restaurante', 'INTEGER'),
+                    ('percepcion_esfuerzo', 'INTEGER'),
+                ]
+            }
+
+            for table_name, columns in new_columns.items():
+                if table_name in inspector.get_table_names():
+                    existing_cols = [c['name'] for c in inspector.get_columns(table_name)]
+                    for col_name, col_type in columns:
+                        if col_name not in existing_cols:
+                            try:
+                                db.session.execute(text(f'ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type}'))
+                                print(f"  + Columna agregada: {table_name}.{col_name}")
+                            except:
+                                pass
+                    db.session.commit()
+
         except Exception as e:
             print(f"Error creando tablas: {e}")
 
