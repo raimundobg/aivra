@@ -147,7 +147,7 @@ def register():
             # Login automático
             login_user(new_user)
             
-            flash(f'Â¡Bienvenido/a, {new_user.get_full_name()}!', 'success')
+            flash(f'Bienvenido/a, {new_user.get_full_name()}!', 'success')
             
             # Redirigir según tipo
             if user_type == UserType.NUTRICIONISTA:
@@ -192,7 +192,7 @@ def login():
             db.session.commit()
             
             login_user(user, remember=remember)
-            flash(f'Â¡Bienvenido/a, {user.get_full_name()}!', 'success')
+            flash(f'Bienvenido/a, {user.get_full_name()}!', 'success')
             
             # Redirigir según tipo de usuario
             if user.user_type == 'nutricionista':

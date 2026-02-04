@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro - ZenLab</title>
+    <title>Registro - BiteTrack</title>
     <link rel="stylesheet" href="/css/style-improved.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -87,9 +87,9 @@
     <div class="register-container">
         <div class="register-header">
             <h1>Crear Cuenta</h1>
-            <p style="color: var(--text-secondary);">Íšnete a ZenLab Superalimentos</p>
+            <p style="color: var(--text-secondary);">Unete a BiteTrack</p>
         </div>
-        
+
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -99,29 +99,28 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        
+
         <form method="POST" action="{{ url_for('auth.register') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <!-- Tipo de cuenta -->
             <div class="form-group">
                 <label class="form-label">Tipo de cuenta *</label>
                 <select class="form-control" name="user_type" required>
-                    <option value="cliente">ðŸ‘¤ Cliente (Usuario regular)</option>
-                    <option value="nutricionista">â­ Nutricionista (Profesional)</option>
-                    <option value="empresa">ðŸ¢ Empresa (I+D)</option>
+                    <option value="cliente">Cliente (Usuario regular)</option>
+                    <option value="nutricionista">Nutricionista (Profesional)</option>
+                    <option value="empresa">Empresa (I+D)</option>
                 </select>
             </div>
-            
+
             <!-- Email -->
             <div class="form-group">
                 <label class="form-label">Email *</label>
                 <input type="email" class="form-control" name="email" required>
             </div>
-            
-            <!-- Contraseñas -->
+
+            <!-- Contrasenas -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
-                    <label class="form-label">Contraseña *</label>
+                    <label class="form-label">Contrasena *</label>
                     <input type="password" class="form-control" name="password" required minlength="6">
                 </div>
                 <div class="form-group">
@@ -129,7 +128,7 @@
                     <input type="password" class="form-control" name="confirm_password" required>
                 </div>
             </div>
-            
+
             <!-- Nombre y Apellido -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
@@ -141,16 +140,16 @@
                     <input type="text" class="form-control" name="last_name" required>
                 </div>
             </div>
-            
+
             <!-- Fecha de nacimiento -->
             <div class="form-group">
                 <label class="form-label">Fecha de Nacimiento *</label>
                 <input type="date" class="form-control" name="birth_date" required>
             </div>
-            
-            <!-- País -->
+
+            <!-- Pais -->
             <div class="form-group">
-                <label class="form-label">País *</label>
+                <label class="form-label">Pais *</label>
                 <select class="form-control" name="country" id="country" required>
                     <option value="">Selecciona...</option>
                     {% for country in countries %}
@@ -158,7 +157,7 @@
                     {% endfor %}
                 </select>
             </div>
-            
+
             <!-- Ciudad (solo Chile) -->
             <div class="form-group" id="cityField" style="display: none;">
                 <label class="form-label">Ciudad *</label>
@@ -169,23 +168,23 @@
                     {% endfor %}
                 </select>
             </div>
-            
-            <!-- Teléfono -->
+
+            <!-- Telefono -->
             <div class="form-group">
-                <label class="form-label">Teléfono (opcional)</label>
+                <label class="form-label">Telefono (opcional)</label>
                 <input type="tel" class="form-control" name="phone" placeholder="+56 9 1234 5678">
             </div>
-            
+
             <button type="submit" class="btn-submit">
                 <i class="fas fa-rocket"></i> Crear Mi Cuenta
             </button>
         </form>
-        
+
         <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--gray-200);">
-            <p>¿Ya tienes cuenta? <a href="{{ url_for('auth.login') }}" style="color: var(--primary-green); font-weight: bold;">Inicia sesión</a></p>
+            <p>Ya tienes cuenta? <a href="{{ url_for('auth.login') }}" style="color: var(--primary-green); font-weight: bold;">Inicia sesion</a></p>
         </div>
     </div>
-    
+
     <script>
         document.getElementById('country').addEventListener('change', function() {
             const cityField = document.getElementById('cityField');
