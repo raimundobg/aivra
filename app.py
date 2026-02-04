@@ -1421,6 +1421,62 @@ def internal_error(error):
     return jsonify({'error': 'Error interno del servidor'}), 500
 
 # ============================================
+# MIGRACIÓN DE BASE DE DATOS
+# ============================================
+
+@app.route('/api/migrate-db', methods=['GET', 'POST'])
+def migrate_database():
+    """Endpoint para agregar columnas faltantes a la base de datos"""
+    try:
+        from sqlalchemy import text, inspect
+
+        inspector = inspect(db.engine)
+        results = []
+
+        # Columnas nuevas para patient_files
+        new_columns = {
+            'patient_files': [
+                ('intake_token', 'VARCHAR(64)'),
+                ('intake_completed', 'BOOLEAN DEFAULT FALSE'),
+                ('intake_completed_at', 'TIMESTAMP'),
+                ('intake_url_sent', 'BOOLEAN DEFAULT FALSE'),
+                ('intake_url_sent_at', 'TIMESTAMP'),
+                ('menstruacion', 'VARCHAR(50)'),
+                ('restricciones_alimentarias', 'JSON'),
+                ('delivery_restaurante', 'INTEGER'),
+                ('percepcion_esfuerzo', 'INTEGER'),
+            ]
+        }
+
+        for table_name, columns in new_columns.items():
+            if table_name in inspector.get_table_names():
+                existing_columns = [col['name'] for col in inspector.get_columns(table_name)]
+
+                for col_name, col_type in columns:
+                    if col_name not in existing_columns:
+                        try:
+                            # Sintaxis para PostgreSQL y SQLite
+                            sql = f'ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type}'
+                            db.session.execute(text(sql))
+                            results.append(f"Added: {table_name}.{col_name}")
+                        except Exception as e:
+                            results.append(f"Skip {col_name}: {str(e)[:50]}")
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Migration completed',
+            'results': results
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# ============================================
 # INICIALIZACIÓN
 # ============================================
 
@@ -1428,9 +1484,9 @@ if AUTH_ENABLED:
     with app.app_context():
         try:
             db.create_all()
-            print("✅ Tablas de base de datos creadas/verificadas")
+            print("Tablas de base de datos creadas/verificadas")
         except Exception as e:
-            print(f"❌ Error creando tablas: {e}")
+            print(f"Error creando tablas: {e}")
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
