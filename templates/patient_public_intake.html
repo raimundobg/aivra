@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Pre-Consulta - ZenLab Pro</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --secondary: #3b82f6;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #0f172a;
+            --gray-100: #f9fafb;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #6b7280;
+            --gray-700: #374151;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header */
+        .public-header {
+            background: linear-gradient(135deg, var(--dark) 0%, #1e293b 100%);
+            color: white;
+            padding: 1.5rem 0;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .public-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .public-header p {
+            opacity: 0.9;
+            margin: 0.5rem 0 0;
+            font-size: 0.9375rem;
+        }
+
+        .logo-container {
+            margin-bottom: 1rem;
+        }
+
+        .logo-container img {
+            height: 45px;
+        }
+
+        /* Progress Bar */
+        .progress-wrapper {
+            background: white;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .progress-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            width: 100%;
+            height: 3px;
+            background: var(--gray-200);
+            z-index: -1;
+        }
+
+        .progress-step.active:not(:last-child)::after,
+        .progress-step.completed:not(:last-child)::after {
+            background: var(--primary);
+        }
+
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--gray-200);
+            color: var(--gray-600);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+
+        .progress-step.active .step-circle {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .progress-step.completed .step-circle {
+            background: var(--primary);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        .progress-step.active .step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Form Sections */
+        .form-section {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .section-title i {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        /* Form Elements */
+        .form-label {
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+            font-size: 0.9375rem;
+        }
+
+        .form-label .required {
+            color: var(--danger);
+            margin-left: 0.25rem;
+        }
+
+        .form-control,
+        .form-select {
+            border: 2px solid var(--gray-200);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            outline: none;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Checkbox Pills */
+        .checkbox-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .checkbox-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            background: white;
+        }
+
+        .checkbox-pill:hover {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .checkbox-pill input {
+            display: none;
+        }
+
+        .checkbox-pill.selected {
+            background: linear-gradient(135deg, var(--primary), #14b8a6);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .checkbox-pill i {
+            margin-right: 0.5rem;
+        }
+
+        /* Range Slider */
+        .range-container {
+            padding: 1rem 0;
+        }
+
+        .range-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            margin-top: 0.5rem;
+        }
+
+        .form-range {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: var(--gray-200);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .form-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid var(--gray-100);
+        }
+
+        .btn-nav {
+            padding: 0.875rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .btn-prev {
+            background: white;
+            color: var(--gray-700);
+            border: 2px solid var(--gray-200);
+        }
+
+        .btn-prev:hover {
+            border-color: var(--gray-300);
+            background: var(--gray-100);
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, var(--primary), #14b8a6);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--secondary), #8b5cf6);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.125rem;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Success/Error States */
+        .alert-box {
+            padding: 2rem;
+            border-radius: 1.5rem;
+            text-align: center;
+            margin: 2rem auto;
+            max-width: 600px;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 2px solid var(--primary);
+        }
+
+        .alert-error {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 2px solid var(--danger);
+        }
+
+        .alert-box i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success i {
+            color: var(--primary);
+        }
+
+        .alert-error i {
+            color: var(--danger);
+        }
+
+        .alert-box h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-box p {
+            color: var(--gray-600);
+            margin: 0;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 1rem;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .public-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .form-section {
+                padding: 1.5rem;
+                border-radius: 1rem;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+            }
+
+            .btn-nav {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .step-label {
+                display: none;
+            }
+
+            .progress-step:not(:last-child)::after {
+                top: 16px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 1rem 0.75rem;
+            }
+
+            .form-section {
+                padding: 1.25rem;
+            }
+
+            .section-title {
+                font-size: 1.125rem;
+            }
+
+            .checkbox-pills {
+                gap: 0.375rem;
+            }
+
+            .checkbox-pill {
+                padding: 0.375rem 0.75rem;
+                font-size: 0.8125rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Guardando tus datos...</div>
+    </div>
+
+    <!-- Header -->
+    <header class="public-header">
+        <div class="container">
+            <div class="logo-container">
+                <img src="/images/logo.png" alt="ZenLab Pro" onerror="this.style.display='none'">
+            </div>
+            {% if error %}
+                <h1><i class="fas fa-exclamation-triangle me-2"></i>Error</h1>
+            {% elif already_completed %}
+                <h1><i class="fas fa-check-circle me-2"></i>Formulario Completado</h1>
+            {% else %}
+                <h1>Formulario Pre-Consulta</h1>
+                <p>Completa tus datos antes de tu cita con {{ nutritionist_name }}</p>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if error %}
+    <!-- Error State -->
+    <div class="main-content">
+        <div class="alert-box alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <h2>Enlace no valido</h2>
+            <p>{{ error }}</p>
+            <p class="mt-3">Si crees que esto es un error, contacta a tu nutricionista.</p>
+        </div>
+    </div>
+
+    {% elif already_completed %}
+    <!-- Already Completed State -->
+    <div class="main-content">
+        <div class="alert-box alert-success">
+            <i class="fas fa-check-circle"></i>
+            <h2>Ya completaste este formulario</h2>
+            <p>Gracias {{ patient.nombre }}! Tus datos ya fueron recibidos.</p>
+            <p class="mt-2">Tu nutricionista los revisara antes de tu consulta.</p>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Progress Bar -->
+    <div class="progress-wrapper">
+        <div class="progress-steps">
+            <div class="progress-step active" data-step="1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Datos</div>
+            </div>
+            <div class="progress-step" data-step="2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Salud</div>
+            </div>
+            <div class="progress-step" data-step="3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Habitos</div>
+            </div>
+            <div class="progress-step" data-step="4">
+                <div class="step-circle">4</div>
+                <div class="step-label">Objetivos</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="main-content">
+        <form id="intakeForm">
+            <!-- Step 1: Datos Personales -->
+            <div class="form-section active" data-step="1">
+                <div class="section-title">
+                    <i class="fas fa-user"></i>
+                    <span>Datos Personales</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Nombre completo <span class="required">*</span></label>
+                        <input type="text" class="form-control" name="nombre"
+                               value="{{ patient.nombre or '' }}" required
+                               placeholder="Tu nombre completo">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha de nacimiento <span class="required">*</span></label>
+                        <input type="date" class="form-control" name="fecha_nacimiento"
+                               value="{{ patient.fecha_nacimiento or '' }}" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Sexo <span class="required">*</span></label>
+                        <select class="form-select" name="sexo" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="Femenino" {% if patient.sexo == 'Femenino' %}selected{% endif %}>Femenino</option>
+                            <option value="Masculino" {% if patient.sexo == 'Masculino' %}selected{% endif %}>Masculino</option>
+                            <option value="Otro" {% if patient.sexo == 'Otro' %}selected{% endif %}>Otro</option>
+                            <option value="Prefiero no decir" {% if patient.sexo == 'Prefiero no decir' %}selected{% endif %}>Prefiero no decir</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Ocupacion / Profesion</label>
+                        <input type="text" class="form-control" name="ocupacion"
+                               value="{{ patient.ocupacion or '' }}"
+                               placeholder="Ej: Ingeniero, Estudiante, etc.">
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Direccion (opcional)</label>
+                        <input type="text" class="form-control" name="direccion"
+                               value="{{ patient.direccion or '' }}"
+                               placeholder="Ciudad, Comuna">
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <div></div>
+                    <button type="button" class="btn-nav btn-next" onclick="nextStep()">
+                        Siguiente <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Antecedentes de Salud -->
+            <div class="form-section" data-step="2">
+                <div class="section-title">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>Antecedentes de Salud</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Antecedentes medicos (marca los que apliquen)</label>
+                        <div class="checkbox-pills" id="diagnosticosGroup">
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="diabetes">
+                                <i class="fas fa-tint"></i> Diabetes
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="hipertension">
+                                <i class="fas fa-heart"></i> Hipertension
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="dislipidemia">
+                                <i class="fas fa-chart-line"></i> Colesterol alto
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="hipotiroidismo">
+                                <i class="fas fa-shield-alt"></i> Tiroides
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="gastritis">
+                                <i class="fas fa-stomach"></i> Gastritis/Reflujo
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="colon_irritable">
+                                <i class="fas fa-bacteria"></i> Colon irritable
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="anemia">
+                                <i class="fas fa-tint"></i> Anemia
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="ninguno">
+                                <i class="fas fa-check"></i> Ninguno
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Medicamentos actuales</label>
+                        <textarea class="form-control" name="medicamentos" rows="2"
+                                  placeholder="Lista los medicamentos que tomas actualmente (nombre y dosis si la conoces)">{{ patient.medicamentos or '' }}</textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Suplementos o vitaminas</label>
+                        <textarea class="form-control" name="suplementos" rows="2"
+                                  placeholder="Vitaminas, minerales, proteinas, etc.">{{ patient.suplementos or '' }}</textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Cirugias anteriores</label>
+                        <textarea class="form-control" name="cirugias" rows="2"
+                                  placeholder="Lista cirugias relevantes y el ano aproximado">{{ patient.cirugias or '' }}</textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Antecedentes familiares (padres, hermanos)</label>
+                        <div class="checkbox-pills" id="antecedentesGroup">
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="antecedentes_familiares" value="diabetes">
+                                Diabetes
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="antecedentes_familiares" value="hipertension">
+                                Hipertension
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="antecedentes_familiares" value="cancer">
+                                Cancer
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="antecedentes_familiares" value="obesidad">
+                                Obesidad
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="antecedentes_familiares" value="cardiopatia">
+                                Enf. del corazon
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Alergias alimentarias</label>
+                        <textarea class="form-control" name="alergias" rows="2"
+                                  placeholder="Ej: Mani, mariscos, lactosa, gluten...">{{ patient.alergias or '' }}</textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Intolerancias</label>
+                        <textarea class="form-control" name="intolerancias" rows="2"
+                                  placeholder="Alimentos que te caen mal o te producen malestar">{{ patient.intolerancias or '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button type="button" class="btn-nav btn-prev" onclick="prevStep()">
+                        <i class="fas fa-arrow-left"></i> Anterior
+                    </button>
+                    <button type="button" class="btn-nav btn-next" onclick="nextStep()">
+                        Siguiente <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Estilo de Vida y Habitos -->
+            <div class="form-section" data-step="3">
+                <div class="section-title">
+                    <i class="fas fa-running"></i>
+                    <span>Estilo de Vida</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Horas de sueno promedio</label>
+                        <select class="form-select" name="horas_sueno">
+                            <option value="">Seleccionar...</option>
+                            <option value="menos_5">Menos de 5 horas</option>
+                            <option value="5-6">5-6 horas</option>
+                            <option value="6-7">6-7 horas</option>
+                            <option value="7-8">7-8 horas</option>
+                            <option value="mas_8">Mas de 8 horas</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Calidad de sueno</label>
+                        <div class="range-container">
+                            <div class="range-value" id="suenoValue">5</div>
+                            <input type="range" class="form-range" name="calidad_sueno"
+                                   min="1" max="10" value="5"
+                                   oninput="document.getElementById('suenoValue').textContent = this.value">
+                            <div class="range-labels">
+                                <span>Muy mala</span>
+                                <span>Excelente</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Nivel de estres</label>
+                        <div class="range-container">
+                            <div class="range-value" id="estresValue">5</div>
+                            <input type="range" class="form-range" name="nivel_estres"
+                                   min="1" max="10" value="5"
+                                   oninput="document.getElementById('estresValue').textContent = this.value">
+                            <div class="range-labels">
+                                <span>Muy bajo</span>
+                                <span>Muy alto</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Actividad fisica</label>
+                        <select class="form-select" name="actividad_fisica">
+                            <option value="">Seleccionar...</option>
+                            <option value="sedentario">Sedentario (poco o nada de ejercicio)</option>
+                            <option value="ligero">Ligero (ejercicio 1-2 veces/semana)</option>
+                            <option value="moderado">Moderado (ejercicio 3-4 veces/semana)</option>
+                            <option value="activo">Activo (ejercicio 5-6 veces/semana)</option>
+                            <option value="muy_activo">Muy activo (ejercicio diario intenso)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Tipo de ejercicio que realizas</label>
+                        <input type="text" class="form-control" name="tipo_ejercicio"
+                               placeholder="Ej: Caminar, correr, gimnasio, yoga, natacion...">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Consumo de alcohol</label>
+                        <select class="form-select" name="consumo_alcohol">
+                            <option value="">Seleccionar...</option>
+                            <option value="nunca">Nunca</option>
+                            <option value="ocasional">Ocasionalmente (eventos)</option>
+                            <option value="semanal">1-2 veces por semana</option>
+                            <option value="frecuente">3+ veces por semana</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Tabaco</label>
+                        <select class="form-select" name="tabaco">
+                            <option value="">Seleccionar...</option>
+                            <option value="no">No fumo</option>
+                            <option value="ex">Ex fumador</option>
+                            <option value="ocasional">Ocasionalmente</option>
+                            <option value="si">Si, fumo regularmente</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Restricciones alimentarias</label>
+                        <div class="checkbox-pills" id="restriccionesGroup">
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="restricciones_alimentarias" value="vegetariano">
+                                <i class="fas fa-leaf"></i> Vegetariano
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="restricciones_alimentarias" value="vegano">
+                                <i class="fas fa-seedling"></i> Vegano
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="restricciones_alimentarias" value="sin_gluten">
+                                <i class="fas fa-bread-slice"></i> Sin gluten
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="restricciones_alimentarias" value="sin_lactosa">
+                                <i class="fas fa-cheese"></i> Sin lactosa
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="restricciones_alimentarias" value="kosher">
+                                Kosher
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="restricciones_alimentarias" value="halal">
+                                Halal
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="restricciones_alimentarias" value="ninguna">
+                                <i class="fas fa-check"></i> Ninguna
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button type="button" class="btn-nav btn-prev" onclick="prevStep()">
+                        <i class="fas fa-arrow-left"></i> Anterior
+                    </button>
+                    <button type="button" class="btn-nav btn-next" onclick="nextStep()">
+                        Siguiente <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Motivo y Objetivos -->
+            <div class="form-section" data-step="4">
+                <div class="section-title">
+                    <i class="fas fa-bullseye"></i>
+                    <span>Motivo de Consulta y Objetivos</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Motivo de consulta <span class="required">*</span></label>
+                        <textarea class="form-control" name="motivo_consulta" rows="4" required
+                                  placeholder="Cuentanos por que buscas atencion nutricional. Que te preocupa? Que te gustaria lograr?">{{ patient.motivo_consulta or '' }}</textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Objetivos (selecciona los que apliquen)</label>
+                        <div class="checkbox-pills" id="objetivosGroup">
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="objetivos" value="bajar_peso">
+                                <i class="fas fa-weight"></i> Bajar de peso
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="objetivos" value="subir_peso">
+                                <i class="fas fa-dumbbell"></i> Subir de peso
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="objetivos" value="ganar_masa">
+                                <i class="fas fa-dumbbell"></i> Ganar masa muscular
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="objetivos" value="mejorar_salud">
+                                <i class="fas fa-heart"></i> Mejorar salud general
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="objetivos" value="energia">
+                                <i class="fas fa-bolt"></i> Tener mas energia
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="objetivos" value="digestion">
+                                <i class="fas fa-stomach"></i> Mejorar digestion
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="objetivos" value="rendimiento">
+                                <i class="fas fa-running"></i> Mejorar rendimiento deportivo
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="objetivos" value="habitos">
+                                <i class="fas fa-utensils"></i> Mejorar habitos alimenticios
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="objetivos" value="condicion">
+                                <i class="fas fa-notes-medical"></i> Manejar condicion medica
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Sintomas digestivos (si los tienes)</label>
+                        <div class="checkbox-pills" id="sintomasGroup">
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="sintomas_gi" value="hinchazon">
+                                Hinchazon
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="sintomas_gi" value="gases">
+                                Gases
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="sintomas_gi" value="reflujo">
+                                Reflujo/Acidez
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="sintomas_gi" value="estrenimiento">
+                                Estrenimiento
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="sintomas_gi" value="diarrea">
+                                Diarrea
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="sintomas_gi" value="nauseas">
+                                Nauseas
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="sintomas_gi" value="ninguno">
+                                <i class="fas fa-check"></i> Ninguno
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <div class="alert alert-info" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: none; border-radius: 1rem;">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="fas fa-info-circle fa-2x text-primary"></i>
+                                <div>
+                                    <strong>Casi listo!</strong>
+                                    <p class="mb-0 small">Al enviar este formulario, tu nutricionista recibira tus datos y podra preparar mejor tu consulta.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button type="button" class="btn-nav btn-prev" onclick="prevStep()">
+                        <i class="fas fa-arrow-left"></i> Anterior
+                    </button>
+                    <button type="submit" class="btn-nav btn-submit">
+                        <i class="fas fa-paper-plane"></i> Enviar mis datos
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Success Message (hidden by default) -->
+        <div id="successMessage" style="display: none;">
+            <div class="alert-box alert-success">
+                <i class="fas fa-check-circle"></i>
+                <h2>Datos enviados correctamente!</h2>
+                <p>Gracias por completar el formulario.</p>
+                <p class="mt-2">Tu nutricionista revisara tu informacion antes de la consulta.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% if not error and not already_completed %}
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+        const token = '{{ patient.intake_token }}';
+
+        // Initialize checkbox pills
+        document.querySelectorAll('.checkbox-pill').forEach(pill => {
+            pill.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    const checkbox = this.querySelector('input[type="checkbox"]');
+                    checkbox.checked = !checkbox.checked;
+                }
+                this.classList.toggle('selected', this.querySelector('input').checked);
+            });
+
+            // Set initial state
+            const checkbox = pill.querySelector('input[type="checkbox"]');
+            if (checkbox.checked) {
+                pill.classList.add('selected');
+            }
+        });
+
+        function updateProgress() {
+            document.querySelectorAll('.progress-step').forEach((step, index) => {
+                const stepNum = index + 1;
+                step.classList.remove('active', 'completed');
+
+                if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                } else if (stepNum === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            const targetSection = document.querySelector(`.form-section[data-step="${step}"]`);
+            if (targetSection) {
+                targetSection.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            updateProgress();
+        }
+
+        function nextStep() {
+            // Validate current step
+            const currentSection = document.querySelector(`.form-section[data-step="${currentStep}"]`);
+            const requiredFields = currentSection.querySelectorAll('[required]');
+            let valid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    valid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            if (!valid) {
+                alert('Por favor completa los campos requeridos');
+                return;
+            }
+
+            if (currentStep < totalSteps) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+
+        // Form submission
+        document.getElementById('intakeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.classList.add('show');
+
+            // Collect form data
+            const formData = new FormData(this);
+            const data = {};
+
+            // Handle regular fields
+            formData.forEach((value, key) => {
+                if (!data[key]) {
+                    data[key] = value;
+                }
+            });
+
+            // Handle checkbox groups as arrays
+            ['diagnosticos', 'antecedentes_familiares', 'restricciones_alimentarias', 'objetivos', 'sintomas_gi'].forEach(group => {
+                const checkboxes = document.querySelectorAll(`input[name="${group}"]:checked`);
+                data[group] = Array.from(checkboxes).map(cb => cb.value);
+            });
+
+            try {
+                const response = await fetch(`/api/intake/${token}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                loadingOverlay.classList.remove('show');
+
+                if (result.success) {
+                    // Hide form and show success message
+                    document.getElementById('intakeForm').style.display = 'none';
+                    document.querySelector('.progress-wrapper').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    alert(result.error || 'Error al guardar los datos. Por favor intenta nuevamente.');
+                }
+            } catch (error) {
+                loadingOverlay.classList.remove('show');
+                alert('Error de conexion. Por favor verifica tu internet e intenta nuevamente.');
+                console.error('Error:', error);
+            }
+        });
+
+        // Initialize
+        updateProgress();
+    </script>
+    {% endif %}
+</body>
+</html>

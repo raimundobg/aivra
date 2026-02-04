@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Nutricionista - NutriAI Pro</title>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dashboard Nutricionista - ZenLab Pro</title>
+        
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        
+        <!-- 🔧 FIX: Rutas directas sin url_for -->
+        <link rel="stylesheet" href="/css/modern-style.css">
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/modern-style.css">
-    <link rel="stylesheet" href="/css/pauta-generator.css">
-
     <style>
         body { background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%); font-family: 'Inter', sans-serif; }
         .dashboard-wrapper { padding-top: 120px; min-height: 100vh; }
@@ -46,8 +47,8 @@
         .badge-pro { background: linear-gradient(135deg, #10b981, #14b8a6); color: white; padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; }
         .empty-state { text-align: center; padding: 3rem; color: #6b7280; }
         .empty-icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.3; }
-        .patient-item { background: white; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; border-left: 4px solid #10b981; transition: all 0.2s; }
-        .patient-item:hover { transform: translateX(8px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .recipe-item { background: white; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1rem; border-left: 4px solid #10b981; transition: all 0.2s; }
+        .recipe-item:hover { transform: translateX(8px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -55,7 +56,7 @@
         <div class="container">
             <div class="navbar-wrapper" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0;">
                 <a href="{{ url_for('index') }}" class="navbar-brand-custom">
-                    <img src="/images/logo.png" alt="NutriAI" style="height: 200px;">
+                    <img src="/images/logo.png" alt="ZenLab" style="height: 200px;">
                 </a>
                 <div style="display: flex; gap: 1rem; align-items: center;">
                     <span style="color: rgba(255,255,255,0.9);">
@@ -63,7 +64,7 @@
                         {{ current_user.get_full_name() }}
                     </span>
                     <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-light">
-                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesion
+                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
                     </a>
                 </div>
             </div>
@@ -87,6 +88,7 @@
                             Plan Professional
                         </span>
                     </div>
+                    
                 </div>
             </div>
         </div>
@@ -95,33 +97,33 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon green">
-                        <i class="fas fa-users"></i>
+                        <i class="fas fa-flask"></i>
                     </div>
-                    <h3 class="stat-number green">0</h3>
-                    <p style="color: #6b7280; margin: 0;">Pacientes Activos</p>
+                    <h3 class="stat-number green">{{ total_recipes }}</h3>
+                    <p style="color: #6b7280; margin: 0;">Recetas Totales</p>
                 </div>
                 
                 <div class="stat-card">
                     <div class="stat-icon blue">
-                        <i class="fas fa-calendar-check"></i>
+                        <i class="fas fa-infinity"></i>
                     </div>
-                    <h3 class="stat-number blue">0</h3>
-                    <p style="color: #6b7280; margin: 0;">Pautas Generadas</p>
+                    <h3 class="stat-number blue">∞</h3>
+                    <p style="color: #6b7280; margin: 0;">Recetas Disponibles</p>
                 </div>
                 
                 <div class="stat-card">
                     <div class="stat-icon red">
-                        <i class="fas fa-clock"></i>
+                        <i class="fas fa-users"></i>
                     </div>
-                    <h3 class="stat-number red">70%</h3>
-                    <p style="color: #6b7280; margin: 0;">Tiempo Ahorrado</p>
+                    <h3 class="stat-number red">0</h3>
+                    <p style="color: #6b7280; margin: 0;">Pacientes Activos</p>
                 </div>
                 
                 <div class="stat-card">
                     <div class="stat-icon orange">
                         <i class="fas fa-chart-line"></i>
                     </div>
-                    <h3 class="stat-number orange">0</h3>
+                    <h3 class="stat-number orange">{{ recipes|length }}</h3>
                     <p style="color: #6b7280; margin: 0;">Este Mes</p>
                 </div>
             </div>
@@ -129,39 +131,34 @@
             <div class="content-section">
                 <h2 class="section-title">
                     <i class="fas fa-th-large title-icon"></i>
-                    Menu Principal
+                    Menú Principal
                 </h2>
                 
                 <div class="menu-grid">
-                    <div class="menu-card" onclick="window.location.href='{{ url_for('patient_intake_wtf') }}'">
+                    <div class="menu-card" onclick="window.location.href='{{ url_for('patient_intake_form') }}'">
                         <div class="menu-icon green">
                             <i class="fas fa-user-plus"></i>
                         </div>
                         <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Ingresar un Paciente</h3>
-                        <p style="color: #6b7280; text-align: center; margin: 0;">Registrar nueva ficha con datos antropometricos</p>
+                        <p style="color: #6b7280; text-align: center; margin: 0;">Registrar nueva ficha con datos antropométricos</p>
                     </div>
                     
-                    <div class="menu-card" onclick="window.location.href='/dashboard/nutritionist/patients'">
+                    <div class="menu-card" onclick="alert('Próximamente: Módulo de Gestión de Fichas')">
                         <div class="menu-icon blue">
                             <i class="fas fa-folder-open"></i>
                         </div>
-                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Mis Pacientes</h3>
-                        <p style="color: #6b7280; text-align: center; margin: 0;">Ver, editar y gestionar fichas</p>
+                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Abrir Ficha Paciente</h3>
+                        <p style="color: #6b7280; text-align: center; margin: 0;">Ver historial y plan nutricional</p>
                     </div>
                     
-                    <div class="menu-card" data-bs-toggle="modal" data-bs-target="#pautaGeneratorModal" style="cursor: pointer;">
+                    <div class="menu-card" data-bs-toggle="modal" data-bs-target="#mealPlanGeneratorModal">
                         <div class="menu-icon purple">
-                            <i class="fas fa-calendar-week"></i>
+                            <i class="fas fa-utensils"></i>
                         </div>
-                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Pauta Alimentaria Semanal</h3>
-                        <p style="color: #6b7280; text-align: center; margin: 0;">7 dias de alimentacion personalizada con IA</p>
+                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Crear Pauta de Alimentacion</h3>
+                        <p style="color: #6b7280; text-align: center; margin: 0;">Plan semanal con lista de supermercado</p>
                     </div>
                     
-                    <!-- ============================================
-                         RECIPE GENERATOR - COMENTADO/DESHABILITADO
-                         Descomentar cuando este listo para produccion
-                         ============================================ -->
-                    <!--
                     <div class="menu-card" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
                         <div class="menu-icon orange">
                             <i class="fas fa-flask"></i>
@@ -169,168 +166,655 @@
                         <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center;">Generar Recetas Personalizadas</h3>
                         <p style="color: #6b7280; text-align: center; margin: 0;">Batidos optimizados con IA</p>
                     </div>
-                    -->
                 </div>
             </div>
             
-            <!-- Seccion de Actividad Reciente -->
             <div class="content-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                     <h2 class="section-title" style="margin: 0;">
                         <i class="fas fa-history title-icon"></i>
-                        Actividad Reciente
+                        Mis Recetas Recientes
                     </h2>
-                    <button class="btn-modern" data-bs-toggle="modal" data-bs-target="#pautaGeneratorModal">
+                    <button class="btn-modern" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
                         <i class="fas fa-plus me-2"></i>
-                        Nueva Pauta
+                        Nueva Receta
                     </button>
                 </div>
                 
-                <div class="empty-state">
-                    <i class="fas fa-clipboard-list empty-icon"></i>
-                    <h4 style="color: #6b7280; font-size: 1.25rem; font-weight: 600;">Comienza ingresando pacientes</h4>
-                    <p>Registra tu primer paciente y genera pautas alimentarias automaticas</p>
-                    <button class="btn-modern" onclick="window.location.href='{{ url_for('patient_intake_wtf') }}'">
-                        <i class="fas fa-user-plus me-2"></i>
-                        Ingresar Primer Paciente
-                    </button>
-                </div>
+                {% if recipes %}
+                    {% for recipe in recipes %}
+                        <div class="recipe-item">
+                            <h4 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">
+                                <i class="fas fa-blender" style="color: #10b981;"></i>
+                                {{ recipe.recipe_name }}
+                            </h4>
+                            <small style="color: #6b7280;">
+                                <i class="far fa-calendar me-1"></i>
+                                {{ recipe.created_at.strftime('%d/%m/%Y %H:%M') }}
+                            </small>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-flask empty-icon"></i>
+                        <h4 style="color: #6b7280; font-size: 1.25rem; font-weight: 600;">Aún no tienes recetas</h4>
+                        <p>¡Crea tu primera receta optimizada con IA!</p>
+                        <button class="btn-modern" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
+                            <i class="fas fa-plus me-2"></i>
+                            Crear Primera Receta
+                        </button>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
-    
-    <!-- ============================================
-         MODAL: GENERADOR DE PAUTA ALIMENTARIA
-         ============================================ -->
-    <div class="modal fade pauta-modal" id="pautaGeneratorModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+    <!-- ========================================
+         MODAL DEL GENERADOR DE RECETAS COMPLETO
+    ========================================= -->
+    <div class="modal fade" id="recipeGeneratorModal" tabindex="-1" aria-labelledby="recipeGeneratorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-calendar-week me-2"></i>
-                        Generador de Pauta Alimentaria Semanal
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="recipeGeneratorModalLabel">
+                        <i class="fas fa-flask me-2 text-primary"></i>
+                        Generador de Batidos con Biodisponibilidad Optimizada
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                
-                <!-- Stepper -->
-                <div class="pauta-stepper">
-                    <div class="pauta-step active" data-step="1">
-                        <span class="step-number">1</span>
-                        <span class="step-text">Seleccionar Paciente</span>
-                    </div>
-                    <span class="step-connector"></span>
-                    <div class="pauta-step" data-step="2">
-                        <span class="step-number">2</span>
-                        <span class="step-text">Revisar Pauta Semanal</span>
-                    </div>
-                    <span class="step-connector"></span>
-                    <div class="pauta-step" data-step="3">
-                        <span class="step-number">3</span>
-                        <span class="step-text">Guardar</span>
-                    </div>
-                </div>
-                
                 <div class="modal-body">
-                    <!-- PASO 1: Seleccionar Paciente -->
-                    <div id="pautaStep1" class="pauta-panel active">
-                        <h4 style="font-weight: 700; margin-bottom: 1.5rem;">
-                            <i class="fas fa-users me-2" style="color: #14b8a6;"></i>
-                            Selecciona un paciente para generar su pauta semanal
-                        </h4>
-                        
-                        <div class="alert alert-info" style="border-radius: 10px; border-left: 4px solid #14b8a6;">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Pauta de 7 dias:</strong> El sistema generara un plan alimenticio completo 
-                            basado en los datos del paciente: GET, objetivos, registro de 24 horas y frecuencia de consumo.
+                    <div class="row">
+                        <!-- Form Section -->
+                        <div class="col-lg-6">
+                            <div class="generator-form">
+                                <div class="alert alert-info mb-4" role="alert">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Modo actual:</strong> Polvos para batidos con biodisponibilidad optimizada
+                                </div>
+                                
+                                <form id="recipeForm">
+                                    <!-- Primary Objective -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label" for="primaryObjective">
+                                            <i class="fas fa-bullseye me-1"></i> Objetivo Principal
+                                        </label>
+                                        <select class="form-select" id="primaryObjective" required>
+                                            <option value="">Selecciona un objetivo</option>
+                                            <option value="immune">🛡️ Fortalecer sistema inmunológico</option>
+                                            <option value="energy">⚡ Aumentar energía y vitalidad</option>
+                                            <option value="cognitive">🧠 Mejorar rendimiento cognitivo</option>
+                                            <option value="physical">💪 Potenciar rendimiento físico</option>
+                                            <option value="muscle">🏋️ Aumentar masa muscular</option>
+                                            <option value="detox">🌿 Desintoxicación y limpieza</option>
+                                            <option value="stress">😌 Reducir estrés y mejorar sueño</option>
+                                            <option value="digestion">🥗 Mejorar digestión</option>
+                                            <option value="beauty">💅 Mejorar piel, cabello y uñas</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Secondary Objectives -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label">
+                                            <i class="fas fa-list-check me-1"></i> Objetivos Secundarios (Opcional)
+                                        </label>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="form-label small" for="secondaryObjective1">Salud general</label>
+                                                <select class="form-select mb-2" id="secondaryObjective1">
+                                                    <option value="">Ninguno</option>
+                                                    <option value="cardiovascular">Salud cardiovascular</option>
+                                                    <option value="brain_health">Salud cerebral</option>
+                                                    <option value="inflammation">Reducir inflamación</option>
+                                                    <option value="blood_sugar">Regular azúcar</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small" for="secondaryObjective2">Bienestar específico</label>
+                                                <select class="form-select" id="secondaryObjective2">
+                                                    <option value="">Ninguno</option>
+                                                    <option value="weight_control">Control de peso</option>
+                                                    <option value="hormonal">Equilibrar hormonas</option>
+                                                    <option value="joint_health">Articulaciones</option>
+                                                    <option value="visual_health">Salud visual</option>
+                                                    <option value="intestinal_health">Salud intestinal</option>
+                                                    <option value="bone_health">Fortalecer huesos</option>
+                                                    <option value="liver_function">Función hepática</option>
+                                                    <option value="mood">Estado de ánimo</option>
+                                                    <option value="mental_clarity">Claridad mental</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Dietary Restrictions -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label">
+                                            <i class="fas fa-shield-halved me-1"></i> Restricciones Dietéticas
+                                        </label>
+                                        <div class="restriction-buttons" role="group">
+                                            <button type="button" class="btn btn-outline-secondary restriction-btn" data-restriction="vegan">
+                                                <i class="fas fa-leaf me-1"></i> Vegano
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary restriction-btn" data-restriction="gluten_free">
+                                                <i class="fas fa-wheat me-1"></i> Sin Gluten
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary restriction-btn" data-restriction="nut_free">
+                                                <i class="fas fa-ban me-1"></i> Sin Frutos Secos
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Number of Ingredients -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label" for="numIngredients">
+                                            <i class="fas fa-layer-group me-1"></i> Número de Ingredientes: 
+                                            <span id="ingredientCount" class="text-primary fw-bold">5</span>
+                                        </label>
+                                        <input type="range" class="form-range" id="numIngredients" 
+                                               min="3" max="8" value="5">
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">Mínimo (3)</small>
+                                            <small class="text-muted">Óptimo (5-6)</small>
+                                            <small class="text-muted">Máximo (8)</small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Package Size -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label" for="packageSize">
+                                            <i class="fas fa-box me-1"></i> Tamaño del Envase
+                                        </label>
+                                        <select class="form-select" id="packageSize">
+                                            <option value="100" selected>100g (Personal - 30 porciones)</option>
+                                            <option value="200">200g (Familiar - 60 porciones)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Food Sources -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label">
+                                            <i class="fas fa-filter me-1"></i> Fuentes de Alimentos (Opcional)
+                                        </label>
+                                        <div class="source-buttons" role="group">
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="hongos_medicinales">
+                                                <i class="fas fa-mushroom me-1"></i> Hongos
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="frutas_bayas">
+                                                <i class="fas fa-apple-alt me-1"></i> Frutas
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="frutos_secos">
+                                                <i class="fas fa-seedling me-1"></i> Frutos Secos
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="algas_marinas">
+                                                <i class="fas fa-water me-1"></i> Algas
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="semillas">
+                                                <i class="fas fa-seed me-1"></i> Semillas
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary source-btn" data-source="vegetales_verdes">
+                                                <i class="fas fa-leaf me-1"></i> Vegetales
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Product Type -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">
+                                            <i class="fas fa-box-open me-2"></i>
+                                            Tipo de Producto
+                                        </label>
+                                        <select class="form-select form-select-lg" id="productType" required>
+                                            <option value="polvo_batidos" selected>
+                                                🥤 Polvo para Batidos
+                                            </option>
+                                            <option value="jugo_funcional">
+                                                🧋 Jugo Funcional
+                                            </option>
+                                            <option value="capsula_suplemento">
+                                                💊 Cápsulas
+                                            </option>
+                                            <option value="polvo_hidratacion">
+                                                💧 Polvo de Hidratación
+                                            </option>
+                                            <option value="golden_milk">
+                                                ☕ Golden Milk
+                                            </option>
+                                            <option value="supergreens">
+                                                🌿 Supergreens
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Generate Button -->
+                                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                                        <i class="fas fa-flask me-2"></i>
+                                        Generar Mi Batido Optimizado
+                                    </button>
+                                    
+                                    <div class="mt-3 text-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-atom me-1"></i>
+                                            El algoritmo analizará <strong>35 interacciones científicas</strong>
+                                        </small>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                        
-                        <div class="patient-search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" 
-                                   id="pautaPatientSearch" 
-                                   placeholder="Buscar por nombre o numero de ficha..."
-                                   autocomplete="off">
-                        </div>
-                        
-                        <div id="pautaPatientList">
-                            <div class="text-center py-5">
-                                <div class="spinner-border text-primary" role="status"></div>
-                                <p class="mt-2 text-muted">Cargando pacientes...</p>
+
+                        <!-- Results Section -->
+                        <div class="col-lg-6">
+                            <!-- Empty State -->
+                            <div id="emptyState" class="text-center py-5">
+                                <i class="fas fa-blender fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Tu batido personalizado aparecerá aquí</h5>
+                                <p class="text-muted small">Completa el formulario y genera tu receta</p>
+                                
+                                <div class="mt-4">
+                                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-check text-success"></i> Sinergias potenciadoras
+                                        </span>
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-times text-danger"></i> Sin inhibidores
+                                        </span>
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-chart-line text-info"></i> Biodisponibilidad optimizada
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Loading State -->
+                            <div id="loadingSpinner" class="text-center py-5 d-none" role="status">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">Generando batido...</span>
+                                </div>
+                                <h6>Analizando interacciones...</h6>
+                                <p class="text-muted small">Optimizando biodisponibilidad y sinergias</p>
+                            </div>
+                            
+                            <!-- Results Container -->
+                            <div id="recipeResults" class="recipe-results d-none" role="region">
+                                <!-- Recipe content will be populated here by JavaScript -->
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- PASO 2: Revisar Pauta Semanal -->
-                    <div id="pautaStep2" class="pauta-panel">
-                        <div id="pautaEditorContainer">
-                            <!-- Se llena dinamicamente -->
-                        </div>
-                    </div>
-                    
-                    <!-- PASO 3: Confirmacion -->
-                    <div id="pautaStep3" class="pauta-panel">
-                        <div id="pautaConfirmContainer">
-                            <!-- Se llena dinamicamente -->
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="modal-footer">
-                    <button type="button" 
-                            id="pautaPrevBtn" 
-                            class="btn btn-outline-secondary"
-                            style="display: none;"
-                            onclick="pautaPrevStep()">
-                        <i class="fas fa-arrow-left me-2"></i>Anterior
-                    </button>
-                    
-                    <div style="flex: 1;"></div>
-                    
-                    <button type="button" 
-                            class="btn btn-secondary" 
-                            data-bs-dismiss="modal">
-                        Cancelar
-                    </button>
-                    
-                    <button type="button" 
-                            id="pautaNextBtn" 
-                            class="btn btn-pauta-primary"
-                            disabled
-                            onclick="pautaNextStep()">
-                        <i class="fas fa-magic me-2"></i>Generar Pauta Semanal
-                    </button>
-                    
-                    <button type="button" 
-                            id="pautaSaveBtn" 
-                            class="btn btn-success"
-                            style="display: none;"
-                            onclick="savePauta()">
-                        <i class="fas fa-save me-2"></i>Guardar Pauta
-                    </button>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- ============================================
-         MODAL DEL RECIPE GENERATOR - COMENTADO
-         Descomentar cuando este listo para produccion
-         ============================================ -->
-    <!--
-    <div class="modal fade" id="recipeGeneratorModal" tabindex="-1">
-        ... contenido del modal recipe generator ...
+    <!-- ========================================
+         MODAL DEL GENERADOR DE PAUTAS ALIMENTARIAS
+    ========================================= -->
+    <div class="modal fade" id="mealPlanGeneratorModal" tabindex="-1" aria-labelledby="mealPlanGeneratorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header border-0" style="background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white;">
+                    <h5 class="modal-title" id="mealPlanGeneratorModalLabel">
+                        <i class="fas fa-utensils me-2"></i>
+                        Generador de Pauta Alimentaria
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Form Section -->
+                        <div class="col-lg-5">
+                            <div class="generator-form">
+                                <div class="alert alert-info mb-4" role="alert">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Generador de Pautas:</strong> Crea planes alimentarios personalizados considerando alergias, intolerancias y preferencias.
+                                </div>
+
+                                <form id="mealPlanForm">
+                                    <!-- Paciente (opcional) -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label" for="patientSelect">
+                                            <i class="fas fa-user me-1"></i> Paciente (Opcional)
+                                        </label>
+                                        <select class="form-select" id="patientSelect">
+                                            <option value="">Sin paciente especifico</option>
+                                            <!-- Se llenara dinamicamente -->
+                                        </select>
+                                        <small class="text-muted">Si selecciona un paciente, se usaran sus alergias e intolerancias automaticamente.</small>
+                                    </div>
+
+                                    <!-- Tiempo de Comida -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label" for="mealTimeSelect">
+                                            <i class="fas fa-clock me-1"></i> Tiempo de Comida
+                                        </label>
+                                        <select class="form-select" id="mealTimeSelect" required>
+                                            <option value="">Selecciona un tiempo de comida</option>
+                                            <option value="desayuno">Desayuno</option>
+                                            <option value="colacion_am">Colacion AM</option>
+                                            <option value="almuerzo">Almuerzo</option>
+                                            <option value="colacion_pm">Colacion PM</option>
+                                            <option value="cena">Cena</option>
+                                            <option value="colacion_nocturna">Colacion Nocturna</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Objetivo Calorico -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label" for="targetCalories">
+                                            <i class="fas fa-fire me-1"></i> Calorias Objetivo (kcal)
+                                        </label>
+                                        <input type="number" class="form-control" id="targetCalories"
+                                               placeholder="Ej: 500" min="100" max="2000" value="500">
+                                        <small class="text-muted">Calorias aproximadas para este tiempo de comida.</small>
+                                    </div>
+
+                                    <!-- Alergias/Intolerancias -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label">
+                                            <i class="fas fa-allergies me-1"></i> Alergias/Intolerancias
+                                        </label>
+                                        <div class="allergy-buttons" role="group">
+                                            <button type="button" class="btn btn-outline-danger btn-sm allergy-btn mb-1" data-allergy="lactosa">
+                                                Lactosa
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm allergy-btn mb-1" data-allergy="gluten">
+                                                Gluten
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm allergy-btn mb-1" data-allergy="frutos secos">
+                                                Frutos Secos
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm allergy-btn mb-1" data-allergy="huevo">
+                                                Huevo
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm allergy-btn mb-1" data-allergy="mariscos">
+                                                Mariscos
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm allergy-btn mb-1" data-allergy="soya">
+                                                Soya
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm allergy-btn mb-1" data-allergy="pescado">
+                                                Pescado
+                                            </button>
+                                        </div>
+                                        <input type="text" class="form-control mt-2" id="otherAllergies"
+                                               placeholder="Otras alergias (separadas por coma)">
+                                    </div>
+
+                                    <!-- Preferencias Alimentarias -->
+                                    <div class="form-group mb-4">
+                                        <label class="form-label">
+                                            <i class="fas fa-leaf me-1"></i> Preferencias Alimentarias
+                                        </label>
+                                        <div class="preference-buttons" role="group">
+                                            <button type="button" class="btn btn-outline-success btn-sm preference-btn mb-1" data-preference="vegetariano">
+                                                Vegetariano
+                                            </button>
+                                            <button type="button" class="btn btn-outline-success btn-sm preference-btn mb-1" data-preference="vegano">
+                                                Vegano
+                                            </button>
+                                            <button type="button" class="btn btn-outline-success btn-sm preference-btn mb-1" data-preference="bajo_sodio">
+                                                Bajo en Sodio
+                                            </button>
+                                            <button type="button" class="btn btn-outline-success btn-sm preference-btn mb-1" data-preference="bajo_azucar">
+                                                Bajo en Azucar
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Generate Button -->
+                                    <button type="submit" class="btn btn-lg w-100" style="background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white;">
+                                        <i class="fas fa-utensils me-2"></i>
+                                        Generar Pauta Alimentaria
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Results Section -->
+                        <div class="col-lg-7">
+                            <!-- Empty State -->
+                            <div id="mealPlanEmptyState" class="text-center py-5">
+                                <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Tu pauta alimentaria aparecera aqui</h5>
+                                <p class="text-muted small">Completa el formulario y genera tu plan</p>
+
+                                <div class="mt-4">
+                                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-check text-success"></i> Sin alergenos
+                                        </span>
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-apple-alt text-danger"></i> Alimentos reales
+                                        </span>
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-balance-scale text-info"></i> Balanceado
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Loading State -->
+                            <div id="mealPlanLoading" class="text-center py-5 d-none" role="status">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">Generando pauta...</span>
+                                </div>
+                                <h6>Generando pauta alimentaria...</h6>
+                                <p class="text-muted small">Filtrando alergenos y optimizando nutrientes</p>
+                            </div>
+
+                            <!-- Results Container -->
+                            <div id="mealPlanResults" class="d-none">
+                                <!-- Se llenara con JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    -->
-    
+
+    <!-- ========================================
+         SCRIPTS
+    ========================================= -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- ============================================
-         RECIPE GENERATOR JS - COMENTADO
-         Descomentar cuando este listo para produccion
-         ============================================ -->
-    <!-- <script src="/js/modern-recipe-generator.js"></script> -->
-    
-    <script src="/js/pauta-generator.js"></script>
+    <script src="/js/modern-recipe-generator.js"></script>
+    <script>
+    // Update ingredient count display
+    document.getElementById('numIngredients').addEventListener('input', function() {
+        document.getElementById('ingredientCount').textContent = this.value;
+    });
+
+    // ========================================
+    // GENERADOR DE PAUTAS ALIMENTARIAS
+    // ========================================
+    (function() {
+        'use strict';
+
+        let selectedAllergies = new Set();
+        let selectedPreferences = new Set();
+
+        // Toggle allergy buttons
+        document.querySelectorAll('.allergy-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const allergy = this.dataset.allergy;
+                if (selectedAllergies.has(allergy)) {
+                    selectedAllergies.delete(allergy);
+                    this.classList.remove('active', 'btn-danger');
+                    this.classList.add('btn-outline-danger');
+                } else {
+                    selectedAllergies.add(allergy);
+                    this.classList.remove('btn-outline-danger');
+                    this.classList.add('active', 'btn-danger');
+                }
+            });
+        });
+
+        // Toggle preference buttons
+        document.querySelectorAll('.preference-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const pref = this.dataset.preference;
+                if (selectedPreferences.has(pref)) {
+                    selectedPreferences.delete(pref);
+                    this.classList.remove('active', 'btn-success');
+                    this.classList.add('btn-outline-success');
+                } else {
+                    selectedPreferences.add(pref);
+                    this.classList.remove('btn-outline-success');
+                    this.classList.add('active', 'btn-success');
+                }
+            });
+        });
+
+        // Form submission
+        document.getElementById('mealPlanForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const mealTime = document.getElementById('mealTimeSelect').value;
+            const targetCalories = document.getElementById('targetCalories').value;
+            const otherAllergies = document.getElementById('otherAllergies').value;
+
+            if (!mealTime) {
+                alert('Por favor selecciona un tiempo de comida');
+                return;
+            }
+
+            // Combine allergies
+            let allAllergies = Array.from(selectedAllergies);
+            if (otherAllergies) {
+                const extraAllergies = otherAllergies.split(',').map(a => a.trim()).filter(a => a);
+                allAllergies = allAllergies.concat(extraAllergies);
+            }
+
+            // Show loading
+            document.getElementById('mealPlanEmptyState').classList.add('d-none');
+            document.getElementById('mealPlanLoading').classList.remove('d-none');
+            document.getElementById('mealPlanResults').classList.add('d-none');
+
+            try {
+                const response = await fetch('/generate_recipe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        primary_objective: 'salud_general',
+                        secondary_objectives: [],
+                        dietary_restrictions: Array.from(selectedPreferences),
+                        food_sources: [],
+                        product_type: 'ingrediente_cocinar',
+                        num_ingredients: 6,
+                        package_size: 100,
+                        allergies: allAllergies,
+                        meal_time: mealTime
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                // Display results
+                displayMealPlanResults(result, mealTime, targetCalories);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error generando la pauta: ' + error.message);
+            } finally {
+                document.getElementById('mealPlanLoading').classList.add('d-none');
+            }
+        });
+
+        function displayMealPlanResults(result, mealTime, targetCalories) {
+            const resultsContainer = document.getElementById('mealPlanResults');
+
+            const mealTimeLabels = {
+                'desayuno': 'Desayuno',
+                'colacion_am': 'Colacion AM',
+                'almuerzo': 'Almuerzo',
+                'colacion_pm': 'Colacion PM',
+                'cena': 'Cena',
+                'colacion_nocturna': 'Colacion Nocturna'
+            };
+
+            const ingredients = result.ingredients || [];
+
+            let html = `
+                <div class="meal-plan-result">
+                    <div class="meal-plan-header mb-4 p-3 rounded" style="background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white;">
+                        <h4 class="mb-1">
+                            <i class="fas fa-utensils me-2"></i>
+                            ${mealTimeLabels[mealTime] || mealTime}
+                        </h4>
+                        <p class="mb-0 small opacity-75">
+                            <i class="fas fa-fire me-1"></i> Objetivo: ${targetCalories || 500} kcal aprox.
+                        </p>
+                    </div>
+
+                    <div class="meal-plan-ingredients">
+                        <h6 class="mb-3"><i class="fas fa-list me-2"></i>Alimentos Sugeridos</h6>
+            `;
+
+            ingredients.forEach((ing, index) => {
+                const hasWarning = ing.needs_accompaniment;
+                html += `
+                    <div class="ingredient-card p-3 mb-2 rounded ${hasWarning ? 'border-warning border-2' : ''}" style="background: #f8fafc;">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">${ing.name || ing.nombre}</h6>
+                                <small class="text-muted">${ing.function || 'Alimento saludable'}</small>
+                                ${hasWarning ? `
+                                    <div class="alert alert-warning py-1 px-2 mt-2 mb-0">
+                                        <small><i class="fas fa-exclamation-triangle me-1"></i>${ing.accompaniment_suggestion}</small>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-primary">${ing.cantidad_por_porcion ? ing.cantidad_por_porcion.toFixed(1) + 'g' : ing.grams + 'g'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+
+                    <div class="meal-plan-notes mt-4 p-3 rounded" style="background: #f0fdf4;">
+                        <h6 class="mb-2"><i class="fas fa-lightbulb me-2 text-success"></i>Notas</h6>
+                        <ul class="mb-0 small">
+                            <li>Los alimentos fueron filtrados segun las alergias indicadas</li>
+                            <li>Cereales de desayuno, granola y Natur solo se incluyen en desayuno/colaciones</li>
+                            <li>Si hay pan, asegurate de incluir proteina o grasa saludable</li>
+                            <li>Ajusta las porciones segun los requerimientos del paciente</li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-4">
+                        <button class="btn btn-outline-primary me-2" onclick="window.print()">
+                            <i class="fas fa-print me-1"></i> Imprimir
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="copyMealPlan()">
+                            <i class="fas fa-copy me-1"></i> Copiar
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            resultsContainer.innerHTML = html;
+            resultsContainer.classList.remove('d-none');
+        }
+
+        // Copiar pauta
+        window.copyMealPlan = function() {
+            const resultsContainer = document.getElementById('mealPlanResults');
+            const text = resultsContainer.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Pauta copiada al portapapeles');
+            });
+        };
+
+    })();
+    </script>
 </body>
 </html>

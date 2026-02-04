@@ -77,8 +77,8 @@
         <!-- Patient Summary -->
         <div class="patient-summary" id="patientSummary">
             <div class="summary-item">
-                <div class="summary-value" id="summaryEdad">{{ edad_calculada or '-' }}</div>
-                <div class="summary-label">Edad (aÃ±os)</div>
+                <div class="summary-value" id="summaryEdad">{{ patient.calcular_edad() or '-' }}</div>
+                <div class="summary-label">Edad (años)</div>
             </div>
             <div class="summary-item {{ 'warning' if patient.imc and patient.imc >= 25 and patient.imc < 30 else 'danger' if patient.imc and patient.imc >= 30 else '' }}">
                 <div class="summary-value" id="summaryIMC">{{ patient.imc or '-' }}</div>
@@ -94,7 +94,7 @@
             </div>
             <div class="summary-item">
                 <div class="summary-value" id="summaryProteinas">{{ patient.proteinas_g or '-' }}g</div>
-                <div class="summary-label">ProteÃ­nas</div>
+                <div class="summary-label">Proteínas</div>
             </div>
         </div>
         
@@ -102,11 +102,10 @@
         <form id="patientFileForm" class="view-mode">
             <input type="hidden" id="patientId" value="{{ patient.id }}">
             
-            <!-- SECCIÃ“N 1: ANTECEDENTES GENERALES -->
-            <!-- ============================================ -->
+            <!-- SECCIÓN 1: ANTECEDENTES GENERALES -->
             <div class="section-accordion">
                 <button type="button" class="accordion-button-custom" data-bs-toggle="collapse" data-bs-target="#section1">
-                <div class="section-icon green">
+                    <div class="section-icon green">
                         <i class="fas fa-user-circle"></i>
                     </div>
                     <span>1. Antecedentes Generales</span>
@@ -114,1500 +113,611 @@
                 </button>
                 <div class="collapse show" id="section1">
                     <div class="accordion-content">
-                
-                <div class="info-box">
-                    <i class="fas fa-info-circle"></i>
-                    <div>
-                        <strong>InformaciÃ³n bÃ¡sica:</strong> Estos datos son esenciales para personalizar el plan nutricional.
-                    </div>
-                </div>
-                
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <label class="form-label" for="nombre">
-                            <i class="fas fa-user"></i>
-                            Nombre Completo
-                        </label>
-                        <input type="text" class="form-control" id="nombre" name="nombre"  
-                               placeholder="Ej: MarÃ­a GonzÃ¡lez PÃ©rez" value="{{ patient.nombre or '' }}">
-
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <label class="form-label" for="fechaNacimiento">
-                            <i class="fas fa-calendar"></i>
-                            Fecha de Nacimiento
-                        </label>
-                        <input type="date" class="form-control" id="fechaNacimiento" name="fecha_nacimiento" value="{{ patient.fecha_nacimiento or '' }}">
-                        <small class="text-muted">Edad: <span id="edadCalculada">-</span> aÃ±os</small>
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <label class="form-label" for="sexo">
-                            <i class="fas fa-venus-mars"></i>
-                            Sexo
-                        </label>
-                        <select class="form-select" id="sexo" name="sexo" data-patient-value="{{ patient.sexo or '' }}">
-                            <option value="" {{ 'selected' if not patient.sexo else '' }}>Seleccionar</option>
-                            <option value="Masculino" {{ 'selected' if patient.sexo == 'Masculino' else '' }}>Masculino</option>
-                            <option value="Femenino" {{ 'selected' if patient.sexo == 'Femenino' else '' }}>Femenino</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <label class="form-label" for="fechaAtencion">
-                            <i class="fas fa-calendar-check"></i>
-                            Fecha de AtenciÃ³n
-                        </label>
-                        <input type="datetime-local" class="form-control" id="fechaAtencion" name="fecha_atencion" value="{{ patient.fecha_atencion or '' }}">
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <label class="form-label" for="motivoConsulta">
-                            <i class="fas fa-comment-medical"></i>
-                            Motivo de Consulta
-                        </label>
-                        <textarea class="form-control" id="motivoConsulta" name="motivo_consulta" 
-                                  rows="3" 
-                                  placeholder="Describe el motivo principal de la consulta...">{{ patient.motivo_consulta or '' }}</textarea>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <label class="form-label">
-                            <i class="fas fa-bullseye"></i>
-                            Objetivos Principales
-                        </label>
-                        <div class="pill-group">
-                            <button type="button" class="pill-btn" data-objetivo="fraccionamiento">
-                                <i class="fas fa-utensils"></i>
-                                Mejorar fraccionamiento
-                            </button>
-                            <button type="button" class="pill-btn" data-objetivo="agua">
-                                <i class="fas fa-glass-water"></i>
-                                Aumentar consumo de agua
-                            </button>
-                            <button type="button" class="pill-btn" data-objetivo="consciente">
-                                <i class="fas fa-brain"></i>
-                                AlimentaciÃ³n consciente
-                            </button>
-                            <button type="button" class="pill-btn" data-objetivo="proteina">
-                                <i class="fas fa-drumstick-bite"></i>
-                                Aumentar proteÃ­na
-                            </button>
-                            <button type="button" class="pill-btn" data-objetivo="peso">
-                                <i class="fas fa-weight-scale"></i>
-                                Control de peso
-                            </button>
-                        </div>
-                        <input type="hidden" id="objetivos" name="objetivos" value="{{ patient.objetivos or '' }}">
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <label class="form-label" for="diagnosticos">
-                            <i class="fas fa-stethoscope"></i>
-                            DiagnÃ³sticos MÃ©dicos
-                        </label>
-                        <select class="form-select" id="diagnosticos" name="diagnosticos" multiple size="5" data-patient-value="{{ patient.diagnosticos or '' }}">
-                            <option value="colesterol_alto" {{ 'selected' if patient.diagnosticos == 'colesterol_alto' else '' }}>Colesterol Alto</option>
-                            <option value="depresion" {{ 'selected' if patient.diagnosticos == 'depresion' else '' }}>DepresiÃ³n</option>
-                            <option value="diabetes" {{ 'selected' if patient.diagnosticos == 'diabetes' else '' }}>Diabetes</option>
-                            <option value="estrenimiento" {{ 'selected' if patient.diagnosticos == 'estrenimiento' else '' }}>EstreÃ±imiento CrÃ³nico</option>
-                            <option value="hipertension" {{ 'selected' if patient.diagnosticos == 'hipertension' else '' }}>HipertensiÃ³n</option>
-                            <option value="hipotiroidismo" {{ 'selected' if patient.diagnosticos == 'hipotiroidismo' else '' }}>Hipotiroidismo</option>
-                            <option value="hipertiroidismo" {{ 'selected' if patient.diagnosticos == 'hipertiroidismo' else '' }}>Hipertiroidismo</option>
-                            <option value="ingesta_emocional" {{ 'selected' if patient.diagnosticos == 'ingesta_emocional' else '' }}>Ingesta Emocional</option>
-                            <option value="sarcopenia" {{ 'selected' if patient.diagnosticos == 'sarcopenia' else '' }}>Sarcopenia</option>
-                            <option value="otros" {{ 'selected' if patient.diagnosticos == 'otros' else '' }}>Otros</option>
-                        </select>
-                        <small class="text-muted">MantÃ©n presionado Ctrl/Cmd para seleccionar mÃºltiples</small>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <label class="form-label" for="medicamentos">
-                            <i class="fas fa-pills"></i>
-                            Medicamentos Actuales
-                        </label>
-                        <select class="form-select" id="medicamentos" name="medicamentos" multiple size="5" data-patient-value="{{ patient.medicamentos or '' }}">
-                            <option value="ansiolitico" {{ 'selected' if patient.medicamentos == 'ansiolitico' else '' }}>AnsiolÃ­tico</option>
-                            <option value="antidepresivo" {{ 'selected' if patient.medicamentos == 'antidepresivo' else '' }}>Antidepresivo</option>
-                            <option value="diabetes" {{ 'selected' if patient.medicamentos == 'diabetes' else '' }}>Diabetes</option>
-                            <option value="dolor_cronico" {{ 'selected' if patient.medicamentos == 'dolor_cronico' else '' }}>Dolor CrÃ³nico</option>
-                            <option value="enfermedades_cronicas" {{ 'selected' if patient.medicamentos == 'enfermedades_cronicas' else '' }}>Enfermedades CrÃ³nicas</option>
-                            <option value="hipertension" {{ 'selected' if patient.medicamentos == 'hipertension' else '' }}>HipertensiÃ³n</option>
-                            <option value="otros" {{ 'selected' if patient.medicamentos == 'otros' else '' }}>Otros</option>
-                        </select>
-                        <small class="text-muted">MantÃ©n presionado Ctrl/Cmd para seleccionar mÃºltiples</small>
-                    </div>
-                    
-                    <div class="col-md-12">
-                        <label class="form-label" for="suplementos">
-                            <i class="fas fa-capsules"></i>
-                            Suplementos
-                        </label>
-                        <select class="form-select" id="suplementos" name="suplementos" multiple size="4" data-patient-value="{{ patient.suplementos or '' }}">
-                            <option value="ashwaganda" {{ 'selected' if patient.suplementos == 'ashwaganda' else '' }}>Ashwaganda</option>
-                            <option value="betadanina" {{ 'selected' if patient.suplementos == 'betadanina' else '' }}>Betadanina</option>
-                            <option value="b12" {{ 'selected' if patient.suplementos == 'b12' else '' }}>Vitamina B12</option>
-                            <option value="c" {{ 'selected' if patient.suplementos == 'c' else '' }}>Vitamina C</option>
-                            <option value="cordyceps" {{ 'selected' if patient.suplementos == 'cordyceps' else '' }}>Cordyceps</option>
-                            <option value="creatina" {{ 'selected' if patient.suplementos == 'creatina' else '' }}>Creatina</option>
-                            <option value="d" {{ 'selected' if patient.suplementos == 'd' else '' }}>Vitamina D</option>
-                            <option value="e" {{ 'selected' if patient.suplementos == 'e' else '' }}>Vitamina E</option>
-                            <option value="hierro" {{ 'selected' if patient.suplementos == 'hierro' else '' }}>Hierro</option>
-                            <option value="magnesio" {{ 'selected' if patient.suplementos == 'magnesio' else '' }}>Magnesio</option>
-                            <option value="melena_leon" {{ 'selected' if patient.suplementos == 'melena_leon' else '' }}>Melena de LeÃ³n</option>
-                            <option value="omega3" {{ 'selected' if patient.suplementos == 'omega3' else '' }}>Omega 3</option>
-                            <option value="proteina_polvo" {{ 'selected' if patient.suplementos == 'proteina_polvo' else '' }}>ProteÃ­na en Polvo</option>
-                            <option value="reishi" {{ 'selected' if patient.suplementos == 'reishi' else '' }}>Reishi</option>
-                            <option value="zinc" {{ 'selected' if patient.suplementos == 'zinc' else '' }}>Zinc</option>
-                        </select>
-                        <small class="text-muted">MantÃ©n presionado Ctrl/Cmd para seleccionar mÃºltiples</small>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- ============================================ -->
-                    </div>
-                </div>
-            </div>
-            <!-- SECCIÃ“N 2: CONDUCTA Y ENTORNO -->
-            <!-- ============================================ -->
-            <div class="section-accordion">
-                <button type="button" class="accordion-button-custom" data-bs-toggle="collapse" data-bs-target="#section2">
-                <div class="section-header" style="background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);">
-                    <i class="fas fa-home"></i>
-                    <span>2. Conducta y Entorno</span>
-                </div>
-                
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <label class="form-label" for="profesion">
-                            <i class="fas fa-briefcase"></i>
-                            ProfesiÃ³n / OcupaciÃ³n
-                        </label>
-                        <select class="form-select" id="profesion" name="profesion" data-patient-value="{{ patient.profesion or '' }}">
-                            <option value="" {{ 'selected' if not patient.sexo else '' }}>Seleccionar</option>
-                            <option value="abogado" {{ 'selected' if patient.profesion == 'abogado' else '' }}>Abogado</option>
-                            <option value="administrativo" {{ 'selected' if patient.profesion == 'administrativo' else '' }}>Administrativo</option>
-                            <option value="arquitecto" {{ 'selected' if patient.profesion == 'arquitecto' else '' }}>Arquitecto</option>
-                            <option value="comercial" {{ 'selected' if patient.profesion == 'comercial' else '' }}>Ing. Comercial</option>
-                            <option value="contador" {{ 'selected' if patient.profesion == 'contador' else '' }}>Contador</option>
-                            <option value="diseÃ±ador" {{ 'selected' if patient.profesion == 'diseÃ±ador' else '' }}>DiseÃ±ador</option>
-                            <option value="empresario" {{ 'selected' if patient.profesion == 'empresario' else '' }}>Empresario</option>
-                            <option value="enfermero" {{ 'selected' if patient.profesion == 'enfermero' else '' }}>Enfermero/a</option>
-                            <option value="estudiante" {{ 'selected' if patient.profesion == 'estudiante' else '' }}>Estudiante</option>
-                            <option value="ingeniero" {{ 'selected' if patient.profesion == 'ingeniero' else '' }}>Ingeniero</option>
-                            <option value="medico" {{ 'selected' if patient.profesion == 'medico' else '' }}>MÃ©dico</option>
-                            <option value="profesor" {{ 'selected' if patient.profesion == 'profesor' else '' }}>Profesor/a</option>
-                            <option value="psicologo" {{ 'selected' if patient.profesion == 'psicologo' else '' }}>PsicÃ³logo/a</option>
-                            <option value="vendedor" {{ 'selected' if patient.profesion == 'vendedor' else '' }}>Vendedor</option>
-                            <option value="otro" {{ 'selected' if patient.profesion == 'otro' else '' }}>Otro</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label" for="teletrabajo">
-                            <i class="fas fa-laptop-house"></i>
-                            Â¿Trabaja desde casa?
-                        </label>
-                        <select class="form-select" id="teletrabajo" name="teletrabajo" data-patient-value="{{ patient.teletrabajo or '' }}">
-                            <option value="" {{ 'selected' if not patient.sexo else '' }}>Seleccionar</option>
-                            <option value="si" {{ 'selected' if patient.teletrabajo == 'si' else '' }}>SÃ­, teletrabajo</option>
-                            <option value="no" {{ 'selected' if patient.teletrabajo == 'no' else '' }}>No, va a oficina</option>
-                            <option value="hibrido" {{ 'selected' if patient.teletrabajo == 'hibrido' else '' }}>HÃ­brido</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label" for="quien_cocina">
-                            <i class="fas fa-utensil-spoon"></i>
-                            Â¿QuiÃ©n cocina en casa?
-                        </label>
-                        <select class="form-select" id="quien_cocina" name="quien_cocina" multiple size="3" data-patient-value="{{ patient.quien_cocina or '' }}">
-                            <option value="yo" {{ 'selected' if patient.quien_cocina == 'yo' else '' }}>Yo mismo/a</option>
-                            <option value="pareja" {{ 'selected' if patient.quien_cocina == 'pareja' else '' }}>Pareja</option>
-                            <option value="empleada" {{ 'selected' if patient.quien_cocina == 'empleada' else '' }}>Empleada del hogar</option>
-                            <option value="familia" {{ 'selected' if patient.quien_cocina == 'familia' else '' }}>Otro familiar</option>
-                            <option value="delivery" {{ 'selected' if patient.quien_cocina == 'delivery' else '' }}>Delivery/Comida preparada</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <label class="form-label" for="con_quien_vive">
-                            <i class="fas fa-users"></i>
-                            Â¿Con quiÃ©n vive?
-                        </label>
-                        <select class="form-select" id="con_quien_vive" name="con_quien_vive" multiple size="4" data-patient-value="{{ patient.con_quien_vive or '' }}">
-                            <option value="solo" {{ 'selected' if patient.con_quien_vive == 'solo' else '' }}>Solo/a</option>
-                            <option value="pareja" {{ 'selected' if patient.con_quien_vive == 'pareja' else '' }}>Pareja</option>
-                            <option value="hijos" {{ 'selected' if patient.con_quien_vive == 'hijos' else '' }}>Hijos</option>
-                            <option value="padres" {{ 'selected' if patient.con_quien_vive == 'padres' else '' }}>Padres</option>
-                            <option value="compaÃ±eros" {{ 'selected' if patient.con_quien_vive == 'compaÃ±eros' else '' }}>CompaÃ±eros de piso</option>
-                            <option value="mascotas" {{ 'selected' if patient.con_quien_vive == 'mascotas' else '' }}>Mascotas</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <label class="form-label" for="donde_come">
-                            <i class="fas fa-map-marker-alt"></i>
-                            Â¿DÃ³nde come habitualmente?
-                        </label>
-                        <select class="form-select" id="donde_come" name="donde_come" multiple size="4" data-patient-value="{{ patient.donde_come or '' }}">
-                            <option value="casa" {{ 'selected' if patient.donde_come == 'casa' else '' }}>En casa</option>
-                            <option value="trabajo" {{ 'selected' if patient.donde_come == 'trabajo' else '' }}>En el trabajo</option>
-                            <option value="restaurante" {{ 'selected' if patient.donde_come == 'restaurante' else '' }}>Restaurante</option>
-                            <option value="casino" {{ 'selected' if patient.donde_come == 'casino' else '' }}>Casino/CafeterÃ­a</option>
-                            <option value="auto" {{ 'selected' if patient.donde_come == 'auto' else '' }}>En el auto</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- ============================================ -->
-                    </div>
-                </div>
-            </div>
-            <!-- SECCIÃ“N 3: SALUD GENERAL -->
-            <!-- ============================================ -->
-            <div class="section-accordion">
-                <button type="button" class="accordion-button-custom" data-bs-toggle="collapse" data-bs-target="#section3">
-                <div class="section-icon green">
-                        <i class="fas fa-heart-pulse"></i>
-                    </div>
-                    <span>3. Salud General y HÃ¡bitos</span>
-                    <i class="fas fa-chevron-down accordion-icon"></i>
-                </button>
-                <div class="collapse show" id="section3">
-                    <div class="accordion-content">
-                
-                <div class="row g-4">
-                    <!-- SueÃ±o -->
-                    <div class="col-md-4">
-                        <label class="form-label" for="horas_sueno">
-                            <i class="fas fa-moon"></i>
-                            Horas de SueÃ±o
-                        </label>
-                        <select class="form-select" id="horas_sueno" name="horas_sueno">
-                            <option value="">Seleccionar</option>
-                            <option value="3-5">3 a 5 horas</option>
-                            <option value="5-6">5 a 6 horas</option>
-                            <option value="6-7">6 a 7 horas</option>
-                            <option value="7-8">7 a 8 horas</option>
-                            <option value="+8">MÃ¡s de 8 horas</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="fas fa-star"></i>
-                            Calidad del SueÃ±o
-                        </label>
-                        <div class="range-container">
-                            <div class="range-value">
-                                <span id="calidadSuenoValue">5</span>/10
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-user"></i> Nombre Completo
+                                </label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" 
+                                       value="{{ patient.nombre }}" required>
                             </div>
-                            <input type="range" class="form-range" id="calidad_sueno" 
-                                   name="calidad_sueno" min="1" max="10" value="5">
-                            <div class="d-flex justify-content-between">
-                                <small class="text-muted">PÃ©sima</small>
-                                <small class="text-muted">Excelente</small>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar"></i> Fecha de Nacimiento
+                                </label>
+                                <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento"
+                                       value="{{ patient.fecha_nacimiento }}">
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label" for="observaciones_sueno">
-                            <i class="fas fa-sticky-note"></i>
-                            Observaciones SueÃ±o
-                        </label>
-                        <input type="text" class="form-control" id="observaciones_sueno" 
-                               name="observaciones_sueno" placeholder="Ej: Insomnio, apnea..." value="{{ patient.observaciones_sueno or '' }}">
-
-                    </div>
-                    
-                    <!-- EstrÃ©s -->
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="fas fa-brain"></i>
-                            Nivel de EstrÃ©s
-                        </label>
-                        <div class="range-container">
-                            <div class="range-value">
-                                <span id="estresValue">5</span>/10
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-venus-mars"></i> Sexo
+                                </label>
+                                <select class="form-select" id="sexo" name="sexo">
+                                    <option value="">Seleccionar</option>
+                                    <option value="Masculino" {{ 'selected' if patient.sexo == 'Masculino' }}>Masculino</option>
+                                    <option value="Femenino" {{ 'selected' if patient.sexo == 'Femenino' }}>Femenino</option>
+                                </select>
                             </div>
-                            <input type="range" class="form-range" id="nivel_estres" 
-                                   name="nivel_estres" min="1" max="10" value="5">
-                            <div class="d-flex justify-content-between">
-                                <small class="text-muted">Bajo</small>
-                                <small class="text-muted">Muy Alto</small>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-envelope"></i> Email
+                                </label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                       value="{{ patient.email or '' }}" placeholder="correo@ejemplo.com">
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label" for="gatillantes_estres">
-                            <i class="fas fa-bolt"></i>
-                            Gatillantes del EstrÃ©s
-                        </label>
-                        <input type="text" class="form-control" id="gatillantes_estres" 
-                               name="gatillantes_estres" placeholder="Ej: Trabajo, familia..." value="{{ patient.gatillantes_estres or '' }}">
-
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label" for="manejo_estres">
-                            <i class="fas fa-spa"></i>
-                            Manejo del EstrÃ©s
-                        </label>
-                        <input type="text" class="form-control" id="manejo_estres" 
-                               name="manejo_estres" placeholder="Ej: MeditaciÃ³n, ejercicio..." value="{{ patient.manejo_estres or '' }}">
-
-                    </div>
-                    
-                    <!-- HÃ¡bitos -->
-                    <div class="col-md-4">
-                        <label class="form-label" for="consumo_alcohol">
-                            <i class="fas fa-wine-glass"></i>
-                            Consumo de Alcohol
-                        </label>
-                        <select class="form-select" id="consumo_alcohol" name="consumo_alcohol" data-patient-value="{{ patient.consumo_alcohol or '' }}">
-                            <option value="" {{ 'selected' if not patient.sexo else '' }}>Seleccionar</option>
-                            <option value="nunca" {{ 'selected' if patient.consumo_alcohol == 'nunca' else '' }}>No consume</option>
-                            <option value="1_semana" {{ 'selected' if patient.consumo_alcohol == '1_semana' else '' }}>1 vez a la semana</option>
-                            <option value="2_semana" {{ 'selected' if patient.consumo_alcohol == '2_semana' else '' }}>2 veces a la semana</option>
-                            <option value="3_mas" {{ 'selected' if patient.consumo_alcohol == '3_mas' else '' }}>3+ veces a la semana</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-4" id="tipoAlcoholContainer" style="display: none;">
-                        <label class="form-label" for="tipo_alcohol">
-                            <i class="fas fa-glass-cheers"></i>
-                            Tipo de Alcohol
-                        </label>
-                        <select class="form-select" id="tipo_alcohol" name="tipo_alcohol" multiple size="3" data-patient-value="{{ patient.tipo_alcohol or '' }}">
-                            <option value="destilado" {{ 'selected' if patient.tipo_alcohol == 'destilado' else '' }}>Destilado</option>
-                            <option value="vino" {{ 'selected' if patient.tipo_alcohol == 'vino' else '' }}>Vino</option>
-                            <option value="cerveza" {{ 'selected' if patient.tipo_alcohol == 'cerveza' else '' }}>Cerveza</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-2">
-                        <label class="form-label" for="tabaco">
-                            <i class="fas fa-smoking"></i>
-                            Â¿Fuma?
-                        </label>
-                        <select class="form-select" id="tabaco" name="tabaco" data-patient-value="{{ patient.tabaco or '' }}">
-                            <option value="no" {{ 'selected' if patient.tabaco == 'no' else '' }}>No</option>
-                            <option value="si" {{ 'selected' if patient.tabaco == 'si' else '' }}>SÃ­</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-2">
-                        <label class="form-label" for="drogas">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            Â¿Drogas?
-                        </label>
-                        <select class="form-select" id="drogas" name="drogas" data-patient-value="{{ patient.drogas or '' }}">
-                            <option value="no" {{ 'selected' if patient.drogas == 'no' else '' }}>No</option>
-                            <option value="si" {{ 'selected' if patient.drogas == 'si' else '' }}>SÃ­</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Actividad fÃ­sica -->
-                    <div class="col-md-4">
-                        <label class="form-label" for="actividad_fisica">
-                            <i class="fas fa-running"></i>
-                            Actividad FÃ­sica Semanal
-                        </label>
-                        <select class="form-select" id="actividad_fisica" name="actividad_fisica">
-                            <option value="">Seleccionar</option>
-                            <option value="sedentario">Sedentario (sin ejercicio)</option>
-                            <option value="ligero">Ligero (1-2 veces/semana)</option>
-                            <option value="moderado">Moderado (3-4 veces/semana)</option>
-                            <option value="activo">Activo (5-6 veces/semana)</option>
-                            <option value="muy_activo">Muy Activo (diario)</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label" for="tipo_ejercicio">
-                            <i class="fas fa-dumbbell"></i>
-                            Tipo de Ejercicio
-                        </label>
-                        <input type="text" class="form-control" id="tipo_ejercicio" 
-                               name="tipo_ejercicio" placeholder="Ej: Caminata, pesas, yoga...">
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label" for="duracion_ejercicio">
-                            <i class="fas fa-clock"></i>
-                            DuraciÃ³n por SesiÃ³n (min)
-                        </label>
-                        <select class="form-select" id="duracion_ejercicio" name="duracion_ejercicio" data-patient-value="{{ patient.duracion_ejercicio or '' }}">
-                            <option value="" {{ 'selected' if not patient.sexo else '' }}>Seleccionar</option>
-                            <option value="20" {{ 'selected' if patient.duracion_ejercicio == '20' else '' }}>20 minutos</option>
-                            <option value="30" {{ 'selected' if patient.duracion_ejercicio == '30' else '' }}>30 minutos</option>
-                            <option value="45" {{ 'selected' if patient.duracion_ejercicio == '45' else '' }}>45 minutos</option>
-                            <option value="60" {{ 'selected' if patient.duracion_ejercicio == '60' else '' }}>60 minutos</option>
-                            <option value="90" {{ 'selected' if patient.duracion_ejercicio == '90' else '' }}>90 minutos</option>
-                            <option value="120" {{ 'selected' if patient.duracion_ejercicio == '120' else '' }}>2 horas</option>
-                            <option value="180" {{ 'selected' if patient.duracion_ejercicio == '180' else '' }}>3+ horas</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- ============================================ -->
-                    </div>
-                </div>
-            </div>
-            <!-- SECCIÃ“N 4: SÃNTOMAS GASTROINTESTINALES -->
-            <!-- ============================================ -->
-            <div class="section-accordion">
-                <button type="button" class="accordion-button-custom" data-bs-toggle="collapse" data-bs-target="#section4">
-                <div class="section-header" style="background: linear-gradient(135deg, #ef4444 0%, #f97316 100%); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
-                    <i class="fas fa-stomach"></i>
-                    <span>4. SÃ­ntomas Gastrointestinales</span>
-                </div>
-                
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <label class="form-label" for="frecuencia_evacuacion">
-                            <i class="fas fa-toilet"></i>
-                            Frecuencia de EvacuaciÃ³n
-                        </label>
-                        <select class="form-select" id="frecuencia_evacuacion" name="frecuencia_evacuacion" data-patient-value="{{ patient.frecuencia_evacuacion or '' }}">
-                            <option value="" {{ 'selected' if not patient.sexo else '' }}>Seleccionar</option>
-                            <option value="1_dia" {{ 'selected' if patient.frecuencia_evacuacion == '1_dia' else '' }}>1 vez al dÃ­a</option>
-                            <option value="2_dia" {{ 'selected' if patient.frecuencia_evacuacion == '2_dia' else '' }}>2+ veces al dÃ­a</option>
-                            <option value="dia_medio" {{ 'selected' if patient.frecuencia_evacuacion == 'dia_medio' else '' }}>DÃ­a por medio</option>
-                            <option value="2_semana" {{ 'selected' if patient.frecuencia_evacuacion == '2_semana' else '' }}>2 veces a la semana</option>
-                            <option value="menos" {{ 'selected' if patient.frecuencia_evacuacion == 'menos' else '' }}>Menos frecuente</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Reflujo -->
-                    <div class="col-md-4">
-                        <label class="form-label" for="reflujo">
-                            <i class="fas fa-fire"></i>
-                            Â¿Presenta Reflujo?
-                        </label>
-                        <select class="form-select" id="reflujo" name="reflujo" data-patient-value="{{ patient.reflujo or '' }}">
-                            <option value="no" {{ 'selected' if patient.reflujo == 'no' else '' }}>No</option>
-                            <option value="si" {{ 'selected' if patient.reflujo == 'si' else '' }}>SÃ­</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-4" id="reflujoAlimentoContainer" style="display: none;">
-                        <label class="form-label" for="reflujo_alimento">
-                            <i class="fas fa-search"></i>
-                            Â¿Con quÃ© alimentos?
-                        </label>
-                        <input type="text" class="form-control" id="reflujo_alimento" 
-                               name="reflujo_alimento" placeholder="Ej: CafÃ©, tomate, cÃ­tricos..." value="{{ patient.reflujo_alimento or '' }}">
-
-                    </div>
-                    
-                    <!-- HinchazÃ³n -->
-                    <div class="col-md-4">
-                        <label class="form-label" for="hinchazon">
-                            <i class="fas fa-expand-alt"></i>
-                            Â¿Presenta HinchazÃ³n?
-                        </label>
-                        <select class="form-select" id="hinchazon" name="hinchazon" data-patient-value="{{ patient.hinchazon or '' }}">
-                            <option value="no" {{ 'selected' if patient.hinchazon == 'no' else '' }}>No</option>
-                            <option value="si" {{ 'selected' if patient.hinchazon == 'si' else '' }}>SÃ­</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-4" id="hinchazonAlimentoContainer" style="display: none;">
-                        <label class="form-label" for="hinchazon_alimento">
-                            <i class="fas fa-search"></i>
-                            Â¿Con quÃ© alimentos?
-                        </label>
-                        <input type="text" class="form-control" id="hinchazon_alimento" 
-                               name="hinchazon_alimento" placeholder="Ej: Legumbres, lÃ¡cteos..." value="{{ patient.hinchazon_alimento or '' }}">
-
-                    </div>
-                    
-                    <!-- Alergias -->
-                    <div class="col-md-4">
-                        <label class="form-label" for="tiene_alergias">
-                            <i class="fas fa-allergies"></i>
-                            Â¿Alergias / Intolerancias?
-                        </label>
-                        <select class="form-select" id="tiene_alergias" name="tiene_alergias" data-patient-value="{{ patient.tiene_alergias or '' }}">
-                            <option value="no" {{ 'selected' if patient.tiene_alergias == 'no' else '' }}>No</option>
-                            <option value="si" {{ 'selected' if patient.tiene_alergias == 'si' else '' }}>SÃ­</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-8" id="alergiasAlimentoContainer" style="display: none;">
-                        <label class="form-label" for="alergias_alimento">
-                            <i class="fas fa-search"></i>
-                            Â¿A quÃ© alimentos?
-                        </label>
-                        <input type="text" class="form-control" id="alergias_alimento" 
-                               name="alergias_alimento" placeholder="Ej: Gluten, lactosa, mariscos..." value="{{ patient.alergias_alimento or '' }}">
-
-                    </div>
-                </div>
-            </div>
-            
-            <!-- ============================================ -->
-                    </div>
-                </div>
-            </div>
-            <!-- SECCIÃ“N 5: REGISTRO 24 HORAS (ACTUALIZADO CON EXCEL) -->
-            <!-- ============================================ -->
-            <div class="section-accordion">
-                <button type="button" class="accordion-button-custom" data-bs-toggle="collapse" data-bs-target="#section5">
-                <div class="section-header" style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);">
-                    <i class="fas fa-clock"></i>
-                    <span>5. Registro de AlimentaciÃ³n 24 Horas</span>
-                </div>
-                
-                <div class="info-box">
-                    <i class="fas fa-info-circle"></i>
-                    <div>
-                        <strong>Recordatorio:</strong> Registra todo lo que el paciente consumiÃ³ en las Ãºltimas 24 horas. Los valores nutricionales se calcularÃ¡n automÃ¡ticamente.
-                    </div>
-                </div>
-                
-                <!-- Tabs para tiempos de comida -->
-                <ul class="nav nav-tabs meal-tabs" id="mealTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="desayuno-tab" data-bs-toggle="tab" data-bs-target="#desayuno" type="button" role="tab">
-                            <i class="fas fa-sun"></i> Desayuno
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="colacion1-tab" data-bs-toggle="tab" data-bs-target="#colacion1" type="button" role="tab">
-                            <i class="fas fa-apple-alt"></i> ColaciÃ³n AM
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="almuerzo-tab" data-bs-toggle="tab" data-bs-target="#almuerzo" type="button" role="tab">
-                            <i class="fas fa-utensils"></i> Almuerzo
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="colacion2-tab" data-bs-toggle="tab" data-bs-target="#colacion2" type="button" role="tab">
-                            <i class="fas fa-cookie"></i> ColaciÃ³n PM
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="cena-tab" data-bs-toggle="tab" data-bs-target="#cena" type="button" role="tab">
-                            <i class="fas fa-moon"></i> Cena
-                        </button>
-                    </li>
-                </ul>
-                
-                <div class="tab-content" id="mealTabContent">
-                    <!-- Desayuno -->
-                    <div class="tab-pane fade show active" id="desayuno" role="tabpanel">
-                        <div class="meal-table-container">
-                            <table class="table table-bordered meal-table" id="desayunoTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 15%;">Grupo</th>
-                                        <th style="width: 15%;">Subgrupo</th>
-                                        <th style="width: 20%;">Alimento</th>
-                                        <th style="width: 15%;">PorciÃ³n</th>
-                                        <th style="width: 8%;">Kcal</th>
-                                        <th style="width: 7%;">Prot (g)</th>
-                                        <th style="width: 7%;">Carbs (g)</th>
-                                        <th style="width: 7%;">LÃ­pidos (g)</th>
-                                        <th style="width: 3%;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="meal-row" data-meal="desayuno">
-                                        <td>
-                                            <select class="form-select form-select-sm grupo-select" onchange="window.loadSubgrupos(this, 'desayuno', 0)">
-                                                <option value="">Grupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm subgrupo-select" disabled>
-                                                <option value="">Subgrupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm alimento-select" disabled>
-                                                <option value="">Alimento</option>
-                                            </select>
-                                        </td>
-                                        <td class="porcion-cell">
-                                            <span class="text-muted">-</span>
-                                        </td>
-                                        <td class="nutrient-cell kcal-cell">-</td>
-                                        <td class="nutrient-cell prot-cell">-</td>
-                                        <td class="nutrient-cell carbs-cell">-</td>
-                                        <td class="nutrient-cell lipidos-cell">-</td>
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removeRow(this)">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr class="totals-row">
-                                        <td colspan="4" class="text-end fw-bold">Total Desayuno:</td>
-                                        <td class="fw-bold total-kcal">0</td>
-                                        <td class="fw-bold total-prot">0</td>
-                                        <td class="fw-bold total-carbs">0</td>
-                                        <td class="fw-bold total-lipidos">0</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.addMealRow('desayuno')">
-                                <i class="fas fa-plus me-1"></i> Agregar Alimento
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- ColaciÃ³n AM -->
-                    <div class="tab-pane fade" id="colacion1" role="tabpanel">
-                        <div class="meal-table-container">
-                            <table class="table table-bordered meal-table" id="colacion1Table">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 15%;">Grupo</th>
-                                        <th style="width: 15%;">Subgrupo</th>
-                                        <th style="width: 20%;">Alimento</th>
-                                        <th style="width: 15%;">PorciÃ³n</th>
-                                        <th style="width: 8%;">Kcal</th>
-                                        <th style="width: 7%;">Prot (g)</th>
-                                        <th style="width: 7%;">Carbs (g)</th>
-                                        <th style="width: 7%;">LÃ­pidos (g)</th>
-                                        <th style="width: 3%;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="meal-row" data-meal="colacion1">
-                                        <td>
-                                            <select class="form-select form-select-sm grupo-select" onchange="window.loadSubgrupos(this, 'colacion1', 0)">
-                                                <option value="">Grupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm subgrupo-select" disabled>
-                                                <option value="">Subgrupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm alimento-select" disabled>
-                                                <option value="">Alimento</option>
-                                            </select>
-                                        </td>
-                                        <td class="porcion-cell">
-                                            <span class="text-muted">-</span>
-                                        </td>
-                                        <td class="nutrient-cell kcal-cell">-</td>
-                                        <td class="nutrient-cell prot-cell">-</td>
-                                        <td class="nutrient-cell carbs-cell">-</td>
-                                        <td class="nutrient-cell lipidos-cell">-</td>
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removeRow(this)">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr class="totals-row">
-                                        <td colspan="4" class="text-end fw-bold">Total ColaciÃ³n AM:</td>
-                                        <td class="fw-bold total-kcal">0</td>
-                                        <td class="fw-bold total-prot">0</td>
-                                        <td class="fw-bold total-carbs">0</td>
-                                        <td class="fw-bold total-lipidos">0</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.addMealRow('colacion1')">
-                                <i class="fas fa-plus me-1"></i> Agregar Alimento
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Almuerzo -->
-                    <div class="tab-pane fade" id="almuerzo" role="tabpanel">
-                        <div class="meal-table-container">
-                            <table class="table table-bordered meal-table" id="almuerzoTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 15%;">Grupo</th>
-                                        <th style="width: 15%;">Subgrupo</th>
-                                        <th style="width: 20%;">Alimento</th>
-                                        <th style="width: 15%;">PorciÃ³n</th>
-                                        <th style="width: 8%;">Kcal</th>
-                                        <th style="width: 7%;">Prot (g)</th>
-                                        <th style="width: 7%;">Carbs (g)</th>
-                                        <th style="width: 7%;">LÃ­pidos (g)</th>
-                                        <th style="width: 3%;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="meal-row" data-meal="almuerzo">
-                                        <td>
-                                            <select class="form-select form-select-sm grupo-select" onchange="window.loadSubgrupos(this, 'almuerzo', 0)">
-                                                <option value="">Grupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm subgrupo-select" disabled>
-                                                <option value="">Subgrupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm alimento-select" disabled>
-                                                <option value="">Alimento</option>
-                                            </select>
-                                        </td>
-                                        <td class="porcion-cell">
-                                            <span class="text-muted">-</span>
-                                        </td>
-                                        <td class="nutrient-cell kcal-cell">-</td>
-                                        <td class="nutrient-cell prot-cell">-</td>
-                                        <td class="nutrient-cell carbs-cell">-</td>
-                                        <td class="nutrient-cell lipidos-cell">-</td>
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removeRow(this)">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr class="totals-row">
-                                        <td colspan="4" class="text-end fw-bold">Total Almuerzo:</td>
-                                        <td class="fw-bold total-kcal">0</td>
-                                        <td class="fw-bold total-prot">0</td>
-                                        <td class="fw-bold total-carbs">0</td>
-                                        <td class="fw-bold total-lipidos">0</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.addMealRow('almuerzo')">
-                                <i class="fas fa-plus me-1"></i> Agregar Alimento
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- ColaciÃ³n PM -->
-                    <div class="tab-pane fade" id="colacion2" role="tabpanel">
-                        <div class="meal-table-container">
-                            <table class="table table-bordered meal-table" id="colacion2Table">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 15%;">Grupo</th>
-                                        <th style="width: 15%;">Subgrupo</th>
-                                        <th style="width: 20%;">Alimento</th>
-                                        <th style="width: 15%;">PorciÃ³n</th>
-                                        <th style="width: 8%;">Kcal</th>
-                                        <th style="width: 7%;">Prot (g)</th>
-                                        <th style="width: 7%;">Carbs (g)</th>
-                                        <th style="width: 7%;">LÃ­pidos (g)</th>
-                                        <th style="width: 3%;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="meal-row" data-meal="colacion2">
-                                        <td>
-                                            <select class="form-select form-select-sm grupo-select" onchange="window.loadSubgrupos(this, 'colacion2', 0)">
-                                                <option value="">Grupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm subgrupo-select" disabled>
-                                                <option value="">Subgrupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm alimento-select" disabled>
-                                                <option value="">Alimento</option>
-                                            </select>
-                                        </td>
-                                        <td class="porcion-cell">
-                                            <span class="text-muted">-</span>
-                                        </td>
-                                        <td class="nutrient-cell kcal-cell">-</td>
-                                        <td class="nutrient-cell prot-cell">-</td>
-                                        <td class="nutrient-cell carbs-cell">-</td>
-                                        <td class="nutrient-cell lipidos-cell">-</td>
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removeRow(this)">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr class="totals-row">
-                                        <td colspan="4" class="text-end fw-bold">Total ColaciÃ³n PM:</td>
-                                        <td class="fw-bold total-kcal">0</td>
-                                        <td class="fw-bold total-prot">0</td>
-                                        <td class="fw-bold total-carbs">0</td>
-                                        <td class="fw-bold total-lipidos">0</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.addMealRow('colacion2')">
-                                <i class="fas fa-plus me-1"></i> Agregar Alimento
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Cena -->
-                    <div class="tab-pane fade" id="cena" role="tabpanel">
-                        <div class="meal-table-container">
-                            <table class="table table-bordered meal-table" id="cenaTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 15%;">Grupo</th>
-                                        <th style="width: 15%;">Subgrupo</th>
-                                        <th style="width: 20%;">Alimento</th>
-                                        <th style="width: 15%;">PorciÃ³n</th>
-                                        <th style="width: 8%;">Kcal</th>
-                                        <th style="width: 7%;">Prot (g)</th>
-                                        <th style="width: 7%;">Carbs (g)</th>
-                                        <th style="width: 7%;">LÃ­pidos (g)</th>
-                                        <th style="width: 3%;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="meal-row" data-meal="cena">
-                                        <td>
-                                            <select class="form-select form-select-sm grupo-select" onchange="window.loadSubgrupos(this, 'cena', 0)">
-                                                <option value="">Grupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm subgrupo-select" disabled>
-                                                <option value="">Subgrupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm alimento-select" disabled>
-                                                <option value="">Alimento</option>
-                                            </select>
-                                        </td>
-                                        <td class="porcion-cell">
-                                            <span class="text-muted">-</span>
-                                        </td>
-                                        <td class="nutrient-cell kcal-cell">-</td>
-                                        <td class="nutrient-cell prot-cell">-</td>
-                                        <td class="nutrient-cell carbs-cell">-</td>
-                                        <td class="nutrient-cell lipidos-cell">-</td>
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removeRow(this)">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr class="totals-row">
-                                        <td colspan="4" class="text-end fw-bold">Total Cena:</td>
-                                        <td class="fw-bold total-kcal">0</td>
-                                        <td class="fw-bold total-prot">0</td>
-                                        <td class="fw-bold total-carbs">0</td>
-                                        <td class="fw-bold total-lipidos">0</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.addMealRow('cena')">
-                                <i class="fas fa-plus me-1"></i> Agregar Alimento
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Resumen Total del DÃ­a -->
-                <div class="daily-summary mt-4">
-                    <h5><i class="fas fa-chart-pie me-2"></i>Resumen Diario</h5>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="summary-card">
-                                <div class="summary-value" id="totalDiaKcal">0</div>
-                                <div class="summary-label">CalorÃ­as Totales</div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-phone"></i> Teléfono
+                                </label>
+                                <input type="tel" class="form-control" id="telefono" name="telefono"
+                                       value="{{ patient.telefono or '' }}" placeholder="+56 9 1234 5678">
                             </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="summary-card">
-                                <div class="summary-value" id="totalDiaProt">0g</div>
-                                <div class="summary-label">ProteÃ­nas</div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-briefcase"></i> Ocupación
+                                </label>
+                                <input type="text" class="form-control" id="ocupacion" name="ocupacion"
+                                       value="{{ patient.ocupacion or '' }}">
                             </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="summary-card">
-                                <div class="summary-value" id="totalDiaCarbs">0g</div>
-                                <div class="summary-label">Carbohidratos</div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-comment-medical"></i> Motivo de Consulta
+                                </label>
+                                <textarea class="form-control" id="motivo_consulta" name="motivo_consulta" 
+                                          rows="3">{{ patient.motivo_consulta or '' }}</textarea>
                             </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="summary-card">
-                                <div class="summary-value" id="totalDiaLipidos">0g</div>
-                                <div class="summary-label">LÃ­pidos</div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-bullseye"></i> Objetivos
+                                </label>
+                                <textarea class="form-control" id="objetivos" name="objetivos" 
+                                          rows="3">{{ patient.objetivos or '' }}</textarea>
+                            </div>
+                            
+                            <div class="subsection-header">
+                                <i class="fas fa-notes-medical"></i> Historial Médico
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-stethoscope"></i> Diagnósticos Médicos
+                                </label>
+                                <textarea class="form-control" id="diagnosticos" name="diagnosticos" 
+                                          rows="2">{{ patient.diagnosticos or '' }}</textarea>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-pills"></i> Medicamentos Actuales
+                                </label>
+                                <textarea class="form-control" id="medicamentos" name="medicamentos" 
+                                          rows="2">{{ patient.medicamentos or '' }}</textarea>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-capsules"></i> Suplementos
+                                </label>
+                                <textarea class="form-control" id="suplementos" name="suplementos" 
+                                          rows="2">{{ patient.suplementos or '' }}</textarea>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-allergies"></i> Alergias Alimentarias
+                                </label>
+                                <textarea class="form-control" id="alergias" name="alergias" 
+                                          rows="2">{{ patient.alergias or '' }}</textarea>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-exclamation-triangle"></i> Intolerancias
+                                </label>
+                                <textarea class="form-control" id="intolerancias" name="intolerancias" 
+                                          rows="2">{{ patient.intolerancias or '' }}</textarea>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- ============================================ -->
-                    </div>
-                </div>
-            </div>
-            <!-- SECCIÃ“N 6: FRECUENCIA DE CONSUMO (CON CAMPOS LIBRES) -->
-            <!-- ============================================ -->
+            <!-- SECCIÓN 2: EVALUACIÓN ANTROPOMÉTRICA -->
             <div class="section-accordion">
-                <button type="button" class="accordion-button-custom" data-bs-toggle="collapse" data-bs-target="#section6">
-                <div class="section-header" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);">
-                    <i class="fas fa-calendar-week"></i>
-                    <span>6. Encuesta de Frecuencia de Consumo</span>
-                </div>
-                
-                <div class="info-box">
-                    <i class="fas fa-info-circle"></i>
-                    <div>
-                        <strong>Instrucciones:</strong> Indica cuÃ¡ntas veces por semana el paciente consume cada grupo de alimentos (0-7 veces).
-                    </div>
-                </div>
-                
-                <div class="frequency-table-container">
-                    <table class="table table-bordered frequency-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 35%;">Grupo de Alimentos</th>
-                                <th style="width: 45%;">Frecuencia Semanal</th>
-                                <th style="width: 20%;">Especificar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><i class="fas fa-bread-slice me-2 text-warning"></i>Cereales de desayuno</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="cereales_desayuno">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_cereales_desayuno" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="cereales_desayuno_tipo" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-wheat-awn me-2 text-warning"></i>Arroz, pasta, papas</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="arroz_pasta">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_arroz_pasta" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="arroz_pasta_tipo" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-bread-slice me-2 text-warning"></i>Pan</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="pan">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_pan" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="tipo_pan" placeholder="Â¿QuÃ© tipo?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-carrot me-2 text-success"></i>Verduras</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="verduras">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_verduras" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="verduras_tipo" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-apple-alt me-2 text-danger"></i>Frutas</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="frutas">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_frutas" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="cuales_frutas" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-glass-water me-2 text-info"></i>Jugos de fruta</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="jugos">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_jugos" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="jugos_tipo" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-seedling me-2 text-success"></i>Legumbres</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="legumbres">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_legumbres" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="legumbres_tipo" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-drumstick-bite me-2 text-warning"></i>Carnes blancas</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="carnes_blancas">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_carnes_blancas" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="carnes_blancas_tipo" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-bacon me-2 text-danger"></i>Carnes rojas</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="carnes_rojas">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_carnes_rojas" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="carnes_rojas_tipo" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-egg me-2 text-warning"></i>Huevo</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="huevo">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_huevo" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="huevo_tipo" placeholder="Â¿CÃ³mo?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-fish me-2 text-info"></i>Pescado</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="pescado">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_pescado" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="pescado_tipo" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-hotdog me-2 text-danger"></i>Cecinas/Embutidos</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="cecinas">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_cecinas" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="cecinas_tipo" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-cheese me-2 text-warning"></i>LÃ¡cteos</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="lacteos">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_lacteos" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="lacteos_tipo" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-oil-can me-2 text-success"></i>Aceite</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="aceite">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_aceite" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="aceite_tipo" placeholder="Â¿QuÃ© tipo?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-leaf me-2 text-success"></i>Frutos secos / Semillas</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="frutos_secos">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_frutos_secos" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="cuales_frutos_secos" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-cookie me-2 text-warning"></i>Galletas dulces / PastelerÃ­a</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="dulces">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_dulces" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="dulces_tipo" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-french-fries me-2 text-warning"></i>Frituras</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="frituras">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_frituras" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="frituras_tipo" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-tint me-2 text-primary"></i>Agua (vasos/dÃ­a)</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="agua">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1-2</button>
-                                        <button type="button" class="freq-btn" data-value="2">3-4</button>
-                                        <button type="button" class="freq-btn" data-value="3">5-6</button>
-                                        <button type="button" class="freq-btn" data-value="4">7-8</button>
-                                        <button type="button" class="freq-btn" data-value="5">9+</button>
-                                    </div>
-                                    <input type="hidden" name="freq_agua" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="agua_observaciones" placeholder="Observaciones">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-mug-hot me-2 text-warning"></i>CafÃ© / TÃ©</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="cafe_te">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_cafe_te" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="cafe_te_tipo" placeholder="Â¿CuÃ¡l?">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><i class="fas fa-glass-water me-2 text-danger"></i>Bebidas azucaradas</td>
-                                <td>
-                                    <div class="frequency-selector" data-group="bebidas_azucaradas">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
-                                    </div>
-                                    <input type="hidden" name="freq_bebidas_azucaradas" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="bebidas_azucaradas_tipo" placeholder="Â¿CuÃ¡les?">
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- ============================================ -->
-                    </div>
-                </div>
-            </div>
-            <!-- SECCIÃ“N 7: EVALUACIÃ“N ANTROPOMÃ‰TRICA (MOVIDA AL FINAL) -->
-            <!-- ============================================ -->
-            <div class="section-accordion">
-                <button type="button" class="accordion-button-custom" data-bs-toggle="collapse" data-bs-target="#section7">
-                <div class="section-icon green">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse" data-bs-target="#section2">
+                    <div class="section-icon blue">
                         <i class="fas fa-ruler-combined"></i>
                     </div>
-                    <span>7. EvaluaciÃ³n AntropomÃ©trica</span>
+                    <span>2. Evaluación Antropométrica</span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
-                <div class="collapse show" id="section7">
+                <div class="collapse" id="section2">
                     <div class="accordion-content">
-                
-                <div class="info-box success">
-                    <i class="fas fa-calculator"></i>
-                    <div>
-                        <strong>Mediciones:</strong> Los cÃ¡lculos de composiciÃ³n corporal se realizarÃ¡n automÃ¡ticamente.
-                    </div>
-                </div>
-                
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <label class="form-label" for="talla">
-                            <i class="fas fa-arrows-alt-v"></i>
-                            Talla (m)
-                        </label>
-                        <input type="number" class="form-control" id="talla" name="talla" 
-                               step="0.01" min="1.00" max="2.50" 
-                               placeholder="Ej: 1.65" value="{{ patient.talla_m or '' }}">
-
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label" for="peso">
-                            <i class="fas fa-weight"></i>
-                            Peso (kg)
-                        </label>
-                        <input type="number" class="form-control" id="peso" name="peso" 
-                               step="0.1" min="30" max="300" 
-                               placeholder="Ej: 70.5" value="{{ patient.peso_kg or '' }}">
-
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="fas fa-calculator"></i>
-                            IMC Calculado
-                        </label>
-                        <div class="calculated-value" id="imcCalculado">-</div>
-                        <small class="text-muted text-center d-block" id="imcCategoria"></small>
-                    </div>
-                    
-                    <div class="col-12">
-                        <label class="form-label">
-                            <i class="fas fa-hand-paper"></i>
-                            Pliegues CutÃ¡neos (mm)
-                        </label>
-                        <div class="row g-3">
+                        <div class="row g-4">
+                            <!-- Medidas Básicas -->
                             <div class="col-md-3">
-                                <input type="number" class="form-control" id="pliegue_bicipital" 
-                                       name="pliegue_bicipital" step="0.1" placeholder="Bicipital">
+                                <label class="form-label">
+                                    <i class="fas fa-arrows-alt-v"></i> Talla (m)
+                                </label>
+                                <input type="number" class="form-control" id="talla_m" name="talla_m"
+                                       step="0.01" min="1.00" max="2.50" 
+                                       value="{{ patient.talla_m or '' }}" onchange="calcularIMC()">
                             </div>
+                            
                             <div class="col-md-3">
-                                <input type="number" class="form-control" id="pliegue_tricipital" 
-                                       name="pliegue_tricipital" step="0.1" placeholder="Tricipital">
+                                <label class="form-label">
+                                    <i class="fas fa-weight"></i> Peso (kg)
+                                </label>
+                                <input type="number" class="form-control" id="peso_kg" name="peso_kg"
+                                       step="0.1" min="30" max="300"
+                                       value="{{ patient.peso_kg or '' }}" onchange="calcularIMC()">
                             </div>
+                            
                             <div class="col-md-3">
-                                <input type="number" class="form-control" id="pliegue_subescapular" 
-                                       name="pliegue_subescapular" step="0.1" placeholder="Subescapular">
+                                <div class="calculated-field {{ 'warning' if patient.imc and patient.imc >= 25 and patient.imc < 30 else 'danger' if patient.imc and patient.imc >= 30 else '' }}">
+                                    <div class="value" id="imcValue">{{ patient.imc or '-' }}</div>
+                                    <div class="label" id="imcCategoria">{{ patient.imc_categoria or 'IMC' }}</div>
+                                </div>
                             </div>
+                            
                             <div class="col-md-3">
-                                <input type="number" class="form-control" id="pliegue_supracrestideo" 
-                                       name="pliegue_supracrestideo" step="0.1" placeholder="SupracrestÃ­deo">
+                                <div class="calculated-field">
+                                    <div class="value" id="grasaValue">{{ patient.porcentaje_grasa or '-' }}%</div>
+                                    <div class="label">% Grasa Corporal</div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-12">
-                        <label class="form-label">
-                            <i class="fas fa-ruler-horizontal"></i>
-                            PerÃ­metros (cm)
-                        </label>
-                        <div class="row g-3">
+                            
+                            <div class="subsection-header">
+                                <i class="fas fa-hand-paper"></i> Pliegues Cutáneos (mm)
+                            </div>
+                            
                             <div class="col-md-3">
+                                <label class="form-label">Bicipital</label>
+                                <input type="number" class="form-control pliegue" id="pliegue_bicipital" 
+                                       name="pliegue_bicipital" step="0.1"
+                                       value="{{ patient.pliegue_bicipital or '' }}" onchange="calcularGrasa()">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Tricipital</label>
+                                <input type="number" class="form-control pliegue" id="pliegue_tricipital" 
+                                       name="pliegue_tricipital" step="0.1"
+                                       value="{{ patient.pliegue_tricipital or '' }}" onchange="calcularGrasa()">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Subescapular</label>
+                                <input type="number" class="form-control pliegue" id="pliegue_subescapular" 
+                                       name="pliegue_subescapular" step="0.1"
+                                       value="{{ patient.pliegue_subescapular or '' }}" onchange="calcularGrasa()">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Supracrestídeo</label>
+                                <input type="number" class="form-control pliegue" id="pliegue_supracrestideo" 
+                                       name="pliegue_supracrestideo" step="0.1"
+                                       value="{{ patient.pliegue_supracrestideo or '' }}" onchange="calcularGrasa()">
+                            </div>
+                            
+                            <div class="subsection-header">
+                                <i class="fas fa-ruler-horizontal"></i> Perímetros (cm)
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Brazo Relajado</label>
                                 <input type="number" class="form-control" id="perimetro_brazo" 
-                                       name="perimetro_brazo" step="0.1" placeholder="Brazo Relajado">
+                                       name="perimetro_brazo" step="0.1"
+                                       value="{{ patient.perimetro_brazo or '' }}">
                             </div>
+                            
                             <div class="col-md-3">
+                                <label class="form-label">Cintura</label>
                                 <input type="number" class="form-control" id="perimetro_cintura" 
-                                       name="perimetro_cintura" step="0.1" placeholder="Cintura">
+                                       name="perimetro_cintura" step="0.1"
+                                       value="{{ patient.perimetro_cintura or '' }}" onchange="calcularICC()">
                             </div>
+                            
                             <div class="col-md-3">
+                                <label class="form-label">Cadera</label>
                                 <input type="number" class="form-control" id="perimetro_cadera" 
-                                       name="perimetro_cadera" step="0.1" placeholder="Cadera">
+                                       name="perimetro_cadera" step="0.1"
+                                       value="{{ patient.perimetro_cadera or '' }}" onchange="calcularICC()">
                             </div>
+                            
                             <div class="col-md-3">
+                                <div class="calculated-field {{ 'danger' if patient.riesgo_cardiovascular == 'Alto' else 'warning' if patient.riesgo_cardiovascular == 'Moderado' else '' }}">
+                                    <div class="value" id="iccValue">{{ patient.indice_cintura_cadera or '-' }}</div>
+                                    <div class="label" id="riesgoCV">{{ patient.riesgo_cardiovascular or 'ICC' }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Pantorrilla</label>
                                 <input type="number" class="form-control" id="perimetro_pantorrilla" 
-                                       name="perimetro_pantorrilla" step="0.1" placeholder="Pantorrilla">
+                                       name="perimetro_pantorrilla" step="0.1"
+                                       value="{{ patient.perimetro_pantorrilla or '' }}">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Muñeca</label>
+                                <input type="number" class="form-control" id="perimetro_muneca" 
+                                       name="perimetro_muneca" step="0.1"
+                                       value="{{ patient.perimetro_muneca or '' }}">
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Buttons -->
-            <div class="d-flex justify-content-between mb-5">
-                <a href="/dashboard/nutritionist" class="btn-outline-modern">
-                    <i class="fas fa-times"></i>
-                    Cancelar
-                </a>
-                <button type="submit" class="btn-modern">
-                    <i class="fas fa-save"></i>
-                    Guardar Paciente
+            <!-- SECCIÓN 3: EVALUACIÓN BIOQUÍMICA -->
+            <div class="section-accordion">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse" data-bs-target="#section3">
+                    <div class="section-icon purple">
+                        <i class="fas fa-vial"></i>
+                    </div>
+                    <span>3. Evaluación Bioquímica</span>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
-            </div>
-            
-            <!-- BOTONES FLOTANTES STICKY -->
-            <div class="sticky-actions" id="stickyActions" style="display: none;">
+                <div class="collapse" id="section3">
+                    <div class="accordion-content">
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Fecha de Exámenes</label>
+                                <input type="date" class="form-control" id="fecha_examenes" name="fecha_examenes"
+                                       value="{{ patient.fecha_examenes or '' }}">
+                            </div>
+                            
+                            <div class="subsection-header">
+                                <i class="fas fa-tint"></i> Perfil Glucídico
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Glucosa Ayunas (mg/dL)</label>
+                                <input type="number" class="form-control" id="glucosa_ayunas" name="glucosa_ayunas"
+                                       step="0.1" value="{{ patient.glucosa_ayunas or '' }}">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">HbA1c (%)</label>
+                                <input type="number" class="form-control" id="hemoglobina_glicada" name="hemoglobina_glicada"
+                                       step="0.1" value="{{ patient.hemoglobina_glicada or '' }}">
+                            </div>
+                            
+                            <div class="subsection-header">
+                                <i class="fas fa-heart"></i> Perfil Lipídico
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Colesterol Total (mg/dL)</label>
+                                <input type="number" class="form-control" id="colesterol_total" name="colesterol_total"
+                                       step="0.1" value="{{ patient.colesterol_total or '' }}">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">HDL (mg/dL)</label>
+                                <input type="number" class="form-control" id="colesterol_hdl" name="colesterol_hdl"
+                                       step="0.1" value="{{ patient.colesterol_hdl or '' }}">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">LDL (mg/dL)</label>
+                                <input type="number" class="form-control" id="colesterol_ldl" name="colesterol_ldl"
+                                       step="0.1" value="{{ patient.colesterol_ldl or '' }}">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Triglicéridos (mg/dL)</label>
+                                <input type="number" class="form-control" id="trigliceridos" name="trigliceridos"
+                                       step="0.1" value="{{ patient.trigliceridos or '' }}">
+                            </div>
+                            
+                            <div class="subsection-header">
+                                <i class="fas fa-flask"></i> Otros Marcadores
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Hemoglobina (g/dL)</label>
+                                <input type="number" class="form-control" id="hemoglobina" name="hemoglobina"
+                                       step="0.1" value="{{ patient.hemoglobina or '' }}">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Ferritina (ng/mL)</label>
+                                <input type="number" class="form-control" id="ferritina" name="ferritina"
+                                       step="0.1" value="{{ patient.ferritina or '' }}">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Vitamina D (ng/mL)</label>
+                                <input type="number" class="form-control" id="vitamina_d" name="vitamina_d"
+                                       step="0.1" value="{{ patient.vitamina_d or '' }}">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Vitamina B12 (pg/mL)</label>
+                                <input type="number" class="form-control" id="vitamina_b12" name="vitamina_b12"
+                                       step="0.1" value="{{ patient.vitamina_b12 or '' }}">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
+            
+            <!-- SECCIÓN 4: ESTILO DE VIDA -->
+            <div class="section-accordion">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse" data-bs-target="#section4">
+                    <div class="section-icon orange">
+                        <i class="fas fa-heart-pulse"></i>
+                    </div>
+                    <span>4. Estilo de Vida</span>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
+                </button>
+                <div class="collapse" id="section4">
+                    <div class="accordion-content">
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-moon"></i> Horas de Sueño
+                                </label>
+                                <select class="form-select" id="horas_sueno" name="horas_sueno">
+                                    <option value="">Seleccionar</option>
+                                    <option value="3-5" {{ 'selected' if patient.horas_sueno == '3-5' }}>3 a 5 horas</option>
+                                    <option value="5-6" {{ 'selected' if patient.horas_sueno == '5-6' }}>5 a 6 horas</option>
+                                    <option value="6-7" {{ 'selected' if patient.horas_sueno == '6-7' }}>6 a 7 horas</option>
+                                    <option value="7-8" {{ 'selected' if patient.horas_sueno == '7-8' }}>7 a 8 horas</option>
+                                    <option value="+8" {{ 'selected' if patient.horas_sueno == '+8' }}>Más de 8 horas</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-star"></i> Calidad del Sueño (1-10)
+                                </label>
+                                <input type="range" class="form-range" id="calidad_sueno" name="calidad_sueno"
+                                       min="1" max="10" value="{{ patient.calidad_sueno or 5 }}">
+                                <div class="text-center">
+                                    <span id="calidadSuenoValue" class="fw-bold">{{ patient.calidad_sueno or 5 }}</span>/10
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-brain"></i> Nivel de Estrés (1-10)
+                                </label>
+                                <input type="range" class="form-range" id="nivel_estres" name="nivel_estres"
+                                       min="1" max="10" value="{{ patient.nivel_estres or 5 }}">
+                                <div class="text-center">
+                                    <span id="estresValue" class="fw-bold">{{ patient.nivel_estres or 5 }}</span>/10
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-running"></i> Actividad Física
+                                </label>
+                                <select class="form-select" id="actividad_fisica" name="actividad_fisica" onchange="calcularGET()">
+                                    <option value="">Seleccionar</option>
+                                    <option value="sedentario" {{ 'selected' if patient.actividad_fisica == 'sedentario' }}>Sedentario</option>
+                                    <option value="ligero" {{ 'selected' if patient.actividad_fisica == 'ligero' }}>Ligero (1-2x/sem)</option>
+                                    <option value="moderado" {{ 'selected' if patient.actividad_fisica == 'moderado' }}>Moderado (3-4x/sem)</option>
+                                    <option value="activo" {{ 'selected' if patient.actividad_fisica == 'activo' }}>Activo (5-6x/sem)</option>
+                                    <option value="muy_activo" {{ 'selected' if patient.actividad_fisica == 'muy_activo' }}>Muy Activo (diario)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-dumbbell"></i> Tipo de Ejercicio
+                                </label>
+                                <input type="text" class="form-control" id="tipo_ejercicio" name="tipo_ejercicio"
+                                       value="{{ patient.tipo_ejercicio or '' }}" placeholder="Ej: Caminata, pesas, yoga">
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-smoking"></i> ¿Fuma?
+                                </label>
+                                <select class="form-select" id="fuma" name="fuma">
+                                    <option value="false" {{ 'selected' if not patient.fuma }}>No</option>
+                                    <option value="true" {{ 'selected' if patient.fuma }}>Sí</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SECCIÓN 5: REQUERIMIENTOS NUTRICIONALES -->
+            <div class="section-accordion">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse" data-bs-target="#section5">
+                    <div class="section-icon teal">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <span>5. Requerimientos Nutricionales</span>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
+                </button>
+                <div class="collapse" id="section5">
+                    <div class="accordion-content">
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="calculated-field">
+                                    <div class="value" id="gebValue">{{ patient.geb_kcal or '-' }}</div>
+                                    <div class="label">GEB (kcal)</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="calculated-field">
+                                    <div class="value" id="getValue">{{ patient.get_kcal or '-' }}</div>
+                                    <div class="label">GET (kcal)</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-primary w-100 h-100" onclick="calcularRequerimientos()">
+                                    <i class="fas fa-sync-alt me-2"></i>
+                                    Recalcular
+                                </button>
+                            </div>
+                            
+                            <div class="subsection-header">
+                                <i class="fas fa-chart-pie"></i> Distribución de Macronutrientes
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Proteínas (%)</label>
+                                <input type="number" class="form-control" id="proteinas_porcentaje" name="proteinas_porcentaje"
+                                       value="{{ patient.proteinas_porcentaje or 20 }}" min="10" max="40" onchange="calcularMacros()">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Carbohidratos (%)</label>
+                                <input type="number" class="form-control" id="carbohidratos_porcentaje" name="carbohidratos_porcentaje"
+                                       value="{{ patient.carbohidratos_porcentaje or 50 }}" min="30" max="70" onchange="calcularMacros()">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Grasas (%)</label>
+                                <input type="number" class="form-control" id="grasas_porcentaje" name="grasas_porcentaje"
+                                       value="{{ patient.grasas_porcentaje or 30 }}" min="15" max="45" onchange="calcularMacros()">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <span class="badge bg-success" id="totalPorcentaje">100%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="calculated-field">
+                                    <div class="value" id="proteinasG">{{ patient.proteinas_g or '-' }}g</div>
+                                    <div class="label">Proteínas</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="calculated-field">
+                                    <div class="value" id="carbohidratosG">{{ patient.carbohidratos_g or '-' }}g</div>
+                                    <div class="label">Carbohidratos</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="calculated-field">
+                                    <div class="value" id="grasasG">{{ patient.grasas_g or '-' }}g</div>
+                                    <div class="label">Grasas</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="calculated-field">
+                                    <div class="value" id="fibraG">{{ patient.fibra_g or '-' }}g</div>
+                                    <div class="label">Fibra</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SECCIÓN 6: DIAGNÓSTICO Y PLAN -->
+            <div class="section-accordion">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse" data-bs-target="#section6">
+                    <div class="section-icon red">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <span>6. Diagnóstico y Plan Nutricional</span>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
+                </button>
+                <div class="collapse" id="section6">
+                    <div class="accordion-content">
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="fas fa-diagnoses"></i> Diagnóstico Nutricional
+                                </label>
+                                <textarea class="form-control" id="diagnostico_nutricional" name="diagnostico_nutricional"
+                                          rows="4">{{ patient.diagnostico_nutricional or '' }}</textarea>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="fas fa-tasks"></i> Objetivos Nutricionales
+                                </label>
+                                <textarea class="form-control" id="objetivos_nutricionales" name="objetivos_nutricionales"
+                                          rows="3" placeholder="Objetivos SMART...">{{ patient.objetivos_nutricionales or '' }}</textarea>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="fas fa-list-alt"></i> Indicaciones
+                                </label>
+                                <textarea class="form-control" id="indicaciones" name="indicaciones"
+                                          rows="4">{{ patient.indicaciones or '' }}</textarea>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-check"></i> Fecha Próxima Cita
+                                </label>
+                                <input type="datetime-local" class="form-control" id="fecha_proxima_cita" 
+                                       name="fecha_proxima_cita" value="{{ patient.fecha_proxima_cita.strftime('%Y-%m-%dT%H:%M') if patient.fecha_proxima_cita else '' }}">
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="fas fa-sticky-note"></i> Notas de Seguimiento
+                                </label>
+                                <textarea class="form-control" id="notas_seguimiento" name="notas_seguimiento"
+                                          rows="3">{{ patient.notas_seguimiento or '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
     
-    <!-- Scripts -->
+    <!-- Quick Navigation -->
+    <div class="quick-nav">
+        <button class="quick-nav-item active" onclick="scrollToSection('section1')" title="Antecedentes">
+            <i class="fas fa-user-circle"></i>
+        </button>
+        <button class="quick-nav-item" onclick="scrollToSection('section2')" title="Antropometría">
+            <i class="fas fa-ruler-combined"></i>
+        </button>
+        <button class="quick-nav-item" onclick="scrollToSection('section3')" title="Bioquímica">
+            <i class="fas fa-vial"></i>
+        </button>
+        <button class="quick-nav-item" onclick="scrollToSection('section4')" title="Estilo de Vida">
+            <i class="fas fa-heart-pulse"></i>
+        </button>
+        <button class="quick-nav-item" onclick="scrollToSection('section5')" title="Requerimientos">
+            <i class="fas fa-calculator"></i>
+        </button>
+        <button class="quick-nav-item" onclick="scrollToSection('section6')" title="Diagnóstico">
+            <i class="fas fa-clipboard-check"></i>
+        </button>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Guardando...</span>
+            </div>
+            <p class="mb-0 fw-bold">Guardando ficha...</p>
+        </div>
+    </div>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/cache-system.js"></script>
-
     <script src="/js/patient-file.js"></script>
 </body>
 </html>

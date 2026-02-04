@@ -24,7 +24,7 @@
     <nav class="navbar-custom">
         <div class="container">
             <div class="navbar-wrapper">
-                <a href="/dashboard/nutritionist" class="navbar-brand-custom">
+                <a href="/nutritionist/dashboard" class="navbar-brand-custom">
                     <img src="/images/logo.png" alt="ZenLab" class="navbar-logo">
                 </a>
                 <div class="navbar-actions">
@@ -46,7 +46,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb breadcrumb-custom">
                     <li class="breadcrumb-item">
-                        <a href="/dashboard/nutritionist">
+                        <a href="/nutritionist/dashboard">
                             <i class="fas fa-home me-1"></i>Dashboard
                         </a>
                     </li>
@@ -64,9 +64,6 @@
     <!-- Main Content -->
     <div class="container page-wrapper">
         <form id="patientIntakeForm" novalidate>
-            
-            <!-- Hidden field para patient_id (usado en edición) -->
-            <input type="hidden" id="patient_id" name="patient_id" value="">
             
             <!-- ============================================ -->
             <!-- SECCIÓN 1: ANTECEDENTES GENERALES -->
@@ -89,30 +86,36 @@
                         <label class="form-label" for="nombre">
                             <i class="fas fa-user"></i>
                             Nombre Completo
+                            <span class="">*</span>
                         </label>
                         <input type="text" class="form-control" id="nombre" name="nombre"  
                                placeholder="Ej: María González Pérez">
+                        <div class="invalid-feedback">Por favor ingresa el nombre completo</div>
                     </div>
                     
                     <div class="col-md-3">
                         <label class="form-label" for="fechaNacimiento">
                             <i class="fas fa-calendar"></i>
                             Fecha de Nacimiento
+                            <span class="">*</span>
                         </label>
-                        <input type="date" class="form-control" id="fechaNacimiento" name="fecha_nacimiento">
+                        <input type="date" class="form-control" id="fechaNacimiento" name="fecha_nacimiento" >
                         <small class="text-muted">Edad: <span id="edadCalculada">-</span> años</small>
+                        <div class="invalid-feedback">Por favor selecciona la fecha de nacimiento</div>
                     </div>
                     
                     <div class="col-md-3">
                         <label class="form-label" for="sexo">
                             <i class="fas fa-venus-mars"></i>
                             Sexo
+                            <span class="">*</span>
                         </label>
-                        <select class="form-select" id="sexo" name="sexo">
+                        <select class="form-select" id="sexo" name="sexo" >
                             <option value="">Seleccionar</option>
                             <option value="Masculino">Masculino</option>
                             <option value="Femenino">Femenino</option>
                         </select>
+                        <div class="invalid-feedback">Por favor selecciona el sexo</div>
                     </div>
                     
                     <div class="col-md-3">
@@ -127,16 +130,19 @@
                         <label class="form-label" for="motivoConsulta">
                             <i class="fas fa-comment-medical"></i>
                             Motivo de Consulta
+                            <span class="">*</span>
                         </label>
                         <textarea class="form-control" id="motivoConsulta" name="motivo_consulta" 
                                   rows="3" 
                                   placeholder="Describe el motivo principal de la consulta..."></textarea>
+                        <div class="invalid-feedback">Por favor describe el motivo de consulta</div>
                     </div>
                     
                     <div class="col-md-6">
                         <label class="form-label">
                             <i class="fas fa-bullseye"></i>
                             Objetivos Principales
+                            <span class="">*</span>
                         </label>
                         <div class="pill-group">
                             <button type="button" class="pill-btn" data-objetivo="fraccionamiento">
@@ -160,7 +166,8 @@
                                 Control de peso
                             </button>
                         </div>
-                        <input type="hidden" id="objetivos" name="objetivos">
+                        <input type="hidden" id="objetivos" name="objetivos" >
+                        <div class="invalid-feedback">Por favor selecciona al menos un objetivo</div>
                     </div>
                     
                     <div class="col-md-6">
@@ -321,12 +328,15 @@
             </div>
             
             <!-- ============================================ -->
-            <!-- SECCIÓN 3: SALUD GENERAL -->
+            <!-- SECCIÓN 3: ANTROPOMETRÍA -->
+
+            <!-- ============================================ -->
+            <!-- SECCIÓN 4: SALUD GENERAL -->
             <!-- ============================================ -->
             <div class="form-container">
                 <div class="section-header orange">
                     <i class="fas fa-heart-pulse"></i>
-                    <span>3. Salud General y Hábitos</span>
+                    <span>4. Salud General y Hábitos</span>
                 </div>
                 
                 <div class="row g-4">
@@ -430,10 +440,11 @@
                             <i class="fas fa-glass-cheers"></i>
                             Tipo de Alcohol
                         </label>
-                        <select class="form-select" id="tipo_alcohol" name="tipo_alcohol" multiple size="3">
+                        <select class="form-select" id="tipo_alcohol" name="tipo_alcohol" multiple size="4">
                             <option value="destilado">Destilado</option>
                             <option value="vino">Vino</option>
                             <option value="cerveza">Cerveza</option>
+                            <option value="coctel">Coctel</option>
                         </select>
                     </div>
                     
@@ -455,10 +466,25 @@
                         </label>
                         <select class="form-select" id="drogas" name="drogas">
                             <option value="no">No</option>
-                            <option value="si">Sí</option>
+                            <option value="si">Si</option>
                         </select>
                     </div>
-                    
+
+                    <!-- Menstruacion/Menopausia -->
+                    <div class="col-md-4">
+                        <label class="form-label" for="ciclo_menstrual">
+                            <i class="fas fa-venus"></i>
+                            Ciclo Menstrual / Menopausia
+                        </label>
+                        <select class="form-select" id="ciclo_menstrual" name="ciclo_menstrual">
+                            <option value="">Seleccionar</option>
+                            <option value="regular">Regular</option>
+                            <option value="irregular">Irregular</option>
+                            <option value="menopausia">Menopausia</option>
+                            <option value="no_aplica">No aplica</option>
+                        </select>
+                    </div>
+
                     <!-- Actividad física -->
                     <div class="col-md-4">
                         <label class="form-label" for="actividad_fisica">
@@ -504,12 +530,12 @@
             </div>
             
             <!-- ============================================ -->
-            <!-- SECCIÓN 4: SÍNTOMAS GASTROINTESTINALES -->
+            <!-- SECCIÓN 5: SÍNTOMAS GASTROINTESTINALES -->
             <!-- ============================================ -->
             <div class="form-container">
                 <div class="section-header" style="background: linear-gradient(135deg, #ef4444 0%, #f97316 100%); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
                     <i class="fas fa-stomach"></i>
-                    <span>4. Síntomas Gastrointestinales</span>
+                    <span>5. Síntomas Gastrointestinales</span>
                 </div>
                 
                 <div class="row g-4">
@@ -545,8 +571,9 @@
                             <i class="fas fa-search"></i>
                             ¿Con qué alimentos?
                         </label>
-                        <input type="text" class="form-control" id="reflujo_alimento" 
-                               name="reflujo_alimento" placeholder="Ej: Café, tomate, cítricos...">
+                        <input type="text" class="form-control alimento-search" id="reflujo_alimento" 
+                               name="reflujo_alimento" placeholder="Escriba para buscar alimentos...">
+                        <div class="search-results" id="reflujoResults"></div>
                     </div>
                     
                     <!-- Hinchazón -->
@@ -566,8 +593,9 @@
                             <i class="fas fa-search"></i>
                             ¿Con qué alimentos?
                         </label>
-                        <input type="text" class="form-control" id="hinchazon_alimento" 
-                               name="hinchazon_alimento" placeholder="Ej: Legumbres, lácteos...">
+                        <input type="text" class="form-control alimento-search" id="hinchazon_alimento" 
+                               name="hinchazon_alimento" placeholder="Escriba para buscar alimentos...">
+                        <div class="search-results" id="hinchazonResults"></div>
                     </div>
                     
                     <!-- Alergias -->
@@ -587,19 +615,67 @@
                             <i class="fas fa-search"></i>
                             ¿A qué alimentos?
                         </label>
-                        <input type="text" class="form-control" id="alergias_alimento" 
-                               name="alergias_alimento" placeholder="Ej: Gluten, lactosa, mariscos...">
+                        <input type="text" class="form-control alimento-search" id="alergias_alimento"
+                               name="alergias_alimento" placeholder="Escriba para buscar alimentos...">
+                        <div class="search-results" id="alergiasResults"></div>
+                    </div>
+
+                    <!-- Restricciones Alimentarias -->
+                    <div class="col-md-12">
+                        <label class="form-label">
+                            <i class="fas fa-ban"></i>
+                            Restricciones Alimentarias
+                        </label>
+                        <div class="restricciones-group d-flex flex-wrap gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input restriccion-check" type="checkbox" id="restriccion_vegetariano" name="restricciones[]" value="vegetariano">
+                                <label class="form-check-label" for="restriccion_vegetariano">
+                                    <i class="fas fa-leaf text-success me-1"></i>Vegetariano
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input restriccion-check" type="checkbox" id="restriccion_vegano" name="restricciones[]" value="vegano">
+                                <label class="form-check-label" for="restriccion_vegano">
+                                    <i class="fas fa-seedling text-success me-1"></i>Vegano
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input restriccion-check" type="checkbox" id="restriccion_sin_gluten" name="restricciones[]" value="sin_gluten">
+                                <label class="form-check-label" for="restriccion_sin_gluten">
+                                    <i class="fas fa-wheat-awn-circle-exclamation text-warning me-1"></i>Sin Gluten
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input restriccion-check" type="checkbox" id="restriccion_sin_lactosa" name="restricciones[]" value="sin_lactosa">
+                                <label class="form-check-label" for="restriccion_sin_lactosa">
+                                    <i class="fas fa-cow text-info me-1"></i>Sin Lactosa
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input restriccion-check" type="checkbox" id="restriccion_kosher" name="restricciones[]" value="kosher">
+                                <label class="form-check-label" for="restriccion_kosher">
+                                    <i class="fas fa-star-of-david text-primary me-1"></i>Kosher
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input restriccion-check" type="checkbox" id="restriccion_halal" name="restricciones[]" value="halal">
+                                <label class="form-check-label" for="restriccion_halal">
+                                    <i class="fas fa-moon text-success me-1"></i>Halal
+                                </label>
+                            </div>
+                        </div>
+                        <input type="hidden" id="restricciones_alimentarias" name="restricciones_alimentarias">
                     </div>
                 </div>
             </div>
-            
+
             <!-- ============================================ -->
-            <!-- SECCIÓN 5: REGISTRO 24 HORAS (ACTUALIZADO CON EXCEL) -->
+            <!-- SECCIÓN 6: REGISTRO 24 HORAS -->
             <!-- ============================================ -->
             <div class="form-container">
                 <div class="section-header" style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);">
                     <i class="fas fa-clock"></i>
-                    <span>5. Registro de Alimentación 24 Horas</span>
+                    <span>6. Registro de Alimentación 24 Horas</span>
                 </div>
                 
                 <div class="info-box">
@@ -645,43 +721,47 @@
                             <table class="table table-bordered meal-table" id="desayunoTable">
                                 <thead>
                                     <tr>
-                                        <th style="width: 15%;">Grupo</th>
-                                        <th style="width: 15%;">Subgrupo</th>
-                                        <th style="width: 20%;">Alimento</th>
-                                        <th style="width: 15%;">Porción</th>
-                                        <th style="width: 8%;">Kcal</th>
-                                        <th style="width: 7%;">Prot (g)</th>
-                                        <th style="width: 7%;">Carbs (g)</th>
-                                        <th style="width: 7%;">Lípidos (g)</th>
-                                        <th style="width: 3%;"></th>
+                                        <th style="width: 20%;">Grupo Alimento</th>
+                                        <th style="width: 25%;">Alimento</th>
+                                        <th style="width: 20%;">Porción (medida casera)</th>
+                                        <th style="width: 10%;">Kcal</th>
+                                        <th style="width: 8%;">Prot (g)</th>
+                                        <th style="width: 8%;">Carbs (g)</th>
+                                        <th style="width: 8%;">Grasas (g)</th>
+                                        <th style="width: 5%;"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr class="meal-row" data-meal="desayuno">
                                         <td>
-                                            <select class="form-select form-select-sm grupo-select" onchange="window.loadSubgrupos(this, 'desayuno', 0)">
-                                                <option value="">Grupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm subgrupo-select" disabled>
-                                                <option value="">Subgrupo</option>
+                                            <select class="form-select form-select-sm grupo-alimento" onchange="loadAlimentos(this, 'desayuno', 0)">
+                                                <option value="">Seleccionar grupo</option>
+                                                <option value="proteina">Proteínas</option>
+                                                <option value="cereales">Cereales/Pan</option>
+                                                <option value="lacteos">Lácteos</option>
+                                                <option value="frutas">Frutas</option>
+                                                <option value="verduras">Verduras</option>
+                                                <option value="aceites">Aceites/Grasas</option>
+                                                <option value="liquidos">Líquidos</option>
+                                                <option value="extra">Extras</option>
                                             </select>
                                         </td>
                                         <td>
                                             <select class="form-select form-select-sm alimento-select" disabled>
-                                                <option value="">Alimento</option>
+                                                <option value="">Primero seleccione grupo</option>
                                             </select>
                                         </td>
-                                        <td class="porcion-cell">
-                                            <span class="text-muted">-</span>
+                                        <td>
+                                            <select class="form-select form-select-sm porcion-select" disabled>
+                                                <option value="">Porción</option>
+                                            </select>
                                         </td>
                                         <td class="nutrient-cell kcal-cell">-</td>
                                         <td class="nutrient-cell prot-cell">-</td>
                                         <td class="nutrient-cell carbs-cell">-</td>
-                                        <td class="nutrient-cell lipidos-cell">-</td>
+                                        <td class="nutrient-cell grasas-cell">-</td>
                                         <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removeRow(this)">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </td>
@@ -689,16 +769,16 @@
                                 </tbody>
                                 <tfoot>
                                     <tr class="totals-row">
-                                        <td colspan="4" class="text-end fw-bold">Total Desayuno:</td>
+                                        <td colspan="3" class="text-end fw-bold">Total Desayuno:</td>
                                         <td class="fw-bold total-kcal">0</td>
                                         <td class="fw-bold total-prot">0</td>
                                         <td class="fw-bold total-carbs">0</td>
-                                        <td class="fw-bold total-lipidos">0</td>
+                                        <td class="fw-bold total-grasas">0</td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
                             </table>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.addMealRow('desayuno')">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addMealRow('desayuno')">
                                 <i class="fas fa-plus me-1"></i> Agregar Alimento
                             </button>
                         </div>
@@ -710,43 +790,46 @@
                             <table class="table table-bordered meal-table" id="colacion1Table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 15%;">Grupo</th>
-                                        <th style="width: 15%;">Subgrupo</th>
-                                        <th style="width: 20%;">Alimento</th>
-                                        <th style="width: 15%;">Porción</th>
-                                        <th style="width: 8%;">Kcal</th>
-                                        <th style="width: 7%;">Prot (g)</th>
-                                        <th style="width: 7%;">Carbs (g)</th>
-                                        <th style="width: 7%;">Lípidos (g)</th>
-                                        <th style="width: 3%;"></th>
+                                        <th style="width: 20%;">Grupo Alimento</th>
+                                        <th style="width: 25%;">Alimento</th>
+                                        <th style="width: 20%;">Porción (medida casera)</th>
+                                        <th style="width: 10%;">Kcal</th>
+                                        <th style="width: 8%;">Prot (g)</th>
+                                        <th style="width: 8%;">Carbs (g)</th>
+                                        <th style="width: 8%;">Grasas (g)</th>
+                                        <th style="width: 5%;"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr class="meal-row" data-meal="colacion1">
                                         <td>
-                                            <select class="form-select form-select-sm grupo-select" onchange="window.loadSubgrupos(this, 'colacion1', 0)">
-                                                <option value="">Grupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm subgrupo-select" disabled>
-                                                <option value="">Subgrupo</option>
+                                            <select class="form-select form-select-sm grupo-alimento" onchange="loadAlimentos(this, 'colacion1', 0)">
+                                                <option value="">Seleccionar grupo</option>
+                                                <option value="proteina">Proteínas</option>
+                                                <option value="cereales">Cereales/Pan</option>
+                                                <option value="lacteos">Lácteos</option>
+                                                <option value="frutas">Frutas</option>
+                                                <option value="aceites">Aceites/Grasas</option>
+                                                <option value="liquidos">Líquidos</option>
+                                                <option value="extra">Extras</option>
                                             </select>
                                         </td>
                                         <td>
                                             <select class="form-select form-select-sm alimento-select" disabled>
-                                                <option value="">Alimento</option>
+                                                <option value="">Primero seleccione grupo</option>
                                             </select>
                                         </td>
-                                        <td class="porcion-cell">
-                                            <span class="text-muted">-</span>
+                                        <td>
+                                            <select class="form-select form-select-sm porcion-select" disabled>
+                                                <option value="">Porción</option>
+                                            </select>
                                         </td>
                                         <td class="nutrient-cell kcal-cell">-</td>
                                         <td class="nutrient-cell prot-cell">-</td>
                                         <td class="nutrient-cell carbs-cell">-</td>
-                                        <td class="nutrient-cell lipidos-cell">-</td>
+                                        <td class="nutrient-cell grasas-cell">-</td>
                                         <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removeRow(this)">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </td>
@@ -754,16 +837,16 @@
                                 </tbody>
                                 <tfoot>
                                     <tr class="totals-row">
-                                        <td colspan="4" class="text-end fw-bold">Total Colación AM:</td>
+                                        <td colspan="3" class="text-end fw-bold">Total Colación AM:</td>
                                         <td class="fw-bold total-kcal">0</td>
                                         <td class="fw-bold total-prot">0</td>
                                         <td class="fw-bold total-carbs">0</td>
-                                        <td class="fw-bold total-lipidos">0</td>
+                                        <td class="fw-bold total-grasas">0</td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
                             </table>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.addMealRow('colacion1')">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addMealRow('colacion1')">
                                 <i class="fas fa-plus me-1"></i> Agregar Alimento
                             </button>
                         </div>
@@ -775,43 +858,48 @@
                             <table class="table table-bordered meal-table" id="almuerzoTable">
                                 <thead>
                                     <tr>
-                                        <th style="width: 15%;">Grupo</th>
-                                        <th style="width: 15%;">Subgrupo</th>
-                                        <th style="width: 20%;">Alimento</th>
-                                        <th style="width: 15%;">Porción</th>
-                                        <th style="width: 8%;">Kcal</th>
-                                        <th style="width: 7%;">Prot (g)</th>
-                                        <th style="width: 7%;">Carbs (g)</th>
-                                        <th style="width: 7%;">Lípidos (g)</th>
-                                        <th style="width: 3%;"></th>
+                                        <th style="width: 20%;">Grupo Alimento</th>
+                                        <th style="width: 25%;">Alimento</th>
+                                        <th style="width: 20%;">Porción (medida casera)</th>
+                                        <th style="width: 10%;">Kcal</th>
+                                        <th style="width: 8%;">Prot (g)</th>
+                                        <th style="width: 8%;">Carbs (g)</th>
+                                        <th style="width: 8%;">Grasas (g)</th>
+                                        <th style="width: 5%;"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr class="meal-row" data-meal="almuerzo">
                                         <td>
-                                            <select class="form-select form-select-sm grupo-select" onchange="window.loadSubgrupos(this, 'almuerzo', 0)">
-                                                <option value="">Grupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm subgrupo-select" disabled>
-                                                <option value="">Subgrupo</option>
+                                            <select class="form-select form-select-sm grupo-alimento" onchange="loadAlimentos(this, 'almuerzo', 0)">
+                                                <option value="">Seleccionar grupo</option>
+                                                <option value="proteina">Proteínas</option>
+                                                <option value="cereales">Cereales/Pan</option>
+                                                <option value="lacteos">Lácteos</option>
+                                                <option value="frutas">Frutas</option>
+                                                <option value="verduras">Verduras</option>
+                                                <option value="aceites">Aceites/Grasas</option>
+                                                <option value="liquidos">Líquidos</option>
+                                                <option value="postre">Postre</option>
+                                                <option value="extra">Extras</option>
                                             </select>
                                         </td>
                                         <td>
                                             <select class="form-select form-select-sm alimento-select" disabled>
-                                                <option value="">Alimento</option>
+                                                <option value="">Primero seleccione grupo</option>
                                             </select>
                                         </td>
-                                        <td class="porcion-cell">
-                                            <span class="text-muted">-</span>
+                                        <td>
+                                            <select class="form-select form-select-sm porcion-select" disabled>
+                                                <option value="">Porción</option>
+                                            </select>
                                         </td>
                                         <td class="nutrient-cell kcal-cell">-</td>
                                         <td class="nutrient-cell prot-cell">-</td>
                                         <td class="nutrient-cell carbs-cell">-</td>
-                                        <td class="nutrient-cell lipidos-cell">-</td>
+                                        <td class="nutrient-cell grasas-cell">-</td>
                                         <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removeRow(this)">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </td>
@@ -819,16 +907,16 @@
                                 </tbody>
                                 <tfoot>
                                     <tr class="totals-row">
-                                        <td colspan="4" class="text-end fw-bold">Total Almuerzo:</td>
+                                        <td colspan="3" class="text-end fw-bold">Total Almuerzo:</td>
                                         <td class="fw-bold total-kcal">0</td>
                                         <td class="fw-bold total-prot">0</td>
                                         <td class="fw-bold total-carbs">0</td>
-                                        <td class="fw-bold total-lipidos">0</td>
+                                        <td class="fw-bold total-grasas">0</td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
                             </table>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.addMealRow('almuerzo')">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addMealRow('almuerzo')">
                                 <i class="fas fa-plus me-1"></i> Agregar Alimento
                             </button>
                         </div>
@@ -840,43 +928,46 @@
                             <table class="table table-bordered meal-table" id="colacion2Table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 15%;">Grupo</th>
-                                        <th style="width: 15%;">Subgrupo</th>
-                                        <th style="width: 20%;">Alimento</th>
-                                        <th style="width: 15%;">Porción</th>
-                                        <th style="width: 8%;">Kcal</th>
-                                        <th style="width: 7%;">Prot (g)</th>
-                                        <th style="width: 7%;">Carbs (g)</th>
-                                        <th style="width: 7%;">Lípidos (g)</th>
-                                        <th style="width: 3%;"></th>
+                                        <th style="width: 20%;">Grupo Alimento</th>
+                                        <th style="width: 25%;">Alimento</th>
+                                        <th style="width: 20%;">Porción (medida casera)</th>
+                                        <th style="width: 10%;">Kcal</th>
+                                        <th style="width: 8%;">Prot (g)</th>
+                                        <th style="width: 8%;">Carbs (g)</th>
+                                        <th style="width: 8%;">Grasas (g)</th>
+                                        <th style="width: 5%;"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr class="meal-row" data-meal="colacion2">
                                         <td>
-                                            <select class="form-select form-select-sm grupo-select" onchange="window.loadSubgrupos(this, 'colacion2', 0)">
-                                                <option value="">Grupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm subgrupo-select" disabled>
-                                                <option value="">Subgrupo</option>
+                                            <select class="form-select form-select-sm grupo-alimento" onchange="loadAlimentos(this, 'colacion2', 0)">
+                                                <option value="">Seleccionar grupo</option>
+                                                <option value="proteina">Proteínas</option>
+                                                <option value="cereales">Cereales/Pan</option>
+                                                <option value="lacteos">Lácteos</option>
+                                                <option value="frutas">Frutas</option>
+                                                <option value="aceites">Aceites/Grasas</option>
+                                                <option value="liquidos">Líquidos</option>
+                                                <option value="extra">Extras</option>
                                             </select>
                                         </td>
                                         <td>
                                             <select class="form-select form-select-sm alimento-select" disabled>
-                                                <option value="">Alimento</option>
+                                                <option value="">Primero seleccione grupo</option>
                                             </select>
                                         </td>
-                                        <td class="porcion-cell">
-                                            <span class="text-muted">-</span>
+                                        <td>
+                                            <select class="form-select form-select-sm porcion-select" disabled>
+                                                <option value="">Porción</option>
+                                            </select>
                                         </td>
                                         <td class="nutrient-cell kcal-cell">-</td>
                                         <td class="nutrient-cell prot-cell">-</td>
                                         <td class="nutrient-cell carbs-cell">-</td>
-                                        <td class="nutrient-cell lipidos-cell">-</td>
+                                        <td class="nutrient-cell grasas-cell">-</td>
                                         <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removeRow(this)">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </td>
@@ -884,16 +975,16 @@
                                 </tbody>
                                 <tfoot>
                                     <tr class="totals-row">
-                                        <td colspan="4" class="text-end fw-bold">Total Colación PM:</td>
+                                        <td colspan="3" class="text-end fw-bold">Total Colación PM:</td>
                                         <td class="fw-bold total-kcal">0</td>
                                         <td class="fw-bold total-prot">0</td>
                                         <td class="fw-bold total-carbs">0</td>
-                                        <td class="fw-bold total-lipidos">0</td>
+                                        <td class="fw-bold total-grasas">0</td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
                             </table>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.addMealRow('colacion2')">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addMealRow('colacion2')">
                                 <i class="fas fa-plus me-1"></i> Agregar Alimento
                             </button>
                         </div>
@@ -905,43 +996,48 @@
                             <table class="table table-bordered meal-table" id="cenaTable">
                                 <thead>
                                     <tr>
-                                        <th style="width: 15%;">Grupo</th>
-                                        <th style="width: 15%;">Subgrupo</th>
-                                        <th style="width: 20%;">Alimento</th>
-                                        <th style="width: 15%;">Porción</th>
-                                        <th style="width: 8%;">Kcal</th>
-                                        <th style="width: 7%;">Prot (g)</th>
-                                        <th style="width: 7%;">Carbs (g)</th>
-                                        <th style="width: 7%;">Lípidos (g)</th>
-                                        <th style="width: 3%;"></th>
+                                        <th style="width: 20%;">Grupo Alimento</th>
+                                        <th style="width: 25%;">Alimento</th>
+                                        <th style="width: 20%;">Porción (medida casera)</th>
+                                        <th style="width: 10%;">Kcal</th>
+                                        <th style="width: 8%;">Prot (g)</th>
+                                        <th style="width: 8%;">Carbs (g)</th>
+                                        <th style="width: 8%;">Grasas (g)</th>
+                                        <th style="width: 5%;"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr class="meal-row" data-meal="cena">
                                         <td>
-                                            <select class="form-select form-select-sm grupo-select" onchange="window.loadSubgrupos(this, 'cena', 0)">
-                                                <option value="">Grupo</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm subgrupo-select" disabled>
-                                                <option value="">Subgrupo</option>
+                                            <select class="form-select form-select-sm grupo-alimento" onchange="loadAlimentos(this, 'cena', 0)">
+                                                <option value="">Seleccionar grupo</option>
+                                                <option value="proteina">Proteínas</option>
+                                                <option value="cereales">Cereales/Pan</option>
+                                                <option value="lacteos">Lácteos</option>
+                                                <option value="frutas">Frutas</option>
+                                                <option value="verduras">Verduras</option>
+                                                <option value="aceites">Aceites/Grasas</option>
+                                                <option value="liquidos">Líquidos</option>
+                                                <option value="postre">Postre</option>
+                                                <option value="extra">Extras</option>
                                             </select>
                                         </td>
                                         <td>
                                             <select class="form-select form-select-sm alimento-select" disabled>
-                                                <option value="">Alimento</option>
+                                                <option value="">Primero seleccione grupo</option>
                                             </select>
                                         </td>
-                                        <td class="porcion-cell">
-                                            <span class="text-muted">-</span>
+                                        <td>
+                                            <select class="form-select form-select-sm porcion-select" disabled>
+                                                <option value="">Porción</option>
+                                            </select>
                                         </td>
                                         <td class="nutrient-cell kcal-cell">-</td>
                                         <td class="nutrient-cell prot-cell">-</td>
                                         <td class="nutrient-cell carbs-cell">-</td>
-                                        <td class="nutrient-cell lipidos-cell">-</td>
+                                        <td class="nutrient-cell grasas-cell">-</td>
                                         <td>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removeRow(this)">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(this)">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </td>
@@ -949,16 +1045,16 @@
                                 </tbody>
                                 <tfoot>
                                     <tr class="totals-row">
-                                        <td colspan="4" class="text-end fw-bold">Total Cena:</td>
+                                        <td colspan="3" class="text-end fw-bold">Total Cena:</td>
                                         <td class="fw-bold total-kcal">0</td>
                                         <td class="fw-bold total-prot">0</td>
                                         <td class="fw-bold total-carbs">0</td>
-                                        <td class="fw-bold total-lipidos">0</td>
+                                        <td class="fw-bold total-grasas">0</td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
                             </table>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.addMealRow('cena')">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addMealRow('cena')">
                                 <i class="fas fa-plus me-1"></i> Agregar Alimento
                             </button>
                         </div>
@@ -989,8 +1085,8 @@
                         </div>
                         <div class="col-md-3">
                             <div class="summary-card">
-                                <div class="summary-value" id="totalDiaLipidos">0g</div>
-                                <div class="summary-label">Lípidos</div>
+                                <div class="summary-value" id="totalDiaGrasas">0g</div>
+                                <div class="summary-label">Grasas</div>
                             </div>
                         </div>
                     </div>
@@ -998,18 +1094,18 @@
             </div>
             
             <!-- ============================================ -->
-            <!-- SECCIÓN 6: FRECUENCIA DE CONSUMO (CON CAMPOS LIBRES) -->
+            <!-- SECCIÓN 7: FRECUENCIA DE CONSUMO -->
             <!-- ============================================ -->
             <div class="form-container">
                 <div class="section-header" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);">
                     <i class="fas fa-calendar-week"></i>
-                    <span>6. Encuesta de Frecuencia de Consumo</span>
+                    <span>7. Encuesta de Frecuencia de Consumo</span>
                 </div>
                 
                 <div class="info-box">
                     <i class="fas fa-info-circle"></i>
                     <div>
-                        <strong>Instrucciones:</strong> Indica cuántas veces por semana el paciente consume cada grupo de alimentos (0-7 veces).
+                        <strong>Instrucciones:</strong> Indica cuántas veces por semana el paciente consume cada grupo de alimentos (1-7 veces).
                     </div>
                 </div>
                 
@@ -1017,9 +1113,8 @@
                     <table class="table table-bordered frequency-table">
                         <thead>
                             <tr>
-                                <th style="width: 35%;">Grupo de Alimentos</th>
-                                <th style="width: 45%;">Frecuencia Semanal</th>
-                                <th style="width: 20%;">Especificar</th>
+                                <th style="width: 40%;">Grupo de Alimentos</th>
+                                <th style="width: 60%;">Frecuencia Semanal</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1038,9 +1133,6 @@
                                     </div>
                                     <input type="hidden" name="freq_cereales_desayuno" value="0">
                                 </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="cereales_desayuno_tipo" placeholder="¿Cuáles?">
-                                </td>
                             </tr>
                             <tr>
                                 <td><i class="fas fa-wheat-awn me-2 text-warning"></i>Arroz, pasta, papas</td>
@@ -1057,27 +1149,24 @@
                                     </div>
                                     <input type="hidden" name="freq_arroz_pasta" value="0">
                                 </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="arroz_pasta_tipo" placeholder="¿Cuáles?">
-                                </td>
                             </tr>
                             <tr>
-                                <td><i class="fas fa-bread-slice me-2 text-warning"></i>Pan</td>
+                                <td><i class="fas fa-bread-slice me-2 text-warning"></i>Pan (¿qué tipo?)</td>
                                 <td>
-                                    <div class="frequency-selector" data-group="pan">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <div class="frequency-selector" data-group="pan">
+                                            <button type="button" class="freq-btn" data-value="0">0</button>
+                                            <button type="button" class="freq-btn" data-value="1">1</button>
+                                            <button type="button" class="freq-btn" data-value="2">2</button>
+                                            <button type="button" class="freq-btn" data-value="3">3</button>
+                                            <button type="button" class="freq-btn" data-value="4">4</button>
+                                            <button type="button" class="freq-btn" data-value="5">5</button>
+                                            <button type="button" class="freq-btn" data-value="6">6</button>
+                                            <button type="button" class="freq-btn" data-value="7">7</button>
+                                        </div>
+                                        <input type="text" class="form-control form-control-sm" name="tipo_pan" placeholder="Tipo" style="width: 120px;">
                                     </div>
                                     <input type="hidden" name="freq_pan" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="tipo_pan" placeholder="¿Qué tipo?">
                                 </td>
                             </tr>
                             <tr>
@@ -1095,27 +1184,24 @@
                                     </div>
                                     <input type="hidden" name="freq_verduras" value="0">
                                 </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="verduras_tipo" placeholder="¿Cuáles?">
-                                </td>
                             </tr>
                             <tr>
-                                <td><i class="fas fa-apple-alt me-2 text-danger"></i>Frutas</td>
+                                <td><i class="fas fa-apple-alt me-2 text-danger"></i>Frutas (¿cuáles?)</td>
                                 <td>
-                                    <div class="frequency-selector" data-group="frutas">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <div class="frequency-selector" data-group="frutas">
+                                            <button type="button" class="freq-btn" data-value="0">0</button>
+                                            <button type="button" class="freq-btn" data-value="1">1</button>
+                                            <button type="button" class="freq-btn" data-value="2">2</button>
+                                            <button type="button" class="freq-btn" data-value="3">3</button>
+                                            <button type="button" class="freq-btn" data-value="4">4</button>
+                                            <button type="button" class="freq-btn" data-value="5">5</button>
+                                            <button type="button" class="freq-btn" data-value="6">6</button>
+                                            <button type="button" class="freq-btn" data-value="7">7</button>
+                                        </div>
+                                        <input type="text" class="form-control form-control-sm" name="cuales_frutas" placeholder="¿Cuáles?" style="width: 120px;">
                                     </div>
                                     <input type="hidden" name="freq_frutas" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="cuales_frutas" placeholder="¿Cuáles?">
                                 </td>
                             </tr>
                             <tr>
@@ -1133,9 +1219,6 @@
                                     </div>
                                     <input type="hidden" name="freq_jugos" value="0">
                                 </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="jugos_tipo" placeholder="¿Cuáles?">
-                                </td>
                             </tr>
                             <tr>
                                 <td><i class="fas fa-seedling me-2 text-success"></i>Legumbres</td>
@@ -1152,12 +1235,9 @@
                                     </div>
                                     <input type="hidden" name="freq_legumbres" value="0">
                                 </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="legumbres_tipo" placeholder="¿Cuáles?">
-                                </td>
                             </tr>
                             <tr>
-                                <td><i class="fas fa-drumstick-bite me-2 text-warning"></i>Carnes blancas</td>
+                                <td><i class="fas fa-drumstick-bite me-2 text-warning"></i>Carnes blancas (pollo, pavo)</td>
                                 <td>
                                     <div class="frequency-selector" data-group="carnes_blancas">
                                         <button type="button" class="freq-btn" data-value="0">0</button>
@@ -1170,9 +1250,6 @@
                                         <button type="button" class="freq-btn" data-value="7">7</button>
                                     </div>
                                     <input type="hidden" name="freq_carnes_blancas" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="carnes_blancas_tipo" placeholder="¿Cuáles?">
                                 </td>
                             </tr>
                             <tr>
@@ -1190,9 +1267,6 @@
                                     </div>
                                     <input type="hidden" name="freq_carnes_rojas" value="0">
                                 </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="carnes_rojas_tipo" placeholder="¿Cuáles?">
-                                </td>
                             </tr>
                             <tr>
                                 <td><i class="fas fa-egg me-2 text-warning"></i>Huevo</td>
@@ -1208,9 +1282,6 @@
                                         <button type="button" class="freq-btn" data-value="7">7</button>
                                     </div>
                                     <input type="hidden" name="freq_huevo" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="huevo_tipo" placeholder="¿Cómo?">
                                 </td>
                             </tr>
                             <tr>
@@ -1228,9 +1299,6 @@
                                     </div>
                                     <input type="hidden" name="freq_pescado" value="0">
                                 </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="pescado_tipo" placeholder="¿Cuáles?">
-                                </td>
                             </tr>
                             <tr>
                                 <td><i class="fas fa-hotdog me-2 text-danger"></i>Cecinas/Embutidos</td>
@@ -1247,12 +1315,9 @@
                                     </div>
                                     <input type="hidden" name="freq_cecinas" value="0">
                                 </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="cecinas_tipo" placeholder="¿Cuáles?">
-                                </td>
                             </tr>
                             <tr>
-                                <td><i class="fas fa-cheese me-2 text-warning"></i>Lácteos</td>
+                                <td><i class="fas fa-cheese me-2 text-warning"></i>Lácteos (yogurt, leche, queso)</td>
                                 <td>
                                     <div class="frequency-selector" data-group="lacteos">
                                         <button type="button" class="freq-btn" data-value="0">0</button>
@@ -1265,9 +1330,6 @@
                                         <button type="button" class="freq-btn" data-value="7">7</button>
                                     </div>
                                     <input type="hidden" name="freq_lacteos" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="lacteos_tipo" placeholder="¿Cuáles?">
                                 </td>
                             </tr>
                             <tr>
@@ -1285,27 +1347,24 @@
                                     </div>
                                     <input type="hidden" name="freq_aceite" value="0">
                                 </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="aceite_tipo" placeholder="¿Qué tipo?">
-                                </td>
                             </tr>
                             <tr>
                                 <td><i class="fas fa-leaf me-2 text-success"></i>Frutos secos / Semillas</td>
                                 <td>
-                                    <div class="frequency-selector" data-group="frutos_secos">
-                                        <button type="button" class="freq-btn" data-value="0">0</button>
-                                        <button type="button" class="freq-btn" data-value="1">1</button>
-                                        <button type="button" class="freq-btn" data-value="2">2</button>
-                                        <button type="button" class="freq-btn" data-value="3">3</button>
-                                        <button type="button" class="freq-btn" data-value="4">4</button>
-                                        <button type="button" class="freq-btn" data-value="5">5</button>
-                                        <button type="button" class="freq-btn" data-value="6">6</button>
-                                        <button type="button" class="freq-btn" data-value="7">7</button>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <div class="frequency-selector" data-group="frutos_secos">
+                                            <button type="button" class="freq-btn" data-value="0">0</button>
+                                            <button type="button" class="freq-btn" data-value="1">1</button>
+                                            <button type="button" class="freq-btn" data-value="2">2</button>
+                                            <button type="button" class="freq-btn" data-value="3">3</button>
+                                            <button type="button" class="freq-btn" data-value="4">4</button>
+                                            <button type="button" class="freq-btn" data-value="5">5</button>
+                                            <button type="button" class="freq-btn" data-value="6">6</button>
+                                            <button type="button" class="freq-btn" data-value="7">7</button>
+                                        </div>
+                                        <input type="text" class="form-control form-control-sm" name="cuales_frutos_secos" placeholder="¿Cuáles?" style="width: 120px;">
                                     </div>
                                     <input type="hidden" name="freq_frutos_secos" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="cuales_frutos_secos" placeholder="¿Cuáles?">
                                 </td>
                             </tr>
                             <tr>
@@ -1323,9 +1382,6 @@
                                     </div>
                                     <input type="hidden" name="freq_dulces" value="0">
                                 </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="dulces_tipo" placeholder="¿Cuáles?">
-                                </td>
                             </tr>
                             <tr>
                                 <td><i class="fas fa-french-fries me-2 text-warning"></i>Frituras</td>
@@ -1342,9 +1398,6 @@
                                     </div>
                                     <input type="hidden" name="freq_frituras" value="0">
                                 </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="frituras_tipo" placeholder="¿Cuáles?">
-                                </td>
                             </tr>
                             <tr>
                                 <td><i class="fas fa-tint me-2 text-primary"></i>Agua (vasos/día)</td>
@@ -1358,9 +1411,6 @@
                                         <button type="button" class="freq-btn" data-value="5">9+</button>
                                     </div>
                                     <input type="hidden" name="freq_agua" value="0">
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="agua_observaciones" placeholder="Observaciones">
                                 </td>
                             </tr>
                             <tr>
@@ -1378,12 +1428,9 @@
                                     </div>
                                     <input type="hidden" name="freq_cafe_te" value="0">
                                 </td>
-                                <td>
-                                    <input type="text" class="form-control form-control-sm" name="cafe_te_tipo" placeholder="¿Cuál?">
-                                </td>
                             </tr>
                             <tr>
-                                <td><i class="fas fa-glass-water me-2 text-danger"></i>Bebidas azucaradas</td>
+                                <td><i class="fas fa-glass-water me-2 text-danger"></i>Bebidas azucaradas / Energéticas</td>
                                 <td>
                                     <div class="frequency-selector" data-group="bebidas_azucaradas">
                                         <button type="button" class="freq-btn" data-value="0">0</button>
@@ -1397,116 +1444,131 @@
                                     </div>
                                     <input type="hidden" name="freq_bebidas_azucaradas" value="0">
                                 </td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-motorcycle me-2 text-warning"></i>Delivery / Restaurante</td>
                                 <td>
-                                    <input type="text" class="form-control form-control-sm" name="bebidas_azucaradas_tipo" placeholder="¿Cuáles?">
+                                    <div class="frequency-selector" data-group="delivery_restaurante">
+                                        <button type="button" class="freq-btn" data-value="0">0</button>
+                                        <button type="button" class="freq-btn" data-value="1">1</button>
+                                        <button type="button" class="freq-btn" data-value="2">2</button>
+                                        <button type="button" class="freq-btn" data-value="3">3</button>
+                                        <button type="button" class="freq-btn" data-value="4">4</button>
+                                        <button type="button" class="freq-btn" data-value="5">5</button>
+                                        <button type="button" class="freq-btn" data-value="6">6</button>
+                                        <button type="button" class="freq-btn" data-value="7">7</button>
+                                    </div>
+                                    <input type="hidden" name="freq_delivery_restaurante" value="0">
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-            
-            <!-- ============================================ -->
-            <!-- SECCIÓN 7: EVALUACIÓN ANTROPOMÉTRICA (MOVIDA AL FINAL) -->
-            <!-- ============================================ -->
-            <div class="form-container">
-                <div class="section-header blue">
-                    <i class="fas fa-ruler-combined"></i>
-                    <span>7. Evaluación Antropométrica</span>
-                </div>
-                
-                <div class="info-box success">
-                    <i class="fas fa-calculator"></i>
-                    <div>
-                        <strong>Mediciones:</strong> Los cálculos de composición corporal se realizarán automáticamente.
-                    </div>
-                </div>
-                
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <label class="form-label" for="talla">
-                            <i class="fas fa-arrows-alt-v"></i>
-                            Talla (m)
-                        </label>
-                        <input type="number" class="form-control" id="talla" name="talla" 
-                               step="0.01" min="1.00" max="2.50" 
-                               placeholder="Ej: 1.65">
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label" for="peso">
-                            <i class="fas fa-weight"></i>
-                            Peso (kg)
-                        </label>
-                        <input type="number" class="form-control" id="peso" name="peso" 
-                               step="0.1" min="30" max="300" 
-                               placeholder="Ej: 70.5">
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            <i class="fas fa-calculator"></i>
-                            IMC Calculado
-                        </label>
-                        <div class="calculated-value" id="imcCalculado">-</div>
-                        <small class="text-muted text-center d-block" id="imcCategoria"></small>
-                    </div>
-                    
-                    <div class="col-12">
-                        <label class="form-label">
-                            <i class="fas fa-hand-paper"></i>
-                            Pliegues Cutáneos (mm)
-                        </label>
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <input type="number" class="form-control" id="pliegue_bicipital" 
-                                       name="pliegue_bicipital" step="0.1" placeholder="Bicipital">
+                        <!-- ============================================ -->
+                        <div class="form-container">
+                            <div class="section-header blue">
+                                <i class="fas fa-ruler-combined"></i>
+                                <span>3. Evaluación Antropométrica</span>
                             </div>
-                            <div class="col-md-3">
-                                <input type="number" class="form-control" id="pliegue_tricipital" 
-                                       name="pliegue_tricipital" step="0.1" placeholder="Tricipital">
+                            
+                            <div class="info-box success">
+                                <i class="fas fa-calculator"></i>
+                                <div>
+                                    <strong>Mediciones:</strong> Los cálculos de composición corporal se realizarán automáticamente.
+                                </div>
                             </div>
-                            <div class="col-md-3">
-                                <input type="number" class="form-control" id="pliegue_subescapular" 
-                                       name="pliegue_subescapular" step="0.1" placeholder="Subescapular">
-                            </div>
-                            <div class="col-md-3">
-                                <input type="number" class="form-control" id="pliegue_supracrestideo" 
-                                       name="pliegue_supracrestideo" step="0.1" placeholder="Supracrestídeo">
+                            
+                            <div class="row g-4">
+                                <div class="col-md-4">
+                                    <label class="form-label" for="talla">
+                                        <i class="fas fa-arrows-alt-v"></i>
+                                        Talla (m)
+                                        <span class="">*</span>
+                                    </label>
+                                    <input type="number" class="form-control" id="talla" name="talla" 
+                                           step="0.01" min="1.00" max="2.50" 
+                                           placeholder="Ej: 1.65" >
+                                    <div class="invalid-feedback">Ingresa una talla válida entre 1.00 y 2.50 m</div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label class="form-label" for="peso">
+                                        <i class="fas fa-weight"></i>
+                                        Peso (kg)
+                                        <span class="">*</span>
+                                    </label>
+                                    <input type="number" class="form-control" id="peso" name="peso" 
+                                           step="0.1" min="30" max="300" 
+                                           placeholder="Ej: 70.5" >
+                                    <div class="invalid-feedback">Ingresa un peso válido entre 30 y 300 kg</div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        <i class="fas fa-calculator"></i>
+                                        IMC Calculado
+                                    </label>
+                                    <div class="calculated-value" id="imcCalculado">-</div>
+                                    <small class="text-muted text-center d-block" id="imcCategoria"></small>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label class="form-label">
+                                        <i class="fas fa-hand-paper"></i>
+                                        Pliegues Cutáneos (mm)
+                                    </label>
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control" id="pliegue_bicipital" 
+                                                   name="pliegue_bicipital" step="0.1" placeholder="Bicipital">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control" id="pliegue_tricipital" 
+                                                   name="pliegue_tricipital" step="0.1" placeholder="Tricipital">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control" id="pliegue_subescapular" 
+                                                   name="pliegue_subescapular" step="0.1" placeholder="Subescapular">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control" id="pliegue_supracrestideo" 
+                                                   name="pliegue_supracrestideo" step="0.1" placeholder="Supracrestídeo">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label class="form-label">
+                                        <i class="fas fa-ruler-horizontal"></i>
+                                        Perímetros (cm)
+                                    </label>
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control" id="perimetro_brazo" 
+                                                   name="perimetro_brazo" step="0.1" placeholder="Brazo Relajado">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control" id="perimetro_cintura" 
+                                                   name="perimetro_cintura" step="0.1" placeholder="Cintura">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control" id="perimetro_cadera" 
+                                                   name="perimetro_cadera" step="0.1" placeholder="Cadera">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="number" class="form-control" id="perimetro_pantorrilla" 
+                                                   name="perimetro_pantorrilla" step="0.1" placeholder="Pantorrilla">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="col-12">
-                        <label class="form-label">
-                            <i class="fas fa-ruler-horizontal"></i>
-                            Perímetros (cm)
-                        </label>
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <input type="number" class="form-control" id="perimetro_brazo" 
-                                       name="perimetro_brazo" step="0.1" placeholder="Brazo Relajado">
-                            </div>
-                            <div class="col-md-3">
-                                <input type="number" class="form-control" id="perimetro_cintura" 
-                                       name="perimetro_cintura" step="0.1" placeholder="Cintura">
-                            </div>
-                            <div class="col-md-3">
-                                <input type="number" class="form-control" id="perimetro_cadera" 
-                                       name="perimetro_cadera" step="0.1" placeholder="Cadera">
-                            </div>
-                            <div class="col-md-3">
-                                <input type="number" class="form-control" id="perimetro_pantorrilla" 
-                                       name="perimetro_pantorrilla" step="0.1" placeholder="Pantorrilla">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                        
             
             <!-- Buttons -->
             <div class="d-flex justify-content-between mb-5">
-                <a href="/dashboard/nutritionist" class="btn-outline-modern">
+                <a href="/nutritionist/dashboard" class="btn-outline-modern">
                     <i class="fas fa-times"></i>
                     Cancelar
                 </a>
@@ -1515,27 +1577,27 @@
                     Guardar Paciente
                 </button>
             </div>
+        </div> <!-- Fin de último section -->
             
-            <!-- BOTONES FLOTANTES STICKY -->
-            <div class="sticky-actions" id="stickyActions" style="display: none;">
-                <div class="container">
-                    <div class="sticky-actions-content">
-                        <div class="sticky-actions-info">
-                            <i class="fas fa-edit"></i>
-                            <span>Editando ficha del paciente</span>
-                        </div>
-                        <div class="sticky-actions-buttons">
-                            <button type="button" class="btn btn-outline-modern" onclick="guardarBorrador()">
-                                <i class="fas fa-save"></i> Guardar Borrador
-                            </button>
-                            <button type="submit" class="btn btn-modern">
-                                <i class="fas fa-check-circle"></i> Guardar y Finalizar
-                            </button>
-                        </div>
+        <!-- BOTONES FLOTANTES STICKY -->
+        <div class="sticky-actions" id="stickyActions" style="display: none;">
+            <div class="container">
+                <div class="sticky-actions-content">
+                    <div class="sticky-actions-info">
+                        <i class="fas fa-edit"></i>
+                        <span>Editando ficha del paciente</span>
+                    </div>
+                    <div class="sticky-actions-buttons">
+                        <button type="button" class="btn btn-outline-modern" onclick="guardarBorrador()">
+                            <i class="fas fa-save"></i> Guardar Borrador
+                        </button>
+                        <button type="submit" class="btn btn-modern">
+                            <i class="fas fa-check-circle"></i> Guardar y Finalizar
+                        </button>
                     </div>
                 </div>
             </div>
-            
+        </div>
         </form>
     </div>
     
@@ -1548,7 +1610,29 @@
             <p class="mb-0 fw-bold">Guardando ficha del paciente...</p>
         </div>
     </div>
-    
+
+    <!-- Modal de Validacion -->
+    <div class="modal fade" id="validationModal" tabindex="-1" aria-labelledby="validationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="validationModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Campos Requeridos
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Por favor completa los siguientes campos obligatorios:</p>
+                    <ul id="missingFieldsList" class="list-unstyled mb-0">
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/patient-intake.js"></script>
 </body>

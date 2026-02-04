@@ -209,20 +209,20 @@ class RecipeGenerator:
     def filter_by_dietary_restrictions(self, df: pd.DataFrame, restrictions: List[str]) -> pd.DataFrame:
         """Filtra superalimentos según restricciones dietéticas."""
         print(f"🚫 DEBUG: Aplicando restricciones dietéticas: {restrictions}")
-        
+
         if not restrictions:
             print("✅ DEBUG: Sin restricciones dietéticas")
             return df
-        
+
         filtered_df = df.copy()
         original_count = len(filtered_df)
-        
+
         restriction_mapping = {
             'vegan': ['lácteo', 'proteína animal'],
             'gluten_free': ['cereales'],
             'nut_free': ['frutos secos']
         }
-        
+
         for restriction in restrictions:
             if restriction in restriction_mapping:
                 excluded_types = restriction_mapping[restriction]
@@ -230,11 +230,179 @@ class RecipeGenerator:
                     if 'tipo_alimento' in filtered_df.columns:
                         filtered_df = filtered_df[filtered_df['tipo_alimento'] != excluded_type]
                         print(f"🚫 DEBUG: Excluidos alimentos tipo '{excluded_type}' por restricción '{restriction}'")
-        
+
         final_count = len(filtered_df)
         print(f"📊 DEBUG: Alimentos después de restricciones: {final_count} (eliminados: {original_count - final_count})")
-        
+
         return filtered_df
+
+    def filter_by_allergies(self, df: pd.DataFrame, allergies: List[str]) -> pd.DataFrame:
+        """
+        Filtra alimentos según las alergias/intolerancias del paciente.
+
+        Args:
+            df: DataFrame con los alimentos
+            allergies: Lista de alergias/intolerancias (ej: ['lactosa', 'gluten', 'mariscos', 'frutos secos'])
+
+        Returns:
+            DataFrame filtrado sin los alérgenos
+        """
+        print(f"⚠️ DEBUG: Aplicando filtro de alergias: {allergies}")
+
+        if not allergies:
+            print("✅ DEBUG: Sin alergias especificadas")
+            return df
+
+        filtered_df = df.copy()
+        original_count = len(filtered_df)
+
+        # Mapeo de alergias a palabras clave que deben excluirse
+        allergy_keywords = {
+            'lactosa': ['lácteo', 'leche', 'queso', 'yogur', 'yogurt', 'mantequilla', 'crema', 'suero', 'caseína', 'lactosuero'],
+            'gluten': ['trigo', 'cebada', 'centeno', 'avena', 'pan', 'pasta', 'harina', 'cereal', 'galleta'],
+            'mariscos': ['marisco', 'camarón', 'langosta', 'cangrejo', 'mejillón', 'almeja', 'ostra', 'calamar', 'pulpo'],
+            'pescado': ['pescado', 'salmón', 'atún', 'bacalao', 'sardina', 'anchoa', 'merluza', 'aceite de pescado'],
+            'frutos secos': ['nuez', 'almendra', 'avellana', 'pistacho', 'anacardo', 'maní', 'cacahuate', 'cacahuete'],
+            'huevo': ['huevo', 'yema', 'clara', 'albúmina', 'mayonesa'],
+            'soya': ['soya', 'soja', 'tofu', 'tempeh', 'edamame', 'lecitina de soya'],
+            'maní': ['maní', 'cacahuate', 'cacahuete', 'mantequilla de maní'],
+            'apio': ['apio', 'celeriac'],
+            'mostaza': ['mostaza'],
+            'sésamo': ['sésamo', 'ajonjolí', 'tahini'],
+            'sulfitos': ['sulfito', 'vino', 'vinagre'],
+            'altramuces': ['altramuz', 'lupino'],
+            'moluscos': ['molusco', 'caracol', 'pulpo', 'calamar', 'sepia']
+        }
+
+        for allergy in allergies:
+            allergy_lower = allergy.lower().strip()
+
+            # Buscar en el mapeo de alergias
+            keywords_to_exclude = []
+            for key, keywords in allergy_keywords.items():
+                if key in allergy_lower or allergy_lower in key:
+                    keywords_to_exclude.extend(keywords)
+
+            # Si no está en el mapeo, usar la alergia directamente como keyword
+            if not keywords_to_exclude:
+                keywords_to_exclude = [allergy_lower]
+
+            # Filtrar alimentos que contengan cualquier keyword
+            for keyword in keywords_to_exclude:
+                if 'nombre' in filtered_df.columns:
+                    mask = ~filtered_df['nombre'].str.lower().str.contains(keyword, na=False)
+                    before = len(filtered_df)
+                    filtered_df = filtered_df[mask]
+                    removed = before - len(filtered_df)
+                    if removed > 0:
+                        print(f"   ⚠️ Excluidos {removed} alimentos con '{keyword}' por alergia '{allergy}'")
+
+        final_count = len(filtered_df)
+        print(f"📊 DEBUG: Alimentos después de filtro de alergias: {final_count} (eliminados: {original_count - final_count})")
+
+        return filtered_df
+
+    def filter_by_meal_time(self, df: pd.DataFrame, meal_time: str) -> pd.DataFrame:
+        """
+        Filtra alimentos según el tiempo de comida.
+        Algunos alimentos solo son apropiados para ciertos tiempos de comida.
+
+        Args:
+            df: DataFrame con los alimentos
+            meal_time: Tiempo de comida ('desayuno', 'almuerzo', 'cena', 'colacion')
+
+        Returns:
+            DataFrame filtrado según restricciones de tiempo de comida
+        """
+        print(f"🕐 DEBUG: Aplicando filtro de tiempo de comida: {meal_time}")
+
+        if not meal_time:
+            print("✅ DEBUG: Sin tiempo de comida especificado")
+            return df
+
+        filtered_df = df.copy()
+        original_count = len(filtered_df)
+        meal_time_lower = meal_time.lower().strip()
+
+        # Alimentos que SOLO deben aparecer en desayuno/colaciones
+        breakfast_only_keywords = [
+            'natur', 'cereal', 'cereales', 'granola', 'muesli',
+            'corn flakes', 'avena instantánea', 'cereal de desayuno'
+        ]
+
+        # Si es almuerzo o cena, excluir alimentos de desayuno
+        if meal_time_lower in ['almuerzo', 'cena', 'lunch', 'dinner']:
+            for keyword in breakfast_only_keywords:
+                if 'nombre' in filtered_df.columns:
+                    mask = ~filtered_df['nombre'].str.lower().str.contains(keyword, na=False)
+                    before = len(filtered_df)
+                    filtered_df = filtered_df[mask]
+                    removed = before - len(filtered_df)
+                    if removed > 0:
+                        print(f"   🕐 Excluidos {removed} alimentos con '{keyword}' (no apropiado para {meal_time})")
+
+        final_count = len(filtered_df)
+        print(f"📊 DEBUG: Alimentos después de filtro de tiempo: {final_count} (eliminados: {original_count - final_count})")
+
+        return filtered_df
+
+    def validate_bread_accompaniment(self, ingredients: List[Dict]) -> List[Dict]:
+        """
+        Valida que si hay pan en la pauta, haya acompañamiento de proteína o grasa.
+        Si hay pan solo, sugiere agregar acompañamiento.
+
+        Args:
+            ingredients: Lista de ingredientes seleccionados
+
+        Returns:
+            Lista de ingredientes con posible acompañamiento agregado
+        """
+        print("🍞 DEBUG: Validando lógica pan + acompañamiento...")
+
+        # Detectar si hay pan
+        bread_keywords = ['pan', 'tostada', 'marraqueta', 'hallulla', 'baguette', 'pan de molde']
+        has_bread = any(
+            any(keyword in str(ing.get('nombre', '')).lower() for keyword in bread_keywords)
+            for ing in ingredients
+        )
+
+        if not has_bread:
+            print("   ✅ No hay pan en la selección")
+            return ingredients
+
+        print("   🍞 Pan detectado, verificando acompañamiento...")
+
+        # Detectar si hay proteína o grasa
+        protein_keywords = ['huevo', 'jamón', 'pavo', 'pollo', 'atún', 'queso', 'quesillo', 'tofu']
+        fat_keywords = ['palta', 'aguacate', 'mantequilla', 'aceite', 'maní', 'almendra']
+
+        has_protein = any(
+            any(keyword in str(ing.get('nombre', '')).lower() for keyword in protein_keywords)
+            for ing in ingredients
+        )
+
+        has_fat = any(
+            any(keyword in str(ing.get('nombre', '')).lower() for keyword in fat_keywords)
+            for ing in ingredients
+        )
+
+        if has_protein or has_fat:
+            print(f"   ✅ Acompañamiento encontrado (proteína: {has_protein}, grasa: {has_fat})")
+            return ingredients
+
+        # Si hay pan sin acompañamiento, agregar sugerencia
+        print("   ⚠️ Pan sin acompañamiento detectado, agregando sugerencia...")
+
+        # Agregar flag de sugerencia al primer pan encontrado
+        for ing in ingredients:
+            nombre = str(ing.get('nombre', '')).lower()
+            if any(keyword in nombre for keyword in bread_keywords):
+                ing['needs_accompaniment'] = True
+                ing['accompaniment_suggestion'] = 'Agregar proteína (huevo, jamón, quesillo) o grasa saludable (palta, mantequilla de maní)'
+                print(f"   💡 Sugerencia agregada a: {ing.get('nombre')}")
+                break
+
+        return ingredients
 
     def filter_by_food_sources(self, df: pd.DataFrame, sources: List[str]) -> pd.DataFrame:
         """Filtra superalimentos según fuentes de alimentos seleccionadas."""
@@ -404,41 +572,58 @@ class RecipeGenerator:
             'unit': dose_info['unit']
         }
 
-    def select_ingredients(self, target_functions: List[str], num_ingredients: int, 
+    def select_ingredients(self, target_functions: List[str], num_ingredients: int,
                          dietary_restrictions: List[str] = None, food_sources: List[str] = None,
                          product_type: str = None, primary_objective: str = None,
-                         optimization_hints: Dict = None) -> List[Dict]:
+                         optimization_hints: Dict = None, allergies: List[str] = None,
+                         meal_time: str = None) -> List[Dict]:
         """Selecciona ingredientes basados en funciones objetivo.
-        
+
         Args:
-            optimization_hints: Dict con 'target_nutrients' y 'boost_sources' para optimización
+            target_functions: Lista de funciones objetivo
+            num_ingredients: Numero de ingredientes a seleccionar
+            dietary_restrictions: Restricciones dieteticas
+            food_sources: Fuentes de alimentos preferidas
+            product_type: Tipo de producto
+            primary_objective: Objetivo principal
+            optimization_hints: Dict con 'target_nutrients' y 'boost_sources' para optimizacion
+            allergies: Lista de alergias/intolerancias del paciente
+            meal_time: Tiempo de comida (desayuno, almuerzo, cena, colacion)
         """
         print(f"🔍 DEBUG: Seleccionando {num_ingredients} ingredientes...")
         print(f"🎯 DEBUG: Funciones objetivo: {target_functions}")
-        
-        # ✅ FASE 2: Aplicar hints de optimización si están disponibles
+
+        # FASE 2: Aplicar hints de optimizacion si estan disponibles
         if optimization_hints:
             print(f"💡 DEBUG: Aplicando hints de optimización: {optimization_hints.get('target_nutrients', [])}")
-        
+
         # Aplicar filtros
         filtered_df = self.superfoods_df.copy()
-        
-        # ✅ FILTRO NaN: Excluir ingredientes con dosis_min_diaria inválida
+
+        # FILTRO NaN: Excluir ingredientes con dosis_min_diaria invalida
         if 'dosis_min_diaria' in filtered_df.columns:
             original_count = len(filtered_df)
             filtered_df = filtered_df[pd.notna(filtered_df['dosis_min_diaria']) & (filtered_df['dosis_min_diaria'] > 0)]
             removed_count = original_count - len(filtered_df)
             if removed_count > 0:
                 print(f"🚫 DEBUG: Excluidos {removed_count} ingredientes con dosis_min_diaria inválida (NaN o ≤0)")
-        
-        # Filtrar por restricciones dietéticas
+
+        # Filtrar por restricciones dieteticas
         if dietary_restrictions:
             filtered_df = self.filter_by_dietary_restrictions(filtered_df, dietary_restrictions)
-        
+
+        # NUEVO: Filtrar por alergias/intolerancias
+        if allergies:
+            filtered_df = self.filter_by_allergies(filtered_df, allergies)
+
+        # NUEVO: Filtrar por tiempo de comida
+        if meal_time:
+            filtered_df = self.filter_by_meal_time(filtered_df, meal_time)
+
         # Filtrar por fuentes de alimentos
         if food_sources:
             filtered_df = self.filter_by_food_sources(filtered_df, food_sources)
-        
+
         # Filtrar por tipo de producto
         if product_type:
             filtered_df = self.filter_by_product_type(filtered_df, product_type)
@@ -1294,26 +1479,30 @@ class RecipeGenerator:
     
     
     def generate_recipe(self, primary_objective: str, num_ingredients: int = 5,
-                       dietary_restrictions: List[str] = None, 
+                       dietary_restrictions: List[str] = None,
                        secondary_objectives: List[str] = None,
                        food_sources: List[str] = None,
                        product_type: str = None,
                        package_size: int = 100,
-                       optimization_hints: Dict = None) -> Dict:
+                       optimization_hints: Dict = None,
+                       allergies: List[str] = None,
+                       meal_time: str = None) -> Dict:
         """
-        🆕 MÉTODO PRINCIPAL: Genera una receta personalizada completa.
-        
+        METODO PRINCIPAL: Genera una receta personalizada completa.
+
         Args:
             primary_objective: Objetivo principal (immune, energy, cognitive, etc.)
-            num_ingredients: Número de ingredientes deseados (default: 5)
+            num_ingredients: Numero de ingredientes deseados (default: 5)
             dietary_restrictions: Lista de restricciones (vegan, gluten_free, nut_free)
             secondary_objectives: Objetivos secundarios opcionales
             food_sources: Fuentes de alimentos preferidas
             product_type: Tipo de producto (polvo_batidos, capsulas, etc.)
-            package_size: Tamaño del envase en gramos (100 o 200, default: 100)
-        
+            package_size: Tamano del envase en gramos (100 o 200, default: 100)
+            allergies: Lista de alergias/intolerancias del paciente
+            meal_time: Tiempo de comida (desayuno, almuerzo, cena, colacion)
+
         Returns:
-            Dict con la receta completa incluyendo ingredientes, instrucciones, métricas, etc.
+            Dict con la receta completa incluyendo ingredientes, instrucciones, metricas, etc.
         """
         print("=" * 80)
         print("🚀 DEBUG: === INICIANDO GENERACIÓN DE RECETA ===")
@@ -1323,6 +1512,8 @@ class RecipeGenerator:
         print(f"🔒 Restricciones: {dietary_restrictions}")
         print(f"🌱 Fuentes: {food_sources}")
         print(f"🎯 Tipo de producto: {product_type}")
+        print(f"⚠️ Alergias: {allergies}")
+        print(f"🕐 Tiempo de comida: {meal_time}")
         
         try:
             # 1. Mapear objetivos a funciones
@@ -1335,18 +1526,24 @@ class RecipeGenerator:
             # 2. Seleccionar ingredientes
             print("\n🔍 PASO 2: Seleccionando ingredientes...")
             ingredients = self.select_ingredients(
-                target_functions, 
-                num_ingredients, 
-                dietary_restrictions, 
+                target_functions,
+                num_ingredients,
+                dietary_restrictions,
                 food_sources,
                 product_type,
                 primary_objective,
-                optimization_hints  # ✅ FASE 2: Pasar hints de optimización
+                optimization_hints,
+                allergies,      # NUEVO: Pasar alergias al filtro
+                meal_time       # NUEVO: Pasar tiempo de comida al filtro
             )
-            
+
             if not ingredients:
                 raise ValueError("No se encontraron ingredientes que cumplan con los criterios")
-            
+
+            # NUEVO: Validar logica pan + acompanamiento
+            if meal_time:
+                ingredients = self.validate_bread_accompaniment(ingredients)
+
             print(f"✅ Ingredientes seleccionados: {len(ingredients)}")
             
             # 3. Calcular ingredientes con tamaño de envase (PROPORCIONAL)
@@ -1542,17 +1739,17 @@ class RecipeGenerator:
 
 def generate_recipe_api(data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Función principal para generar recetas desde la API.
-    Wrapper para mantener compatibilidad con código legacy.
+    Funcion principal para generar recetas desde la API.
+    Wrapper para mantener compatibilidad con codigo legacy.
     """
     print("🚀 DEBUG: === INICIANDO GENERACIÓN DE RECETA (API WRAPPER) ===")
     print(f"📥 DEBUG: Datos recibidos: {json.dumps(data, indent=2)}")
-    
+
     try:
         # Inicializar generador
         generator = RecipeGenerator()
-        
-        # Extraer parámetros
+
+        # Extraer parametros
         primary_objective = data.get('primary_objective', '')
         secondary_objectives = data.get('secondary_objectives', [])
         dietary_restrictions = data.get('dietary_restrictions', [])
@@ -1560,8 +1757,11 @@ def generate_recipe_api(data: Dict[str, Any]) -> Dict[str, Any]:
         product_type = data.get('product_type', 'polvo_batidos')
         num_ingredients = data.get('num_ingredients', 5)
         package_size = data.get('package_size', 100)
-        optimization_hints = data.get('optimization_hints', None)  # ✅ FASE 2: Hints de optimización
-        
+        optimization_hints = data.get('optimization_hints', None)
+        # NUEVO: Parametros para alergias y tiempo de comida
+        allergies = data.get('allergies', [])
+        meal_time = data.get('meal_time', None)
+
         print(f"🎯 DEBUG: Objetivo principal: {primary_objective}")
         print(f"🎯 DEBUG: Objetivos secundarios: {secondary_objectives}")
         print(f"🚫 DEBUG: Restricciones: {dietary_restrictions}")
@@ -1569,18 +1769,20 @@ def generate_recipe_api(data: Dict[str, Any]) -> Dict[str, Any]:
         print(f"🎯 DEBUG: Tipo de producto: {product_type}")
         print(f"🔢 DEBUG: Número de ingredientes: {num_ingredients}")
         print(f"📦 DEBUG: Tamaño de envase: {package_size}g")
-        
-        # Validar parámetros
+        print(f"⚠️ DEBUG: Alergias: {allergies}")
+        print(f"🕐 DEBUG: Tiempo de comida: {meal_time}")
+
+        # Validar parametros
         if not primary_objective:
             error_msg = "El objetivo principal es requerido"
             print(f"❌ DEBUG: {error_msg}")
             return {'error': error_msg}
-        
-        # ✅ FASE 2: Mostrar hints si están disponibles
+
+        # Mostrar hints si estan disponibles
         if optimization_hints:
             print(f"💡 DEBUG: Optimization hints recibidos: {optimization_hints}")
-        
-        # Llamar al método generate_recipe del generador
+
+        # Llamar al metodo generate_recipe del generador
         recipe = generator.generate_recipe(
             primary_objective=primary_objective,
             num_ingredients=num_ingredients,
@@ -1589,13 +1791,15 @@ def generate_recipe_api(data: Dict[str, Any]) -> Dict[str, Any]:
             food_sources=food_sources,
             product_type=product_type,
             package_size=package_size,
-            optimization_hints=optimization_hints  # ✅ FASE 2: Pasar hints al generador
+            optimization_hints=optimization_hints,
+            allergies=allergies,        # NUEVO: Pasar alergias
+            meal_time=meal_time         # NUEVO: Pasar tiempo de comida
         )
-        
+
         print("✅ DEBUG: === RECETA GENERADA EXITOSAMENTE (API WRAPPER) ===")
-        
+
         return recipe
-        
+
     except Exception as e:
         error_msg = f"Error interno: {str(e)}"
         print(f"❌ DEBUG: {error_msg}")
