@@ -1336,54 +1336,9 @@ def serve_product_images(filename):
 # RUTA ESTÁTICA GENÉRICA (SOLO UNA VEZ, AL FINAL)
 # ============================================
 
-@app.route('/<path:filename>')
-def serve_static(filename):
-    """Sirve archivos estáticos (solo archivos que existen)."""
-    
-    # 🔧 FIX: Ignorar rutas de API y dashboards
-    api_prefixes = ['api/', 'dashboard', 'nutritionist/', 'auth/', 'profile', 
-                    'explore-', 'my-recipes', 'generate_', 'submit_', 'get_', 
-                    'regenerate_', 'health', 'debug_', 'test_']
-    
-    for prefix in api_prefixes:
-        if filename.startswith(prefix) or filename == prefix.rstrip('/'):
-            # Dejar que Flask maneje estas rutas normalmente (404 si no existen)
-            return jsonify({'error': 'Endpoint no encontrado'}), 404
-    
-    # Lista de extensiones permitidas
-    allowed_extensions = ['.html', '.css', '.js', '.png', '.jpg', '.jpeg', '.gif', 
-                         '.svg', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.map',
-                         '.json', '.xml', '.txt', '.pdf']
-    
-    # Verificar extensión
-    file_ext = os.path.splitext(filename)[1].lower()
-    
-    # Si no tiene extensión de archivo estático, rechazar
-    if not file_ext or file_ext not in allowed_extensions:
-        log_debug(f"🚫 No es archivo estático: {filename}")
-        return jsonify({'error': 'Endpoint no encontrado'}), 404
-    
-    # BLOQUEAR acceso a carpeta templates
-    if filename.startswith('templates/') or '/templates/' in filename:
-        log_debug(f"🚫 Bloqueado acceso a template: {filename}")
-        return jsonify({'error': 'Acceso denegado'}), 403
-    
-    # BLOQUEAR archivos Python
-    if filename.endswith('.py') or filename.endswith('.pyc'):
-        return jsonify({'error': 'Acceso denegado'}), 403
-    
-    # BLOQUEAR archivos sensibles
-    if filename in ['app.py', 'models.py', 'auth.py', 'requirements.txt', '.env']:
-        return jsonify({'error': 'Acceso denegado'}), 403
-    
-    # Verificar que el archivo existe
-    if os.path.exists(filename) and os.path.isfile(filename):
-        log_debug(f"✅ Sirviendo archivo: {filename}")
-        return send_from_directory('.', filename)
-    
-    # Si no existe, devolver 404
-    log_debug(f"❌ Archivo no encontrado: {filename}")
-    return jsonify({'error': 'Archivo no encontrado'}), 404
+# NOTA: Eliminada la ruta catch-all /<path:filename> porque interceptaba
+# las rutas de auth, api, dashboard, etc. Los archivos estáticos se sirven
+# a través de las rutas específicas /css/, /js/, /images/
 # ============================================
 # HEALTH CHECK Y ERROR HANDLERS
 # ============================================
