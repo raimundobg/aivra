@@ -1424,6 +1424,70 @@ def internal_error(error):
 # MIGRACIÓN DE BASE DE DATOS
 # ============================================
 
+@app.route('/api/debug-auth')
+def debug_auth():
+    """Endpoint para debuggear problemas de autenticación"""
+    import traceback
+    results = {
+        'auth_enabled': AUTH_ENABLED,
+        'checks': []
+    }
+
+    # 1. Verificar templates
+    templates_to_check = ['login.html', 'register.html']
+    for tpl in templates_to_check:
+        path = os.path.join(app.template_folder or 'templates', tpl)
+        exists = os.path.exists(path)
+        results['checks'].append({
+            'check': f'Template {tpl}',
+            'exists': exists,
+            'path': path
+        })
+
+    # 2. Verificar blueprint de auth
+    results['blueprints'] = list(app.blueprints.keys())
+
+    # 3. Verificar rutas de auth
+    auth_routes = []
+    for rule in app.url_map.iter_rules():
+        if 'auth' in rule.endpoint or 'login' in str(rule) or 'register' in str(rule):
+            auth_routes.append({
+                'endpoint': rule.endpoint,
+                'methods': list(rule.methods),
+                'rule': str(rule)
+            })
+    results['auth_routes'] = auth_routes
+
+    # 4. Verificar base de datos
+    try:
+        user_count = User.query.count()
+        results['db_status'] = 'OK'
+        results['user_count'] = user_count
+    except Exception as e:
+        results['db_status'] = 'ERROR'
+        results['db_error'] = str(e)
+
+    # 5. Intentar renderizar login template
+    try:
+        from flask import render_template_string
+        test = render_template('login.html')
+        results['login_template_render'] = 'OK'
+    except Exception as e:
+        results['login_template_render'] = 'ERROR'
+        results['login_template_error'] = str(e)
+        results['login_template_traceback'] = traceback.format_exc()
+
+    # 6. Intentar renderizar register template
+    try:
+        test = render_template('register.html', countries=['Chile'], cities=['Santiago'])
+        results['register_template_render'] = 'OK'
+    except Exception as e:
+        results['register_template_render'] = 'ERROR'
+        results['register_template_error'] = str(e)
+        results['register_template_traceback'] = traceback.format_exc()
+
+    return jsonify(results)
+
 @app.route('/api/migrate-db', methods=['GET', 'POST'])
 def migrate_database():
     """Endpoint para agregar columnas faltantes a la base de datos"""
