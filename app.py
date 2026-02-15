@@ -8,6 +8,13 @@ import sys
 import os
 import traceback
 import json
+import io
+from datetime import datetime, date
+
+# Fix encoding for Windows console
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 # Agregar el directorio actual al path para importar el generador
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -42,9 +49,9 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 try:
     from flask_cors import CORS
     CORS(app)
-    print("✅ CORS habilitado")
+    print("[OK] CORS habilitado")
 except ImportError:
-    print("⚠️ CORS no disponible (flask-cors no instalado)")
+    print("[WARN] CORS no disponible (flask-cors no instalado)")
     @app.after_request
     def after_request(response):
         response.headers.add('Access-Control-Allow-Origin', '*')
@@ -54,12 +61,18 @@ except ImportError:
 
 # Base de datos y autenticación
 try:
-    from models import db, User, UserRecipe, Review, UserType, SubscriptionPlan, PatientFile
+    from models import (db, User, UserRecipe, Review, UserType, SubscriptionPlan,
+                        PatientFile, NutritionistSchedule, Booking, NutritionistReview,
+                        BookingStatus, NUTRITIONIST_SPECIALTIES, SPECIALTIES_DICT)
     from auth import auth_bp
     import pandas as pd
-    
-    
+    from functools import lru_cache
+    from pauta_generator import PautaInteligente
+    from email_service import init_mail, send_intake_email, send_booking_confirmation, is_mail_configured
+
+
     db.init_app(app)
+    init_mail(app)
     
     # Configurar Flask-Login
     login_manager = LoginManager()
@@ -75,10 +88,10 @@ try:
     # Registrar blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
     
-    print("✅ Sistema de autenticación habilitado")
+    print("[OK] Sistema de autenticación habilitado")
     AUTH_ENABLED = True
 except ImportError as e:
-    print(f"⚠️ Sistema de autenticación no disponible: {e}")
+    print(f"[WARN] Sistema de autenticación no disponible: {e}")
     AUTH_ENABLED = False
 
 # ============================================
@@ -143,7 +156,7 @@ def client_dashboard():
     
     recipes_remaining = current_user.get_recipes_remaining() if AUTH_ENABLED else 0
     
-    # ✅ IMPORTANTE: Agregar user=current_user
+    # [OK] IMPORTANTE: Agregar user=current_user
     return render_template('client_dashboard.html',
                          user=current_user,  # ← AGREGAR ESTA LÍNEA
                         current_user=current_user,  # Por si acaso usa current_user en el template
@@ -166,20 +179,24 @@ def nutritionist_dashboard():
                                      .limit(10)\
                                      .all()
             total_recipes = UserRecipe.query.filter_by(user_id=current_user.id).count()
-            log_debug(f"✅ Dashboard nutricionista: {total_recipes} recetas encontradas")
+            total_patients = PatientFile.query.count() # Or filter by nutritionist if needed
+            log_debug(f"[OK] Dashboard nutricionista: {total_recipes} recetas, {total_patients} pacientes")
         except Exception as e:
-            log_debug(f"⚠️ Error obteniendo recetas: {e}")
+            log_debug(f"[WARN] Error en dashboard: {e}")
             recipes = []
             total_recipes = 0
+            total_patients = 0
     else:
         recipes = []
         total_recipes = 0
+        total_patients = 0
     
-    # ✅ IMPORTANTE: Agregar user=current_user
+    # [OK] IMPORTANTE: Agregar user=current_user
     return render_template('nutritionist_dashboard.html',
-                         user=current_user,  # ← AGREGAR ESTA LÍNEA
+                         user=current_user,
                          recipes=recipes,
-                         total_recipes=total_recipes)
+                         total_recipes=total_recipes,
+                         total_patients=total_patients)
 
 @app.route('/dashboard/enterprise')
 @login_required
@@ -213,7 +230,7 @@ def enterprise_dashboard():
         total_recipes = 0
         recipes_remaining = 0
     
-    # ✅ IMPORTANTE: Pasar 'user' explícitamente
+    # [OK] IMPORTANTE: Pasar 'user' explícitamente
     return render_template('enterprise_dashboard.html',
                          user=current_user,  # ← ESTA LÍNEA ES CRÍTICA
                          recipes=recipes,
@@ -287,7 +304,7 @@ def update_patient(patient_id):
         # Actualizar campos básicos
         campos_texto = [
             'nombre', 'fecha_nacimiento', 'sexo', 'email', 'telefono', 
-            'direccion', 'ocupacion', 'motivo_consulta', 'objetivos',
+            'direccion', 'ocupacion', 'motivo_consulta', 'rut',
             'diagnosticos', 'medicamentos', 'suplementos', 'alergias',
             'intolerancias', 'cirugias', 'antecedentes_familiares',
             'horas_sueno', 'actividad_fisica', 'tipo_ejercicio',
@@ -296,16 +313,48 @@ def update_patient(patient_id):
             'plan_alimentario', 'indicaciones', 'metas_corto_plazo',
             'metas_mediano_plazo', 'metas_largo_plazo', 'notas_seguimiento',
             'fecha_examenes', 'frecuencia_evacuacion', 'consistencia_heces',
-            'recordatorio_24h', 'frecuencia_consumo', 'signos_clinicos',
-            'sintomas_gi', 'horario_desayuno', 'horario_almuerzo', 
-            'horario_cena', 'quien_cocina', 'donde_come',
-            'consumo_bebidas_azucaradas', 'consumo_alcohol', 'tipo_alcohol'
+            'signos_clinicos', 'sintomas_gi', 'horario_desayuno', 'horario_almuerzo', 
+            'horario_cena', 'quien_cocina', 'donde_come', 'con_quien_vive',
+            'teletrabajo', 'profesion', 'menstruacion', 
+            'reflujo', 'reflujo_alimento', 'hinchazon', 'hinchazon_alimento',
+            'tiene_alergias', 'alergias_alimento',
+            'consumo_bebidas_azucaradas', 'consumo_alcohol', 'tipo_alcohol',
+            'observaciones_sueno', 'gatillantes_estres', 'manejo_estres',
+            'tabaco', 'drogas'
         ]
         
         for campo in campos_texto:
             if campo in data:
                 setattr(patient, campo, data[campo])
         
+        # Campos JSON Objeto (db.JSON - NO serializar manual)
+        campos_json_obj = [
+            'actividad_fisica', 'restricciones_alimentarias', 'registro_24h', 'frecuencia_consumo', 'sintomas_gi'
+        ]
+
+        for campo in campos_json_obj:
+            if campo in data:
+                setattr(patient, campo, data[campo])
+
+        # Manejar alias para Antropometría (v3.4 compatibility)
+        if 'talla' in data and data['talla']:
+            patient.talla_m = float(data['talla'])
+        if 'peso' in data and data['peso']:
+            patient.peso_kg = float(data['peso'])
+
+        # Campos JSON Texto (db.Text - SÍ serializar manual)
+        campos_json_text = [
+            'objetivos'
+        ]
+
+        for campo in campos_json_text:
+            if campo in data:
+                val = data[campo]
+                if isinstance(val, (dict, list)):
+                    setattr(patient, campo, json.dumps(val))
+                else:
+                    setattr(patient, campo, val)
+
         # Campos numéricos float
         campos_float = [
             'talla_m', 'peso_kg', 'peso_ideal',
@@ -325,7 +374,7 @@ def update_patient(patient_id):
         ]
         
         for campo in campos_float:
-            if campo in data and data[campo]:
+            if campo in data and data[campo] is not None:
                 try:
                     setattr(patient, campo, float(data[campo]))
                 except (ValueError, TypeError):
@@ -336,11 +385,11 @@ def update_patient(patient_id):
             'calidad_sueno', 'nivel_estres',
             'presion_sistolica', 'presion_diastolica', 'frecuencia_cardiaca',
             'comidas_por_dia', 'consumo_cafe_tazas', 'consumo_te_tazas',
-            'cigarrillos_dia'
+            'cigarrillos_dia', 'delivery_restaurante', 'percepcion_esfuerzo'
         ]
         
         for campo in campos_int:
-            if campo in data and data[campo]:
+            if campo in data and data[campo] is not None:
                 try:
                     setattr(patient, campo, int(data[campo]))
                 except (ValueError, TypeError):
@@ -362,9 +411,15 @@ def update_patient(patient_id):
         # Fecha próxima cita
         if 'fecha_proxima_cita' in data and data['fecha_proxima_cita']:
             try:
-                from datetime import datetime
-                patient.fecha_proxima_cita = datetime.fromisoformat(data['fecha_proxima_cita'].replace('Z', '+00:00'))
-            except:
+                # Handle possible datetime formats
+                fecha_str = data['fecha_proxima_cita'].replace('Z', '')
+                if 'T' in fecha_str:
+                    patient.fecha_proxima_cita = datetime.fromisoformat(fecha_str)
+                else:
+                    # Try other formats if needed
+                    pass
+            except Exception as e:
+                log_debug(f"[WARN] Error parseando fecha cita: {e}")
                 pass
         
         # Ejecutar cálculos automáticos
@@ -372,7 +427,7 @@ def update_patient(patient_id):
         
         db.session.commit()
         
-        log_debug(f"✅ Paciente actualizado: {patient.nombre} (ID: {patient.id})")
+        log_debug(f"[OK] Paciente actualizado: {patient.nombre} (ID: {patient.id})")
         
         return jsonify({
             'success': True,
@@ -405,16 +460,52 @@ def delete_patient(patient_id):
         # Soft delete
         patient.is_active = False
         db.session.commit()
-        
-        log_debug(f"✅ Paciente eliminado (soft): {patient.nombre} (ID: {patient.id})")
-        
+
+        log_debug(f"[OK] Paciente eliminado (soft): {patient.nombre} (ID: {patient.id})")
+
         return jsonify({
             'success': True,
             'message': 'Paciente eliminado exitosamente'
         })
-    
+
     except Exception as e:
         db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/patients/bulk', methods=['DELETE'])
+@login_required
+def delete_patients_bulk():
+    """Eliminar múltiples pacientes"""
+    if current_user.user_type != 'nutricionista':
+        return jsonify({'error': 'No autorizado'}), 403
+
+    try:
+        data = request.get_json()
+        patient_ids = data.get('ids', [])
+
+        if not patient_ids:
+            return jsonify({'success': False, 'error': 'No se proporcionaron IDs'}), 400
+
+        # Soft delete de pacientes del nutricionista actual
+        deleted_count = PatientFile.query.filter(
+            PatientFile.id.in_(patient_ids),
+            PatientFile.nutricionista_id == current_user.id
+        ).update({PatientFile.is_active: False}, synchronize_session=False)
+
+        db.session.commit()
+
+        log_debug(f"[OK] Eliminación masiva: {deleted_count} pacientes")
+
+        return jsonify({
+            'success': True,
+            'deleted': deleted_count,
+            'message': f'{deleted_count} pacientes eliminados exitosamente'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        log_debug(f"[ERROR] Bulk delete failed: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -455,8 +546,15 @@ def list_patients():
             'nombre': p.nombre,
             'edad': p.calcular_edad(),
             'sexo': p.sexo,
+            'email': p.email,
+            'telefono': p.telefono,
+            'rut': p.rut,
             'motivo_consulta': p.motivo_consulta[:100] + '...' if p.motivo_consulta and len(p.motivo_consulta) > 100 else p.motivo_consulta,
             'imc': p.imc,
+            'intake_token': p.intake_token,
+            'intake_completed': p.intake_completed,
+            'intake_url_sent': p.intake_url_sent,
+            'plan_alimentario': p.plan_alimentario if p.plan_alimentario else None,
             'fecha_proxima_cita': p.fecha_proxima_cita.strftime('%Y-%m-%d %H:%M') if p.fecha_proxima_cita else None,
             'created_at': p.created_at.strftime('%Y-%m-%d'),
             'updated_at': p.updated_at.strftime('%Y-%m-%d %H:%M') if p.updated_at else None
@@ -522,101 +620,397 @@ def create_patient():
     
     try:
         data = request.get_json()
-        
+
+        # Strip non-model datetime fields that come from the form
+        for _key in ['fecha_atencion', 'fecha_meta']:
+            data.pop(_key, None)
+
+        log_debug(f"[DEBUG] create_patient - keys in data: {list(data.keys())}")
+
         # Obtener siguiente número de ficha para este nutricionista
         last_ficha = PatientFile.query.filter_by(
             nutricionista_id=current_user.id
         ).order_by(PatientFile.ficha_numero.desc()).first()
         
         next_ficha_numero = (last_ficha.ficha_numero or 0) + 1 if last_ficha else 1
-        
+
+        # Helper: convert any value to Python bool safely
+        def to_bool(val):
+            if val is None:
+                return False
+            if isinstance(val, bool):
+                return val
+            if isinstance(val, str):
+                return val.lower() in ('true', '1', 'on', 'si', 'yes')
+            return bool(val)
+
+        # Helper: safe float conversion
+        def to_float(val):
+            if not val:
+                return None
+            try:
+                return float(val)
+            except (ValueError, TypeError):
+                return None
+
+        # Helper: safe int conversion
+        def to_int(val):
+            if not val and val != 0:
+                return None
+            try:
+                return int(val)
+            except (ValueError, TypeError):
+                return None
+
         new_patient = PatientFile(
             nutricionista_id=current_user.id,
             ficha_numero=next_ficha_numero,
-            
-            # Campos existentes
+
+            # Datos personales
             nombre=data.get('nombre'),
             fecha_nacimiento=data.get('fecha_nacimiento'),
             sexo=data.get('sexo'),
+            email=data.get('email'),
+            telefono=data.get('telefono'),
+            rut=data.get('rut'),
             motivo_consulta=data.get('motivo_consulta'),
-            objetivos=data.get('objetivos', ''),
-            
+            objetivos=json.dumps(data.get('objetivos', [])) if isinstance(data.get('objetivos'), list) else data.get('objetivos', ''),
+
             # Diagnósticos, medicamentos, suplementos (JSON arrays)
             diagnosticos=json.dumps(data.get('diagnosticos', [])) if isinstance(data.get('diagnosticos'), list) else data.get('diagnosticos', ''),
             medicamentos=json.dumps(data.get('medicamentos', [])) if isinstance(data.get('medicamentos'), list) else data.get('medicamentos', ''),
             suplementos=json.dumps(data.get('suplementos', [])) if isinstance(data.get('suplementos'), list) else data.get('suplementos', ''),
-            
-            # Conducta y Entorno (NUEVOS)
+
+            # Conducta y Entorno
             profesion=data.get('profesion'),
             teletrabajo=data.get('teletrabajo'),
             quien_cocina=json.dumps(data.get('quien_cocina', [])) if isinstance(data.get('quien_cocina'), list) else data.get('quien_cocina', ''),
             con_quien_vive=json.dumps(data.get('con_quien_vive', [])) if isinstance(data.get('con_quien_vive'), list) else data.get('con_quien_vive', ''),
-
             donde_come=json.dumps(data.get('donde_come', [])) if isinstance(data.get('donde_come'), list) else data.get('donde_come', ''),
 
-            
-            # Antropometría (existentes)
-            talla_m=float(data.get('talla')) if data.get('talla') else None,
-            peso_kg=float(data.get('peso')) if data.get('peso') else None,
-            pliegue_bicipital=float(data.get('pliegue_bicipital')) if data.get('pliegue_bicipital') else None,
-            pliegue_tricipital=float(data.get('pliegue_tricipital')) if data.get('pliegue_tricipital') else None,
-            pliegue_subescapular=float(data.get('pliegue_subescapular')) if data.get('pliegue_subescapular') else None,
-            pliegue_supracrestideo=float(data.get('pliegue_supracrestideo')) if data.get('pliegue_supracrestideo') else None,
-            perimetro_brazo=float(data.get('perimetro_brazo')) if data.get('perimetro_brazo') else None,
-            perimetro_cintura=float(data.get('perimetro_cintura')) if data.get('perimetro_cintura') else None,
-            perimetro_cadera=float(data.get('perimetro_cadera')) if data.get('perimetro_cadera') else None,
-            perimetro_pantorrilla=float(data.get('perimetro_pantorrilla')) if data.get('perimetro_pantorrilla') else None,
-            
-            # Salud General (existentes + nuevos)
+            # Horarios y Hábitos
+            horario_desayuno=data.get('horario_desayuno'),
+            horario_almuerzo=data.get('horario_almuerzo'),
+            horario_cena=data.get('horario_cena'),
+            pica_entre_comidas=to_bool(data.get('pica_entre_comidas')),
+            come_frente_tv=to_bool(data.get('come_frente_tv')),
+            come_rapido=to_bool(data.get('come_rapido')),
+
+            # Antropometría
+            talla_m=to_float(data.get('talla')),
+            peso_kg=to_float(data.get('peso')),
+            pliegue_bicipital=to_float(data.get('pliegue_bicipital')),
+            pliegue_tricipital=to_float(data.get('pliegue_tricipital')),
+            pliegue_subescapular=to_float(data.get('pliegue_subescapular')),
+            pliegue_supracrestideo=to_float(data.get('pliegue_supracrestideo')),
+            pliegue_abdominal=to_float(data.get('pliegue_abdominal')),
+            perimetro_brazo=to_float(data.get('perimetro_brazo')),
+            perimetro_cintura=to_float(data.get('perimetro_cintura')),
+            perimetro_cadera=to_float(data.get('perimetro_cadera')),
+            perimetro_pantorrilla=to_float(data.get('perimetro_pantorrilla')),
+
+            # Salud General
             horas_sueno=data.get('horas_sueno'),
-            calidad_sueno=int(data.get('calidad_sueno')) if data.get('calidad_sueno') else None,
+            calidad_sueno=to_int(data.get('calidad_sueno')),
             observaciones_sueno=data.get('observaciones_sueno'),
-            nivel_estres=int(data.get('nivel_estres')) if data.get('nivel_estres') else None,
+            nivel_estres=to_int(data.get('nivel_estres')),
             gatillantes_estres=data.get('gatillantes_estres'),
             manejo_estres=data.get('manejo_estres'),
             consumo_alcohol=data.get('consumo_alcohol'),
             tipo_alcohol=json.dumps(data.get('tipo_alcohol', [])) if isinstance(data.get('tipo_alcohol'), list) else data.get('tipo_alcohol', ''),
             tabaco=data.get('tabaco'),
+            fuma=to_bool(data.get('fuma')),
+            cigarrillos_dia=to_int(data.get('cigarrillos_dia')),
             drogas=data.get('drogas'),
             actividad_fisica=data.get('actividad_fisica'),
             tipo_ejercicio=data.get('tipo_ejercicio'),
-            duracion_ejercicio=int(data.get('duracion_ejercicio')) if data.get('duracion_ejercicio') else None,
-            
-            # Síntomas GI (NUEVOS)
+            duracion_ejercicio=to_int(data.get('duracion_ejercicio')),
+
+            # Campos adicionales
+            menstruacion=data.get('menstruacion') or data.get('ciclo_menstrual'),
+            percepcion_esfuerzo=to_int(data.get('percepcion_esfuerzo')),
+            restricciones_alimentarias=data.get('restricciones_alimentarias', []),
+            delivery_restaurante=to_int(data.get('delivery_restaurante')),
+
+            # Consumo líquidos
+            consumo_agua_litros=to_float(data.get('consumo_agua_litros')),
+            consumo_cafe_tazas=to_int(data.get('consumo_cafe_tazas')),
+            consumo_te_tazas=to_int(data.get('consumo_te_tazas')),
+
+            # Síntomas GI
             frecuencia_evacuacion=data.get('frecuencia_evacuacion'),
-            reflujo=data.get('reflujo'),
+            reflujo='si' if to_bool(data.get('reflujo')) else 'no',
             reflujo_alimento=data.get('reflujo_alimento'),
-            hinchazon=data.get('hinchazon'),
+            hinchazon='si' if to_bool(data.get('hinchazon')) else 'no',
             hinchazon_alimento=data.get('hinchazon_alimento'),
             tiene_alergias=data.get('tiene_alergias'),
             alergias_alimento=data.get('alergias_alimento'),
-            
-            # Registro 24h y Frecuencia de Consumo (NUEVOS - JSON)
-            # Registro 24h y Frecuencia de Consumo (NUEVOS - JSON)
-# Convertir a string JSON si es dict/list
-            registro_24h=json.dumps(data.get('registro_24h')) if isinstance(data.get('registro_24h'), (dict, list)) else data.get('registro_24h'),
-            frecuencia_consumo=json.dumps(data.get('frecuencia_consumo')) if isinstance(data.get('frecuencia_consumo'), (dict, list)) else data.get('frecuencia_consumo')
+            alergias=data.get('alergias'),
+            intolerancias=data.get('intolerancias'),
+
+            # Registro 24h y Frecuencia de Consumo (JSON)
+            registro_24h=data.get('registro_24h'),
+            frecuencia_consumo=data.get('frecuencia_consumo'),
+
+            # Diagnostico y Plan Nutricional
+            diagnostico_nutricional=data.get('diagnostico_nutricional'),
+            objetivos_nutricionales=data.get('objetivos_nutricionales'),
+            indicaciones=data.get('indicaciones'),
+            notas_seguimiento=data.get('notas_seguimiento'),
+            plan_alimentario=data.get('plan_alimentario'),
+
+            # Explicit datetime values (bypass defaults to avoid SQLite issues)
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
         )
-        
+
+        # Handle fecha_proxima_cita separately (DateTime field)
+        fecha_prox = data.get('fecha_proxima_cita')
+        if fecha_prox and str(fecha_prox).strip():
+            try:
+                fecha_str = str(fecha_prox).replace('Z', '')
+                if 'T' in fecha_str:
+                    new_patient.fecha_proxima_cita = datetime.fromisoformat(fecha_str)
+                elif fecha_str.strip():
+                    new_patient.fecha_proxima_cita = datetime.strptime(fecha_str.strip(), '%Y-%m-%d %H:%M')
+            except Exception as e:
+                log_debug(f"[WARN] Error parseando fecha_proxima_cita: {e}")
+                new_patient.fecha_proxima_cita = None
+        else:
+            new_patient.fecha_proxima_cita = None
+
         # Calcular valores automáticos
         new_patient.calcular_todo()
+
+        # Debug: inspect all DateTime columns before commit
+        log_debug(f"[DEBUG] DateTime fields before commit:")
+        log_debug(f"  created_at={new_patient.created_at!r} (type={type(new_patient.created_at).__name__})")
+        log_debug(f"  updated_at={new_patient.updated_at!r} (type={type(new_patient.updated_at).__name__})")
+        log_debug(f"  fecha_proxima_cita={new_patient.fecha_proxima_cita!r} (type={type(new_patient.fecha_proxima_cita).__name__})")
+        log_debug(f"  intake_completed_at={new_patient.intake_completed_at!r}")
+        log_debug(f"  intake_url_sent_at={new_patient.intake_url_sent_at!r})")
+
+        # Safeguard: ensure no string dates leaked into DateTime columns
+        for dt_col in ['created_at', 'updated_at', 'fecha_proxima_cita', 'intake_completed_at', 'intake_url_sent_at']:
+            val = getattr(new_patient, dt_col, None)
+            if val is not None and not isinstance(val, (datetime, date)):
+                log_debug(f"[FIX] {dt_col} was {type(val).__name__}: {val!r} - setting to None")
+                setattr(new_patient, dt_col, None)
         
         db.session.add(new_patient)
         db.session.commit()
-        
-        log_debug(f"✅ Paciente creado: {new_patient.nombre} (Ficha #{new_patient.ficha_numero})")
-        
+
+        log_debug(f"[OK] Paciente creado: {new_patient.nombre} (Ficha #{new_patient.ficha_numero})")
+
+        # Auto-generate intake token and send email if patient has email
+        email_sent = False
+        intake_url = None
+        if new_patient.email:
+            new_patient.generate_intake_token()
+            intake_url = new_patient.get_intake_url(request.host_url.rstrip('/'))
+
+            if is_mail_configured():
+                result = send_intake_email(
+                    new_patient,
+                    intake_url,
+                    current_user.get_full_name()
+                )
+                if result['success']:
+                    new_patient.mark_intake_url_sent()
+                    email_sent = True
+                    log_debug(f"📧 Email de intake enviado a {new_patient.email}")
+                else:
+                    log_debug(f"[WARN] No se pudo enviar email: {result.get('error')}")
+            else:
+                log_debug(f"[WARN] Email no configurado. Token generado: {intake_url}")
+
+            db.session.commit()
+
         return jsonify({
             'success': True,
             'message': 'Paciente guardado exitosamente',
             'patient_id': new_patient.id,
             'ficha_numero': new_patient.ficha_numero,
-            'redirect_url': f'/dashboard/nutritionist/patient/{new_patient.id}'
+            'redirect_url': f'/dashboard/nutritionist/patient/{new_patient.id}',
+            'email_sent': email_sent,
+            'intake_url': intake_url
         }), 201
         
     except Exception as e:
         db.session.rollback()
-        log_debug(f"❌ Error creando paciente: {str(e)}")
+        log_debug(f"[ERROR] Error creando paciente: {str(e)}")
+        import traceback
+        log_debug(f"[TRACEBACK] {traceback.format_exc()}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/patient/save-draft', methods=['POST'])
+@login_required
+def save_patient_draft():
+    """Guarda un borrador del paciente (sin validacion completa)"""
+    try:
+        data = request.json
+        log_debug(f"[DRAFT] Guardando borrador...")
+
+        # Strip non-model datetime fields that come from the form
+        for _key in ['fecha_atencion', 'fecha_meta']:
+            data.pop(_key, None)
+
+        patient_id = data.get('patient_id')
+
+        if patient_id:
+            # Actualizar paciente existente
+            patient = PatientFile.query.get(patient_id)
+            if not patient:
+                return jsonify({'success': False, 'error': 'Paciente no encontrado'}), 404
+        else:
+            # Crear nuevo paciente como borrador
+            patient = PatientFile(
+                nutricionista_id=current_user.id,
+                nombre=data.get('nombre', 'Borrador'),
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow()
+            )
+            db.session.add(patient)
+
+        # Actualizar campos de texto/string
+        campos_texto = [
+            'nombre', 'fecha_nacimiento', 'sexo', 'rut', 'email', 'telefono',
+            'motivo_consulta', 'profesion', 'teletrabajo',
+            'horario_desayuno', 'horario_almuerzo', 'horario_cena',
+            'horas_sueno', 'tipo_ejercicio',
+            'frecuencia_evacuacion', 'menstruacion',
+            'consumo_alcohol', 'consumo_bebidas_azucaradas',
+            'diagnostico_nutricional', 'objetivos_nutricionales', 'indicaciones',
+            'notas_seguimiento', 'observaciones_sueno', 'gatillantes_estres', 'manejo_estres',
+            'tabaco', 'drogas', 'reflujo_alimento', 'hinchazon_alimento',
+            'alergias_alimento', 'alergias', 'intolerancias',
+            'reflujo', 'hinchazon', 'tiene_alergias'
+        ]
+
+        for campo in campos_texto:
+            if campo in data and data[campo] is not None:
+                setattr(patient, campo, str(data[campo]) if data[campo] else None)
+
+        # Campos JSON texto (arrays serializados como string)
+        campos_json_text = ['objetivos', 'diagnosticos', 'medicamentos', 'suplementos',
+                            'quien_cocina', 'donde_come', 'con_quien_vive', 'tipo_alcohol']
+        for campo in campos_json_text:
+            if campo in data and data[campo] is not None:
+                val = data[campo]
+                if isinstance(val, (dict, list)):
+                    setattr(patient, campo, json.dumps(val))
+                else:
+                    setattr(patient, campo, val)
+
+        # Mapear talla/peso a talla_m/peso_kg (Float)
+        if data.get('talla'):
+            try:
+                patient.talla_m = float(data['talla'])
+            except (ValueError, TypeError):
+                pass
+        if data.get('peso'):
+            try:
+                patient.peso_kg = float(data['peso'])
+            except (ValueError, TypeError):
+                pass
+
+        # Campos numéricos float
+        campos_float = [
+            'perimetro_cintura', 'perimetro_cadera', 'perimetro_brazo',
+            'perimetro_brazo_contraido', 'perimetro_muslo', 'perimetro_pantorrilla',
+            'perimetro_muneca',
+            'pliegue_tricipital', 'pliegue_abdominal', 'pliegue_bicipital',
+            'pliegue_subescapular', 'pliegue_supracrestideo', 'pliegue_muslo',
+            'pliegue_pantorrilla',
+            'consumo_agua_litros'
+        ]
+        for campo in campos_float:
+            if campo in data and data[campo] is not None and data[campo] != '':
+                try:
+                    setattr(patient, campo, float(data[campo]))
+                except (ValueError, TypeError):
+                    pass
+
+        # Campos numéricos int
+        campos_int = [
+            'calidad_sueno', 'nivel_estres', 'percepcion_esfuerzo',
+            'consumo_cafe_tazas', 'consumo_te_tazas', 'cigarrillos_dia',
+            'delivery_restaurante', 'comidas_por_dia',
+            'presion_sistolica', 'presion_diastolica', 'frecuencia_cardiaca'
+        ]
+        for campo in campos_int:
+            if campo in data and data[campo] is not None and data[campo] != '':
+                try:
+                    setattr(patient, campo, int(data[campo]))
+                except (ValueError, TypeError):
+                    pass
+
+        # Campos booleanos
+        campos_bool = ['fuma', 'pica_entre_comidas', 'come_frente_tv', 'come_rapido']
+        for campo in campos_bool:
+            if campo in data:
+                value = data[campo]
+                if isinstance(value, bool):
+                    setattr(patient, campo, value)
+                elif isinstance(value, str):
+                    setattr(patient, campo, value.lower() in ('true', '1', 'on', 'si'))
+                else:
+                    setattr(patient, campo, bool(value))
+
+        # Fecha próxima cita (DateTime field - needs proper parsing)
+        fecha_prox = data.get('fecha_proxima_cita')
+        if fecha_prox and str(fecha_prox).strip():
+            try:
+                fecha_str = str(fecha_prox).replace('Z', '')
+                if 'T' in fecha_str:
+                    patient.fecha_proxima_cita = datetime.fromisoformat(fecha_str)
+                elif fecha_str.strip():
+                    patient.fecha_proxima_cita = datetime.strptime(fecha_str.strip(), '%Y-%m-%d %H:%M')
+            except Exception as e:
+                log_debug(f"[WARN] Error parseando fecha_proxima_cita en borrador: {e}")
+                patient.fecha_proxima_cita = None
+
+        # Campos JSON nativos (db.JSON)
+        if 'registro_24h' in data:
+            patient.registro_24h = data['registro_24h']
+        if 'frecuencia_consumo' in data:
+            patient.frecuencia_consumo = data['frecuencia_consumo']
+        if 'actividad_fisica' in data:
+            patient.actividad_fisica = data['actividad_fisica']
+        if 'restricciones_alimentarias' in data:
+            patient.restricciones_alimentarias = data['restricciones_alimentarias']
+
+        # Explicit updated_at
+        patient.updated_at = datetime.utcnow()
+
+        # Safeguard: ensure no string dates leaked into DateTime columns
+        for dt_col in ['created_at', 'updated_at', 'fecha_proxima_cita', 'intake_completed_at', 'intake_url_sent_at']:
+            val = getattr(patient, dt_col, None)
+            if val is not None and not isinstance(val, (datetime, date)):
+                log_debug(f"[FIX-DRAFT] {dt_col} was {type(val).__name__}: {val!r} - setting to None")
+                setattr(patient, dt_col, None)
+
+        log_debug(f"[DEBUG-DRAFT] DateTime fields before commit:")
+        log_debug(f"  created_at={patient.created_at!r}, updated_at={patient.updated_at!r}")
+        log_debug(f"  fecha_proxima_cita={patient.fecha_proxima_cita!r}")
+
+        db.session.commit()
+
+        log_debug(f"[OK] Borrador guardado: {patient.nombre} (ID: {patient.id})")
+
+        return jsonify({
+            'success': True,
+            'message': 'Borrador guardado',
+            'patient_id': patient.id,
+            'is_draft': True
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        log_debug(f"[ERROR] Error guardando borrador: {str(e)}")
+        import traceback
+        log_debug(f"[TRACEBACK] {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -737,6 +1131,14 @@ def submit_public_intake(token):
         if data.get('sintomas_gi'):
             patient.sintomas_gi = json.dumps(data.get('sintomas_gi')) if isinstance(data.get('sintomas_gi'), list) else data.get('sintomas_gi')
 
+        # Bristol Scale (consistencia de heces)
+        if data.get('consistencia_heces'):
+            patient.consistencia_heces = data.get('consistencia_heces')
+
+        # Frecuencia de Consumo (EFC)
+        if data.get('frecuencia_consumo'):
+            patient.frecuencia_consumo = json.dumps(data.get('frecuencia_consumo')) if isinstance(data.get('frecuencia_consumo'), dict) else data.get('frecuencia_consumo')
+
         # Marcar como completado
         patient.mark_intake_completed()
 
@@ -822,6 +1224,56 @@ def mark_intake_url_sent(patient_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/api/patients/<int:patient_id>/send-intake-email', methods=['POST'])
+@login_required
+def send_intake_email_endpoint(patient_id):
+    """API para enviar/reenviar email de intake al paciente"""
+    if current_user.user_type != 'nutricionista':
+        return jsonify({'error': 'No autorizado'}), 403
+
+    try:
+        patient = PatientFile.query.filter_by(
+            id=patient_id,
+            nutricionista_id=current_user.id
+        ).first()
+
+        if not patient:
+            return jsonify({'error': 'Paciente no encontrado'}), 404
+
+        if not patient.email:
+            return jsonify({'success': False, 'error': 'El paciente no tiene email registrado'}), 400
+
+        if not is_mail_configured():
+            return jsonify({'success': False, 'error': 'El servicio de email no esta configurado. Configura las variables MAIL_USERNAME y MAIL_PASSWORD.'}), 503
+
+        # Generate token if not exists
+        if not patient.intake_token:
+            patient.generate_intake_token()
+
+        intake_url = patient.get_intake_url(request.host_url.rstrip('/'))
+
+        result = send_intake_email(
+            patient,
+            intake_url,
+            current_user.get_full_name()
+        )
+
+        if result['success']:
+            patient.mark_intake_url_sent()
+            db.session.commit()
+            return jsonify({
+                'success': True,
+                'message': f'Email enviado a {patient.email}',
+                'intake_url': intake_url
+            })
+        else:
+            return jsonify({'success': False, 'error': result.get('error', 'Error al enviar email')}), 500
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/my-recipes')
 @login_required
 def my_recipes():
@@ -879,7 +1331,7 @@ def get_superfoods():
         # Convertir a lista de diccionarios
         superfoods = df_filtered.fillna('').to_dict('records')
         
-        log_debug(f"✅ API Superfoods: {len(superfoods)} resultados (categoria: {category}, búsqueda: '{search}')")
+        log_debug(f"[OK] API Superfoods: {len(superfoods)} resultados (categoria: {category}, búsqueda: '{search}')")
         
         return jsonify({
             'success': True,
@@ -902,51 +1354,109 @@ def get_alimentos():
     """
     try:
         import pandas as pd
-        
-        # Cargar Excel
+
+        # Cargar Excel con encoding correcto
         df = pd.read_excel('data/base_alimentos_porciones.xlsx')
-        
+
+        # Función para limpiar texto con encoding problemático
+        import unicodedata
+        def clean_text(text):
+            if not isinstance(text, str):
+                return str(text) if pd.notna(text) else ''
+            # Intentar decodificar si tiene problemas de encoding
+            try:
+                # Reemplazar caracteres problemáticos comunes
+                text = text.encode('latin1').decode('utf-8')
+            except:
+                pass
+            return text.strip()
+
+        def normalize_text(text):
+            # Remove accents and convert to lowercase
+            return ''.join(
+                c for c in unicodedata.normalize('NFD', text.lower())
+                if unicodedata.category(c) != 'Mn'
+            )
+
+        col_map = {}
+        for col in df.columns:
+            col_norm = normalize_text(col)
+            if 'grupo' in col_norm and 'sub' not in col_norm:
+                col_map[col] = 'grupo'
+            elif 'subgrupo' in col_norm:
+                col_map[col] = 'subgrupo'
+            elif 'alimento' in col_norm:
+                col_map[col] = 'alimento'
+            elif 'gramos' in col_norm:
+                col_map[col] = 'gramos_porcion'
+            elif 'medida' in col_norm:
+                col_map[col] = 'medida_casera'
+            elif 'kcal' in col_norm:
+                col_map[col] = 'kcal'
+            elif 'prote' in col_norm:
+                col_map[col] = 'proteinas'
+            elif 'lip' in col_norm or 'grasa' in col_norm:
+                col_map[col] = 'lipidos'
+            elif 'carb' in col_norm:
+                col_map[col] = 'carbohidratos'
+
+        df = df.rename(columns=col_map)
+
         # Organizar estructura jerárquica
         alimentos_db = {}
-        
+
+        def safe_float(val):
+            try:
+                return float(val) if pd.notna(val) else 0.0
+            except:
+                return 0.0
+
         for _, row in df.iterrows():
-            grupo = row.get('grupo', 'otros')
-            subgrupo = row.get('subgrupo', 'general')
-            
+            grupo = clean_text(row.get('grupo', 'otros'))
+            subgrupo = clean_text(row.get('subgrupo', 'general'))
+            nombre = clean_text(row.get('alimento', ''))
+
+            # Saltar filas sin nombre
+            if not nombre or nombre == 'nan':
+                continue
+
             if grupo not in alimentos_db:
                 alimentos_db[grupo] = {}
-            
+
             if subgrupo not in alimentos_db[grupo]:
                 alimentos_db[grupo][subgrupo] = []
-            
+
             alimentos_db[grupo][subgrupo].append({
-                'nombre': row.get('nombre', 'Sin nombre'),
-                'medida_casera': row.get('medida_casera', '1 porción'),
-                'kcal': float(row.get('kcal', 0)),
-                'proteinas': float(row.get('proteinas', 0)),
-                'carbohidratos': float(row.get('carbohidratos', 0)),
-                'lipidos': float(row.get('lipidos', 0))
+                'nombre': nombre,
+                'medida_casera': clean_text(row.get('medida_casera', '1 porcion')),
+                'gramos_porcion': safe_float(row.get('gramos_porcion', 100)),
+                'kcal': safe_float(row.get('kcal', 0)),
+                'proteinas': safe_float(row.get('proteinas', 0)),
+                'carbohidratos': safe_float(row.get('carbohidratos', 0)),
+                'lipidos': safe_float(row.get('lipidos', 0))
             })
-        
+
         # Contar totales
         total_grupos = len(alimentos_db)
         total_alimentos = sum(
-            len(alimentos) 
-            for grupo in alimentos_db.values() 
+            len(alimentos)
+            for grupo in alimentos_db.values()
             for alimentos in grupo.values()
         )
-        
-        log_debug(f"✅ API Alimentos: {total_grupos} grupos, {total_alimentos} alimentos")
-        
+
+        log_debug(f"[OK] API Alimentos: {total_grupos} grupos, {total_alimentos} alimentos")
+
         return jsonify({
             'success': True,
             'data': alimentos_db,
             'total_grupos': total_grupos,
             'total_alimentos': total_alimentos
         })
-    
+
     except Exception as e:
-        log_debug(f"❌ Error en API Alimentos: {str(e)}")
+        log_debug(f"[ERROR] API Alimentos: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': str(e)
@@ -1110,7 +1620,7 @@ def test_data():
                         'rows': len(df),
                         'columns': list(df.columns)
                     }
-                    log_debug(f"✅ {file_path}: {len(df)} filas")
+                    log_debug(f"[OK] {file_path}: {len(df)} filas")
                 except Exception as e:
                     results[file_path] = {'exists': True, 'error': str(e)}
                     log_debug(f"❌ Error leyendo {file_path}: {str(e)}")
@@ -1129,7 +1639,7 @@ def test_data():
 def generate_recipe():
     """Endpoint para generar recetas personalizadas."""
     try:
-        log_debug("🚀 === INICIANDO GENERACIÓN DE RECETA ===")
+        log_debug("[START] === INICIANDO GENERACIÓN DE RECETA ===")
         
         data = request.get_json()
         
@@ -1207,9 +1717,9 @@ def generate_recipe():
                 else:
                     recipe['recipes_remaining'] = recipes_remaining
                     
-                log_debug(f"✅ Receta guardada para {current_user.email}")
+                log_debug(f"[OK] Receta guardada para {current_user.email}")
             except Exception as e:
-                log_debug(f"⚠️ Error guardando receta: {e}")
+                log_debug(f"[WARN] Error guardando receta: {e}")
         else:
             # Usuario no autenticado (desde landing)
             recipe['recipes_remaining'] = 'unlimited'
@@ -1249,9 +1759,9 @@ def submit_feedback():
                     )
                     db.session.add(new_review)
                     db.session.commit()
-                    log_debug(f"✅ Review guardado para usuario {current_user.email}")
+                    log_debug(f"[OK] Review guardado para usuario {current_user.email}")
                 except Exception as e:
-                    log_debug(f"⚠️ Error guardando review: {e}")
+                    log_debug(f"[WARN] Error guardando review: {e}")
             
             # Mantener funcionalidad existente
             from recipe_generator_v2 import RecipeGeneratorV3
@@ -1295,7 +1805,7 @@ def regenerate_optimized_endpoint():
             max_iterations=int(data.get('max_iterations', 3))
         )
         
-        log_debug(f"✅ Regeneración completada")
+        log_debug(f"[OK] Regeneración completada")
         
         return jsonify(result)
         
@@ -1496,6 +2006,563 @@ def migrate_database():
         }), 500
 
 # ============================================
+# ENDPOINTS PAUTA GENERATOR
+# ============================================
+
+@lru_cache(maxsize=1)
+def load_alimentos_database():
+    """Cargar base de datos de alimentos desde Excel (con cache)"""
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, 'data', 'base_alimentos_porciones.xlsx')
+        if not os.path.exists(csv_path):
+             print(f"Error: Archivo no encontrado en {csv_path}")
+             return {}
+
+        df = pd.read_excel(csv_path, engine='openpyxl')
+        df.columns = df.columns.str.strip()
+
+        # Normalize column names to handle encoding issues
+        col_map = {}
+        for col in df.columns:
+            col_lower = col.lower()
+            if 'grupo' in col_lower and 'sub' not in col_lower:
+                col_map[col] = 'grupo'
+            elif 'subgrupo' in col_lower:
+                col_map[col] = 'subgrupo'
+            elif 'alimento' in col_lower:
+                col_map[col] = 'alimento'
+            elif 'gramos' in col_lower:
+                col_map[col] = 'gramos_porcion'
+            elif 'medida' in col_lower:
+                col_map[col] = 'medida_casera'
+            elif 'kcal' in col_lower:
+                col_map[col] = 'kcal'
+            elif 'prote' in col_lower:
+                col_map[col] = 'proteinas'
+            elif 'lip' in col_lower or 'grasa' in col_lower:
+                col_map[col] = 'lipidos'
+            elif 'carb' in col_lower:
+                col_map[col] = 'carbohidratos'
+
+        df = df.rename(columns=col_map)
+
+        database = {}
+
+        def safe_float(val, default=0):
+            """Convert to float safely, handling ranges like '50-60' by averaging"""
+            if pd.isna(val):
+                return default
+            if isinstance(val, (int, float)):
+                return float(val)
+            s = str(val).strip()
+            if '-' in s and not s.startswith('-'):
+                parts = s.split('-')
+                try:
+                    return sum(float(p) for p in parts) / len(parts)
+                except ValueError:
+                    return default
+            try:
+                return float(s)
+            except ValueError:
+                return default
+
+        for grupo in df['grupo'].unique():
+            grupo_key = str(grupo).lower().strip()
+            # Normalizar key
+            replacements = {'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', ' ': '_'}
+            for old, new in replacements.items():
+                grupo_key = grupo_key.replace(old, new)
+
+            database[grupo_key] = {}
+            df_grupo = df[df['grupo'] == grupo]
+
+            for subgrupo in df_grupo['subgrupo'].unique():
+                subgrupo_key = str(subgrupo).lower().strip()
+                df_subgrupo = df_grupo[df_grupo['subgrupo'] == subgrupo]
+                alimentos_list = []
+
+                for _, row in df_subgrupo.iterrows():
+                    nombre = str(row.get('alimento', '')).strip()
+                    if not nombre or nombre == 'nan':
+                        continue
+
+                    alimento = {
+                        'nombre': nombre,
+                        'gramos_porcion': safe_float(row.get('gramos_porcion', 100), 100),
+                        'medida_casera': str(row.get('medida_casera', '1 porcion')),
+                        'kcal': safe_float(row.get('kcal', 0)),
+                        'proteinas': safe_float(row.get('proteinas', 0)),
+                        'lipidos': safe_float(row.get('lipidos', 0)),
+                        'carbohidratos': safe_float(row.get('carbohidratos', 0))
+                    }
+                    alimentos_list.append(alimento)
+
+                if alimentos_list:
+                    database[grupo_key][subgrupo_key] = alimentos_list
+
+        print(f"[OK] load_alimentos_database: {len(database)} grupos cargados")
+        return database
+    except Exception as e:
+        print(f"Error cargando alimentos: {e}")
+        import traceback
+        traceback.print_exc()
+        return {}
+
+@app.route('/api/alimentos/grupo/<grupo>', methods=['GET'])
+@login_required
+def get_alimentos_grupo(grupo):
+    try:
+        db = load_alimentos_database()
+        grupo = grupo.lower().strip()
+        alimentos = []
+        
+        # Mapping keywords
+        keywords = {
+            'lacteos': ['lacteo', 'leche', 'queso', 'yogur'],
+            'cereales': ['cereal', 'pan', 'arroz', 'fideo', 'pasta', 'avena'],
+            'frutas': ['fruta'],
+            'verduras': ['verdura', 'hortaliza'],
+            'proteina': ['carne', 'pescado', 'huevo', 'legumbre', 'pollo', 'cerdo', 'atun'],
+            'grasas': ['aceite', 'grasa', 'palta', 'frutos_secos', 'semilla', 'almendra', 'nuez'],
+            'azucares': ['azucar', 'miel', 'mermelada', 'dulce'],
+            'otros': ['otro', 'bebida', 'aderezo']
+        }
+        
+        search_terms = keywords.get(grupo, [grupo])
+        
+        for db_grupo, subgrupos in db.items():
+            db_grupo_lower = db_grupo.lower()
+            # Check if group matches
+            if any(term in db_grupo_lower for term in search_terms):
+                 for subgrupo, lista in subgrupos.items():
+                     alimentos.extend(lista)
+            else:
+                # Check subgrupos
+                 for subgrupo, lista in subgrupos.items():
+                     if any(term in subgrupo.lower() for term in search_terms):
+                         alimentos.extend(lista)
+        
+        # Sort by name
+        alimentos.sort(key=lambda x: x['nombre'])
+        
+        return jsonify({'success': True, 'alimentos': alimentos})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/generar-pauta/<int:patient_id>', methods=['GET', 'POST'])
+@login_required
+def generar_pauta_endpoint(patient_id):
+    try:
+        patient = PatientFile.query.get_or_404(patient_id)
+        alimentos_db = load_alimentos_database()
+
+        # Prepare patient data dict - FIX: call calcular_edad()
+        edad = patient.calcular_edad()
+        if edad is None:
+            edad = 30 # Default if unknown
+
+        patient_data = {
+            'id': patient.id,
+            'nombre': patient.nombre,
+            'sexo': patient.sexo,
+            'peso_kg': patient.peso_kg,
+            'talla_m': patient.talla_m,
+            'edad': edad,
+            'get_kcal': patient.get_kcal,
+            'factor_actividad': patient.factor_actividad,
+            'proteinas_g': patient.proteinas_g,
+            'carbohidratos_g': patient.carbohidratos_g,
+            'grasas_g': patient.grasas_g,
+            'registro_24h': patient.registro_24h,
+            'frecuencia_consumo': patient.frecuencia_consumo,
+            'objetivos': patient.objetivos,
+            'liquido_ml': float(patient.consumo_agua_litros) * 1000 if patient.consumo_agua_litros else 2000,
+            # Allergy, intolerance and dietary restriction data for filtering
+            'alergias': patient.alergias if patient.alergias else '',
+            'intolerancias': patient.intolerancias if patient.intolerancias else '',
+            'restricciones_alimentarias': patient.restricciones_alimentarias if patient.restricciones_alimentarias else []
+        }
+
+        # If POST request, allow frontend to override/supplement allergy data
+        if request.method == 'POST':
+            post_data = request.get_json(silent=True) or {}
+            if post_data.get('alergias'):
+                patient_data['alergias'] = post_data['alergias']
+            if post_data.get('intolerancias'):
+                patient_data['intolerancias'] = post_data['intolerancias']
+            if post_data.get('restricciones_alimentarias'):
+                patient_data['restricciones_alimentarias'] = post_data['restricciones_alimentarias']
+
+        generator = PautaInteligente(patient_data, alimentos_db)
+        pauta = generator.generar()
+
+        return jsonify({'success': True, 'pauta': pauta})
+    except Exception as e:
+        print(f"Error generating pauta: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/guardar-pauta/<int:patient_id>', methods=['POST'])
+@login_required
+def guardar_pauta_endpoint_post(patient_id):
+    try:
+        patient = PatientFile.query.get_or_404(patient_id)
+        data = request.json
+        pauta = data.get('pauta')
+        
+        if pauta:
+            patient.plan_alimentario = json.dumps(pauta)
+            db.session.commit()
+            return jsonify({'success': True})
+        return jsonify({'success': False, 'error': 'No pauta provided'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============================================
+# BOOKING SYSTEM - Page Routes
+# ============================================
+
+@app.route('/booking')
+def booking_page():
+    """Public booking wizard page"""
+    return render_template('booking.html')
+
+@app.route('/dashboard/nutritionist/schedule')
+@login_required
+def nutritionist_schedule_page():
+    """Schedule management page for nutritionists"""
+    if current_user.user_type != 'nutricionista':
+        return redirect('/dashboard')
+    return render_template('nutritionist_schedule.html')
+
+@app.route('/dashboard/nutritionist/bookings')
+@login_required
+def nutritionist_bookings_page():
+    """Bookings list page for nutritionists"""
+    if current_user.user_type != 'nutricionista':
+        return redirect('/dashboard')
+    return render_template('nutritionist_bookings.html')
+
+@app.route('/dashboard/nutritionist/profile')
+@login_required
+def nutritionist_profile_page():
+    """Public profile editor for nutritionists"""
+    if current_user.user_type != 'nutricionista':
+        return redirect('/dashboard')
+    return render_template('nutritionist_profile.html')
+
+# ============================================
+# BOOKING SYSTEM - Public API
+# ============================================
+
+@app.route('/api/public/specialties')
+def api_public_specialties():
+    """Return the list of nutritionist specialties with 'Ver todos' option first"""
+    specialties_list = [{'key': 'todos', 'label': 'Ver todos los nutricionistas'}]
+    specialties_list.extend([{'key': k, 'label': l} for k, l in NUTRITIONIST_SPECIALTIES])
+    return jsonify({'success': True, 'specialties': specialties_list})
+
+@app.route('/api/public/nutritionists')
+def api_public_nutritionists():
+    """List nutritionists, optionally filtered by specialty. Shows all by default."""
+    specialty = request.args.get('specialty', '')
+    query = User.query.filter_by(user_type='nutricionista', is_active=True)
+
+    nutritionists = query.all()
+    results = []
+    for n in nutritionists:
+        specs = n.get_specialties_list()
+
+        # Si hay filtro de especialidad (y no es 'todos'), filtrar
+        if specialty and specialty != 'todos' and specialty not in specs:
+            continue
+
+        results.append({
+            'id': n.id,
+            'name': n.get_full_name(),
+            'bio': n.bio or '',
+            'specialties': [{'key': s, 'label': SPECIALTIES_DICT.get(s, s)} for s in specs] if specs else [],
+            'avg_rating': n.get_average_nutri_rating(),
+            'review_count': n.get_nutri_review_count(),
+            'consulta_precio': n.consulta_precio,
+            'consulta_duracion': n.consulta_duracion or 60,
+            'city': n.city or '',
+            'country': n.country or '',
+        })
+
+    results.sort(key=lambda x: x['avg_rating'], reverse=True)
+    return jsonify({'success': True, 'nutritionists': results})
+
+@app.route('/api/public/nutritionist/<int:nutri_id>/slots')
+def api_public_slots(nutri_id):
+    """Get available time slots for a nutritionist on a given date"""
+    from datetime import datetime as dt
+    date_str = request.args.get('date', '')
+    if not date_str:
+        return jsonify({'success': False, 'error': 'Parametro date requerido'}), 400
+
+    try:
+        booking_date = dt.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'success': False, 'error': 'Formato de fecha invalido (YYYY-MM-DD)'}), 400
+
+    day_of_week = booking_date.weekday()  # 0=Monday
+
+    schedule = NutritionistSchedule.query.filter_by(
+        nutritionist_id=nutri_id, day_of_week=day_of_week, is_active=True
+    ).first()
+
+    if not schedule:
+        return jsonify({'success': True, 'slots': [], 'message': 'Sin horario para este dia'})
+
+    all_slots = schedule.get_time_slots()
+
+    # Remove already booked slots
+    existing = Booking.query.filter_by(
+        nutritionist_id=nutri_id, booking_date=booking_date
+    ).filter(Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED])).all()
+
+    booked_times = {b.booking_time for b in existing}
+    available = [s for s in all_slots if s not in booked_times]
+
+    return jsonify({'success': True, 'slots': available, 'date': date_str})
+
+@app.route('/api/public/book', methods=['POST'])
+def api_public_book():
+    """Create a new booking (public, no auth required)"""
+    from datetime import datetime as dt
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'error': 'JSON requerido'}), 400
+
+    required = ['nutritionist_id', 'client_name', 'client_email', 'booking_date', 'booking_time']
+    for field in required:
+        if not data.get(field):
+            return jsonify({'success': False, 'error': f'Campo {field} requerido'}), 400
+
+    try:
+        nutri = User.query.get(data['nutritionist_id'])
+        if not nutri or nutri.user_type != 'nutricionista':
+            return jsonify({'success': False, 'error': 'Nutricionista no encontrado'}), 404
+
+        booking_date = dt.strptime(data['booking_date'], '%Y-%m-%d').date()
+
+        # Check slot is still available
+        existing = Booking.query.filter_by(
+            nutritionist_id=nutri.id,
+            booking_date=booking_date,
+            booking_time=data['booking_time']
+        ).filter(Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED])).first()
+
+        if existing:
+            return jsonify({'success': False, 'error': 'Este horario ya no esta disponible'}), 409
+
+        # Create PatientFile for this client
+        ficha_count = PatientFile.query.filter_by(nutricionista_id=nutri.id).count()
+        patient = PatientFile(
+            nutricionista_id=nutri.id,
+            ficha_numero=ficha_count + 1,
+            nombre=data['client_name'],
+            email=data['client_email'],
+            telefono=data.get('client_phone', ''),
+            motivo_consulta=data.get('notes', '')
+        )
+        patient.generate_intake_token()
+        db.session.add(patient)
+        db.session.flush()
+
+        # Create booking
+        booking = Booking(
+            nutritionist_id=nutri.id,
+            patient_file_id=patient.id,
+            client_name=data['client_name'],
+            client_email=data['client_email'],
+            client_phone=data.get('client_phone', ''),
+            specialty=data.get('specialty', ''),
+            booking_date=booking_date,
+            booking_time=data['booking_time'],
+            notes=data.get('notes', '')
+        )
+        db.session.add(booking)
+        db.session.commit()
+
+        # Send confirmation email
+        intake_url = patient.get_intake_url(request.host_url.rstrip('/'))
+        email_sent = False
+        if is_mail_configured():
+            result = send_booking_confirmation(booking, nutri, intake_url)
+            if result.get('success'):
+                patient.mark_url_sent()
+                db.session.commit()
+                email_sent = True
+
+        return jsonify({
+            'success': True,
+            'booking_id': booking.id,
+            'intake_url': intake_url,
+            'email_sent': email_sent,
+            'message': 'Reserva creada exitosamente'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating booking: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============================================
+# BOOKING SYSTEM - Nutritionist API
+# ============================================
+
+@app.route('/api/nutritionist/schedule', methods=['GET'])
+@login_required
+def api_nutri_schedule_get():
+    """Get current nutritionist's weekly schedule"""
+    if current_user.user_type != 'nutricionista':
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+
+    schedules = NutritionistSchedule.query.filter_by(
+        nutritionist_id=current_user.id
+    ).order_by(NutritionistSchedule.day_of_week).all()
+
+    return jsonify({'success': True, 'schedule': [{
+        'id': s.id,
+        'day_of_week': s.day_of_week,
+        'start_time': s.start_time,
+        'end_time': s.end_time,
+        'slot_duration': s.slot_duration,
+        'is_active': s.is_active,
+    } for s in schedules]})
+
+@app.route('/api/nutritionist/schedule', methods=['POST'])
+@login_required
+def api_nutri_schedule_save():
+    """Save weekly schedule (replaces all days)"""
+    if current_user.user_type != 'nutricionista':
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+
+    data = request.get_json()
+    if not data or 'days' not in data:
+        return jsonify({'success': False, 'error': 'JSON con campo days requerido'}), 400
+
+    try:
+        # Delete existing schedule
+        NutritionistSchedule.query.filter_by(nutritionist_id=current_user.id).delete()
+
+        for day in data['days']:
+            if day.get('is_active'):
+                sched = NutritionistSchedule(
+                    nutritionist_id=current_user.id,
+                    day_of_week=day['day_of_week'],
+                    start_time=day.get('start_time', '09:00'),
+                    end_time=day.get('end_time', '17:00'),
+                    slot_duration=day.get('slot_duration', 60),
+                    is_active=True
+                )
+                db.session.add(sched)
+
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Horario guardado'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/nutritionist/bookings')
+@login_required
+def api_nutri_bookings():
+    """List bookings for current nutritionist"""
+    if current_user.user_type != 'nutricionista':
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+
+    bookings = Booking.query.filter_by(nutritionist_id=current_user.id)\
+        .order_by(Booking.booking_date.desc(), Booking.booking_time.desc()).all()
+
+    return jsonify({'success': True, 'bookings': [{
+        'id': b.id,
+        'client_name': b.client_name,
+        'client_email': b.client_email,
+        'client_phone': b.client_phone or '',
+        'specialty': b.specialty,
+        'specialty_label': b.get_specialty_label(),
+        'booking_date': b.booking_date.strftime('%Y-%m-%d'),
+        'booking_time': b.booking_time,
+        'status': b.status,
+        'notes': b.notes or '',
+        'patient_file_id': b.patient_file_id,
+        'created_at': b.created_at.strftime('%Y-%m-%d %H:%M') if b.created_at else None,
+    } for b in bookings]})
+
+@app.route('/api/nutritionist/bookings/<int:booking_id>/status', methods=['PATCH'])
+@login_required
+def api_nutri_booking_status(booking_id):
+    """Update booking status"""
+    if current_user.user_type != 'nutricionista':
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+
+    booking = Booking.query.get_or_404(booking_id)
+    if booking.nutritionist_id != current_user.id:
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+
+    data = request.get_json()
+    new_status = data.get('status')
+    valid = [BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.CANCELLED, BookingStatus.COMPLETED]
+    if new_status not in valid:
+        return jsonify({'success': False, 'error': 'Estado invalido'}), 400
+
+    booking.status = new_status
+    db.session.commit()
+    return jsonify({'success': True, 'status': booking.status})
+
+@app.route('/api/nutritionist/profile', methods=['GET'])
+@login_required
+def api_nutri_profile_get():
+    """Get nutritionist public profile data"""
+    if current_user.user_type != 'nutricionista':
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+
+    banco = {}
+    if current_user.banco_info:
+        try:
+            banco = json.loads(current_user.banco_info)
+        except (json.JSONDecodeError, TypeError):
+            banco = {}
+
+    return jsonify({'success': True, 'profile': {
+        'bio': current_user.bio or '',
+        'specialization': current_user.get_specialties_list(),
+        'consulta_precio': current_user.consulta_precio,
+        'consulta_duracion': current_user.consulta_duracion or 60,
+        'banco_info': banco,
+    }})
+
+@app.route('/api/nutritionist/profile', methods=['POST'])
+@login_required
+def api_nutri_profile_save():
+    """Update nutritionist public profile"""
+    if current_user.user_type != 'nutricionista':
+        return jsonify({'success': False, 'error': 'No autorizado'}), 403
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'error': 'JSON requerido'}), 400
+
+    try:
+        if 'bio' in data:
+            current_user.bio = data['bio']
+        if 'consulta_precio' in data:
+            current_user.consulta_precio = data['consulta_precio']
+        if 'consulta_duracion' in data:
+            current_user.consulta_duracion = data['consulta_duracion']
+        if 'banco_info' in data:
+            current_user.banco_info = json.dumps(data['banco_info'])
+
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Perfil actualizado'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ============================================
 # INICIALIZACIÓN
 # ============================================
 
@@ -1520,6 +2587,16 @@ if AUTH_ENABLED:
                     ('restricciones_alimentarias', 'TEXT'),
                     ('delivery_restaurante', 'INTEGER'),
                     ('percepcion_esfuerzo', 'INTEGER'),
+                    ('rut', 'VARCHAR(20)'),
+                    ('email', 'VARCHAR(120)'),
+                    ('telefono', 'VARCHAR(20)'),
+                    ('consistencia_heces', 'VARCHAR(50)'),
+                ],
+                'users': [
+                    ('bio', 'TEXT'),
+                    ('consulta_precio', 'INTEGER'),
+                    ('consulta_duracion', 'INTEGER DEFAULT 60'),
+                    ('banco_info', 'TEXT'),
                 ]
             }
 
@@ -1541,11 +2618,11 @@ if AUTH_ENABLED:
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print("=" * 80)
-    print("🚀 GENERADOR DE RECETAS V3.4 - FIXED")
+    print("[START] GENERADOR DE RECETAS V3.4 - FIXED")
     print("=" * 80)
     print(f"🌐 Puerto: {port}")
     print(f"📂 Directorio: {os.getcwd()}")
-    print(f"🔐 Autenticación: {'✅ Habilitada' if AUTH_ENABLED else '❌ Deshabilitada'}")
+    print(f"🔐 Autenticación: {'[OK] Habilitada' if AUTH_ENABLED else '❌ Deshabilitada'}")
     print("=" * 80)
     
     app.run(debug=False, host='0.0.0.0', port=port)

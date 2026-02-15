@@ -302,7 +302,17 @@ console.log('📦 pauta-generator.js v3.0 SEMANAL cargado');
         `;
         
         try {
-            const response = await fetch(`/api/generar-pauta/${state.selectedPatient}`);
+            // Send patient allergy/intolerance data via POST for filtering
+            const patientData = state.selectedPatientData || {};
+            const response = await fetch(`/api/generar-pauta/${state.selectedPatient}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    alergias: patientData.alergias || '',
+                    intolerancias: patientData.intolerancias || '',
+                    restricciones_alimentarias: patientData.restricciones_alimentarias || []
+                })
+            });
             const data = await response.json();
             
             if (data.success && data.pauta) {

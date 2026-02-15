@@ -1,0 +1,309 @@
+{% extends "base_layout.html" %}
+
+{% block title %}Mi Horario - BiteTrack{% endblock %}
+
+{% block body_class %}nutritionist-premium{% endblock %}
+
+{% block sidebar_nav %}
+<div class="bt-nav-section-label">Principal</div>
+<a href="{{ url_for('nutritionist_dashboard') }}" class="bt-nav-item">
+    <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+    <span class="nav-label">Dashboard</span>
+</a>
+
+<div class="bt-nav-section-label">Pacientes</div>
+<a href="{{ url_for('patient_intake_form') }}" class="bt-nav-item">
+    <span class="nav-icon"><i class="fas fa-user-plus"></i></span>
+    <span class="nav-label">Nuevo Paciente</span>
+</a>
+<a href="{{ url_for('list_patients') }}" class="bt-nav-item">
+    <span class="nav-icon"><i class="fas fa-users"></i></span>
+    <span class="nav-label">Lista Pacientes</span>
+</a>
+
+<div class="bt-nav-section-label">Agenda</div>
+<a href="{{ url_for('nutritionist_schedule_page') }}" class="bt-nav-item active">
+    <span class="nav-icon"><i class="fas fa-calendar-alt"></i></span>
+    <span class="nav-label">Mi Horario</span>
+</a>
+<a href="{{ url_for('nutritionist_bookings_page') }}" class="bt-nav-item">
+    <span class="nav-icon"><i class="fas fa-calendar-check"></i></span>
+    <span class="nav-label">Reservas</span>
+</a>
+<a href="{{ url_for('nutritionist_profile_page') }}" class="bt-nav-item">
+    <span class="nav-icon"><i class="fas fa-id-card"></i></span>
+    <span class="nav-label">Perfil Publico</span>
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/css/nutritionist-premium.css">
+<style>
+    .schedule-grid { display:flex; flex-direction:column; gap:0.5rem; }
+    .day-row {
+        display:flex;
+        align-items:center;
+        gap:1rem;
+        padding:1rem 1.25rem;
+        border:1px solid var(--glass-border, rgba(255,255,255,0.45));
+        border-radius:var(--radius-lg, 18px);
+        background:var(--glass-bg-light, rgba(255,255,255,0.72));
+        backdrop-filter:blur(24px);
+        -webkit-backdrop-filter:blur(24px);
+        flex-wrap:wrap;
+        transition:all 0.25s ease;
+        animation:fadeSlideUp 0.4s ease-out both;
+    }
+    .day-row:nth-child(1) { animation-delay:0s; }
+    .day-row:nth-child(2) { animation-delay:0.05s; }
+    .day-row:nth-child(3) { animation-delay:0.1s; }
+    .day-row:nth-child(4) { animation-delay:0.15s; }
+    .day-row:nth-child(5) { animation-delay:0.2s; }
+    .day-row:nth-child(6) { animation-delay:0.25s; }
+    .day-row:nth-child(7) { animation-delay:0.3s; }
+    @keyframes fadeSlideUp {
+        from { opacity:0; transform:translateY(12px); }
+        to { opacity:1; transform:translateY(0); }
+    }
+    .day-row.active {
+        border-color:var(--bt-emerald-300);
+        box-shadow:0 4px 16px rgba(16,185,129,0.08);
+    }
+    .day-row:hover {
+        box-shadow:0 8px 24px rgba(0,0,0,0.06);
+    }
+    .day-name {
+        font-weight:700;
+        font-size:0.875rem;
+        width:90px;
+        flex-shrink:0;
+        color:var(--bt-fg-default);
+        letter-spacing:-0.02em;
+    }
+    .day-toggle {
+        width:40px;
+        height:22px;
+        border-radius:11px;
+        border:none;
+        cursor:pointer;
+        position:relative;
+        background:var(--bt-slate-300);
+        transition:all 0.25s ease;
+        flex-shrink:0;
+    }
+    .day-toggle.on {
+        background:linear-gradient(135deg, var(--bt-emerald-500), var(--bt-teal-500));
+        box-shadow:0 2px 8px rgba(16,185,129,0.3);
+    }
+    .day-toggle::after {
+        content:'';
+        position:absolute;
+        width:16px;
+        height:16px;
+        border-radius:50%;
+        background:#fff;
+        top:3px;
+        left:3px;
+        transition:left 0.2s ease;
+        box-shadow:0 1px 3px rgba(0,0,0,0.2);
+    }
+    .day-toggle.on::after { left:21px; }
+    .day-fields { display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; }
+    .day-fields label {
+        font-size:0.6875rem;
+        color:var(--bt-fg-muted);
+        font-weight:600;
+        text-transform:uppercase;
+        letter-spacing:0.05em;
+    }
+    .day-fields input, .day-fields select {
+        padding:0.4rem 0.625rem;
+        border:1px solid var(--glass-border, rgba(255,255,255,0.45));
+        border-radius:8px;
+        font-size:0.8125rem;
+        background:var(--glass-bg-subtle, rgba(255,255,255,0.35));
+        color:var(--bt-fg-default);
+        font-family:var(--bt-font-body);
+        transition:all 0.2s ease;
+    }
+    .day-fields input:focus, .day-fields select:focus {
+        outline:none;
+        border-color:var(--bt-emerald-400);
+        box-shadow:0 0 0 3px rgba(16,185,129,0.1);
+        background:var(--glass-bg-light, rgba(255,255,255,0.72));
+    }
+    .save-bar { display:flex; justify-content:flex-end; gap:0.75rem; margin-top:2.5rem; padding-top:1.5rem; border-top:1px solid var(--glass-border-subtle, rgba(255,255,255,0.18)); }
+    .save-bar button {
+        padding:0.75rem 2rem;
+        border-radius:12px;
+        font-size:0.875rem;
+        font-weight:600;
+        cursor:pointer;
+        border:none;
+        letter-spacing:-0.01em;
+    }
+    .btn-save {
+        background:linear-gradient(135deg, var(--bt-emerald-500), var(--bt-teal-500));
+        color:#fff;
+        box-shadow:0 4px 12px rgba(16,185,129,0.25);
+        transition:all 0.25s ease;
+    }
+    .btn-save:hover:not(:disabled) {
+        transform:translateY(-2px);
+        box-shadow:0 8px 20px rgba(16,185,129,0.3);
+    }
+    .btn-save:disabled { opacity:0.5; cursor:not-allowed; }
+    .toast-msg {
+        position:fixed;
+        bottom:2rem;
+        right:2rem;
+        padding:0.875rem 1.5rem;
+        border-radius:12px;
+        background:var(--glass-bg-light, rgba(255,255,255,0.72));
+        backdrop-filter:blur(24px);
+        -webkit-backdrop-filter:blur(24px);
+        border:1px solid var(--bt-emerald-400);
+        color:var(--bt-emerald-600);
+        font-weight:600;
+        font-size:0.8125rem;
+        box-shadow:0 8px 32px rgba(16,185,129,0.2);
+        z-index:999;
+        display:none;
+    }
+    @media(max-width:600px) {
+        .day-row { flex-direction:column; align-items:flex-start; padding:1rem; }
+        .day-fields { width:100%; }
+        .day-name { width:100%; margin-bottom:0.5rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bt-page-header">
+    <div>
+        <h1 class="bt-page-title">
+            <i class="fas fa-calendar-alt" style="color:var(--bt-brand-primary);"></i>
+            Mi Horario Semanal
+        </h1>
+        <p class="bt-page-subtitle">Define los dias y horarios en los que atiendes pacientes</p>
+    </div>
+</div>
+
+<div class="bt-glass-panel" style="padding:1.5rem;">
+    <div class="schedule-grid" id="scheduleGrid"></div>
+    <div class="save-bar">
+        <button class="btn-save" id="btnSave" onclick="saveSchedule()">
+            <i class="fas fa-save" style="margin-right:0.5rem;"></i> Guardar Horario
+        </button>
+    </div>
+</div>
+
+<div class="toast-msg" id="toastMsg"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const DAYS = ['Lunes','Martes','Miercoles','Jueves','Viernes','Sabado','Domingo'];
+let scheduleData = [];
+
+function showToast(msg) {
+    const t = document.getElementById('toastMsg');
+    t.textContent = msg;
+    t.style.display = 'block';
+    setTimeout(function(){ t.style.display = 'none'; }, 3000);
+}
+
+function buildGrid(existing) {
+    const grid = document.getElementById('scheduleGrid');
+    grid.innerHTML = '';
+    const existMap = {};
+    (existing || []).forEach(function(s){ existMap[s.day_of_week] = s; });
+
+    for (let i = 0; i < 7; i++) {
+        const ex = existMap[i];
+        const isActive = ex ? ex.is_active : (i < 5); // default Mon-Fri active
+        const start = ex ? ex.start_time : '09:00';
+        const end = ex ? ex.end_time : '17:00';
+        const dur = ex ? ex.slot_duration : 60;
+
+        const row = document.createElement('div');
+        row.className = 'day-row' + (isActive ? ' active' : '');
+        row.dataset.day = i;
+        row.innerHTML =
+            '<span class="day-name">' + DAYS[i] + '</span>' +
+            '<button type="button" class="day-toggle' + (isActive ? ' on' : '') + '" onclick="toggleDay(this,' + i + ')"></button>' +
+            '<div class="day-fields" style="' + (isActive ? '' : 'opacity:0.4;pointer-events:none;') + '">' +
+                '<label>Desde</label><input type="time" value="' + start + '" class="input-start">' +
+                '<label>Hasta</label><input type="time" value="' + end + '" class="input-end">' +
+                '<label>Duracion</label>' +
+                '<select class="input-dur">' +
+                    '<option value="30"' + (dur===30?' selected':'') + '>30 min</option>' +
+                    '<option value="45"' + (dur===45?' selected':'') + '>45 min</option>' +
+                    '<option value="60"' + (dur===60?' selected':'') + '>60 min</option>' +
+                    '<option value="90"' + (dur===90?' selected':'') + '>90 min</option>' +
+                '</select>' +
+            '</div>';
+        grid.appendChild(row);
+    }
+}
+
+function toggleDay(btn, dayIndex) {
+    btn.classList.toggle('on');
+    const row = btn.closest('.day-row');
+    const fields = row.querySelector('.day-fields');
+    const isOn = btn.classList.contains('on');
+    row.classList.toggle('active', isOn);
+    fields.style.opacity = isOn ? '1' : '0.4';
+    fields.style.pointerEvents = isOn ? 'auto' : 'none';
+}
+
+async function saveSchedule() {
+    const btn = document.getElementById('btnSave');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+    const days = [];
+    document.querySelectorAll('.day-row').forEach(function(row) {
+        const dayIndex = parseInt(row.dataset.day);
+        const isActive = row.querySelector('.day-toggle').classList.contains('on');
+        days.push({
+            day_of_week: dayIndex,
+            is_active: isActive,
+            start_time: row.querySelector('.input-start').value,
+            end_time: row.querySelector('.input-end').value,
+            slot_duration: parseInt(row.querySelector('.input-dur').value)
+        });
+    });
+
+    try {
+        const res = await fetch('/api/nutritionist/schedule', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({days: days})
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Horario guardado exitosamente');
+        } else {
+            showToast('Error: ' + (data.error || 'desconocido'));
+        }
+    } catch(e) {
+        showToast('Error de conexion');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-save" style="margin-right:0.5rem;"></i> Guardar Horario';
+}
+
+// Load existing schedule
+(async function() {
+    try {
+        const res = await fetch('/api/nutritionist/schedule');
+        const data = await res.json();
+        buildGrid(data.success ? data.schedule : []);
+    } catch(e) {
+        buildGrid([]);
+    }
+})();
+</script>
+{% endblock %}

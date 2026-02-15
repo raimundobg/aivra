@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ficha #{{ patient.ficha_numero or patient.id }} - {{ patient.nombre }} - ZenLab Pro</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Ficha #{{ patient.ficha_numero or patient.id }} - {{ patient.nombre }} - BiteTrack</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <link rel="stylesheet" href="/css/modern-style.css">
     <link rel="stylesheet" href="/css/dashboard-common.css">
     <link rel="stylesheet" href="/css/patient-forms.css">
     <link rel="stylesheet" href="/css/patient-file.css">
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar-custom">
         <div class="container">
             <div class="navbar-wrapper">
                 <a href="{{ url_for('nutritionist_dashboard') }}" class="navbar-brand-custom">
-                    <img src="/images/logo.png" alt="ZenLab" class="navbar-logo">
+                    <img src="/images/logo.png" alt="BiteTrack" class="navbar-logo">
                 </a>
                 <div class="navbar-actions">
                     <span class="navbar-user">
@@ -34,7 +37,7 @@
             </div>
         </div>
     </nav>
-    
+
     <!-- Ficha Header (Sticky) -->
     <div class="ficha-header">
         <div class="container">
@@ -46,23 +49,29 @@
                     </span>
                     <span class="ficha-patient-name">{{ patient.nombre }}</span>
                 </div>
-                
+
                 <div class="ficha-actions">
                     <div class="save-status saved" id="saveStatus">
                         <i class="fas fa-check-circle"></i>
                         <span>Guardado</span>
                     </div>
-                    
+
+                    <button type="button" class="btn-ficha btn-pauta" id="btnPauta" onclick="generarPauta()"
+                        style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                        <i class="fas fa-utensils"></i>
+                        <span>Generar Pauta</span>
+                    </button>
+
                     <button type="button" class="btn-ficha btn-edit" id="btnEdit" onclick="toggleEditMode()">
                         <i class="fas fa-edit"></i>
                         <span>Editar</span>
                     </button>
-                    
+
                     <button type="button" class="btn-ficha btn-save" id="btnSave" onclick="savePatient()" disabled>
                         <i class="fas fa-save"></i>
                         <span>Guardar</span>
                     </button>
-                    
+
                     <button type="button" class="btn-ficha btn-print" onclick="window.print()">
                         <i class="fas fa-print"></i>
                         <span>Imprimir</span>
@@ -71,7 +80,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Main Content -->
     <div class="container page-wrapper">
         <!-- Patient Summary -->
@@ -80,7 +89,8 @@
                 <div class="summary-value" id="summaryEdad">{{ patient.calcular_edad() or '-' }}</div>
                 <div class="summary-label">Edad (años)</div>
             </div>
-            <div class="summary-item {{ 'warning' if patient.imc and patient.imc >= 25 and patient.imc < 30 else 'danger' if patient.imc and patient.imc >= 30 else '' }}">
+            <div
+                class="summary-item {{ 'warning' if patient.imc and patient.imc >= 25 and patient.imc < 30 else 'danger' if patient.imc and patient.imc >= 30 else '' }}">
                 <div class="summary-value" id="summaryIMC">{{ patient.imc or '-' }}</div>
                 <div class="summary-label">IMC</div>
             </div>
@@ -97,14 +107,15 @@
                 <div class="summary-label">Proteínas</div>
             </div>
         </div>
-        
+
         <!-- Form Container -->
         <form id="patientFileForm" class="view-mode">
             <input type="hidden" id="patientId" value="{{ patient.id }}">
-            
+
             <!-- SECCIÓN 1: ANTECEDENTES GENERALES -->
             <div class="section-accordion">
-                <button type="button" class="accordion-button-custom" data-bs-toggle="collapse" data-bs-target="#section1">
+                <button type="button" class="accordion-button-custom" data-bs-toggle="collapse"
+                    data-bs-target="#section1">
                     <div class="section-icon green">
                         <i class="fas fa-user-circle"></i>
                     </div>
@@ -118,120 +129,123 @@
                                 <label class="form-label">
                                     <i class="fas fa-user"></i> Nombre Completo
                                 </label>
-                                <input type="text" class="form-control" id="nombre" name="nombre" 
-                                       value="{{ patient.nombre }}" required>
+                                <input type="text" class="form-control" id="nombre" name="nombre"
+                                    value="{{ patient.nombre }}" required>
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">
                                     <i class="fas fa-calendar"></i> Fecha de Nacimiento
                                 </label>
                                 <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento"
-                                       value="{{ patient.fecha_nacimiento }}">
+                                    value="{{ patient.fecha_nacimiento }}">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">
                                     <i class="fas fa-venus-mars"></i> Sexo
                                 </label>
                                 <select class="form-select" id="sexo" name="sexo">
                                     <option value="">Seleccionar</option>
-                                    <option value="Masculino" {{ 'selected' if patient.sexo == 'Masculino' }}>Masculino</option>
-                                    <option value="Femenino" {{ 'selected' if patient.sexo == 'Femenino' }}>Femenino</option>
+                                    <option value="Masculino" {{ 'selected' if patient.sexo=='Masculino' }}>Masculino
+                                    </option>
+                                    <option value="Femenino" {{ 'selected' if patient.sexo=='Femenino' }}>Femenino
+                                    </option>
                                 </select>
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <label class="form-label">
                                     <i class="fas fa-envelope"></i> Email
                                 </label>
                                 <input type="email" class="form-control" id="email" name="email"
-                                       value="{{ patient.email or '' }}" placeholder="correo@ejemplo.com">
+                                    value="{{ patient.email or '' }}" placeholder="correo@ejemplo.com">
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <label class="form-label">
                                     <i class="fas fa-phone"></i> Teléfono
                                 </label>
                                 <input type="tel" class="form-control" id="telefono" name="telefono"
-                                       value="{{ patient.telefono or '' }}" placeholder="+56 9 1234 5678">
+                                    value="{{ patient.telefono or '' }}" placeholder="+56 9 1234 5678">
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <label class="form-label">
                                     <i class="fas fa-briefcase"></i> Ocupación
                                 </label>
                                 <input type="text" class="form-control" id="ocupacion" name="ocupacion"
-                                       value="{{ patient.ocupacion or '' }}">
+                                    value="{{ patient.ocupacion or '' }}">
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label class="form-label">
                                     <i class="fas fa-comment-medical"></i> Motivo de Consulta
                                 </label>
-                                <textarea class="form-control" id="motivo_consulta" name="motivo_consulta" 
-                                          rows="3">{{ patient.motivo_consulta or '' }}</textarea>
+                                <textarea class="form-control" id="motivo_consulta" name="motivo_consulta"
+                                    rows="3">{{ patient.motivo_consulta or '' }}</textarea>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label class="form-label">
                                     <i class="fas fa-bullseye"></i> Objetivos
                                 </label>
-                                <textarea class="form-control" id="objetivos" name="objetivos" 
-                                          rows="3">{{ patient.objetivos or '' }}</textarea>
+                                <textarea class="form-control" id="objetivos" name="objetivos"
+                                    rows="3">{{ patient.objetivos or '' }}</textarea>
                             </div>
-                            
+
                             <div class="subsection-header">
                                 <i class="fas fa-notes-medical"></i> Historial Médico
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label class="form-label">
                                     <i class="fas fa-stethoscope"></i> Diagnósticos Médicos
                                 </label>
-                                <textarea class="form-control" id="diagnosticos" name="diagnosticos" 
-                                          rows="2">{{ patient.diagnosticos or '' }}</textarea>
+                                <textarea class="form-control" id="diagnosticos" name="diagnosticos"
+                                    rows="2">{{ patient.diagnosticos or '' }}</textarea>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label class="form-label">
                                     <i class="fas fa-pills"></i> Medicamentos Actuales
                                 </label>
-                                <textarea class="form-control" id="medicamentos" name="medicamentos" 
-                                          rows="2">{{ patient.medicamentos or '' }}</textarea>
+                                <textarea class="form-control" id="medicamentos" name="medicamentos"
+                                    rows="2">{{ patient.medicamentos or '' }}</textarea>
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <label class="form-label">
                                     <i class="fas fa-capsules"></i> Suplementos
                                 </label>
-                                <textarea class="form-control" id="suplementos" name="suplementos" 
-                                          rows="2">{{ patient.suplementos or '' }}</textarea>
+                                <textarea class="form-control" id="suplementos" name="suplementos"
+                                    rows="2">{{ patient.suplementos or '' }}</textarea>
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <label class="form-label">
                                     <i class="fas fa-allergies"></i> Alergias Alimentarias
                                 </label>
-                                <textarea class="form-control" id="alergias" name="alergias" 
-                                          rows="2">{{ patient.alergias or '' }}</textarea>
+                                <textarea class="form-control" id="alergias" name="alergias"
+                                    rows="2">{{ patient.alergias or '' }}</textarea>
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <label class="form-label">
                                     <i class="fas fa-exclamation-triangle"></i> Intolerancias
                                 </label>
-                                <textarea class="form-control" id="intolerancias" name="intolerancias" 
-                                          rows="2">{{ patient.intolerancias or '' }}</textarea>
+                                <textarea class="form-control" id="intolerancias" name="intolerancias"
+                                    rows="2">{{ patient.intolerancias or '' }}</textarea>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- SECCIÓN 2: EVALUACIÓN ANTROPOMÉTRICA -->
             <div class="section-accordion">
-                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse" data-bs-target="#section2">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#section2">
                     <div class="section-icon blue">
                         <i class="fas fa-ruler-combined"></i>
                     </div>
@@ -246,119 +260,117 @@
                                 <label class="form-label">
                                     <i class="fas fa-arrows-alt-v"></i> Talla (m)
                                 </label>
-                                <input type="number" class="form-control" id="talla_m" name="talla_m"
-                                       step="0.01" min="1.00" max="2.50" 
-                                       value="{{ patient.talla_m or '' }}" onchange="calcularIMC()">
+                                <input type="number" class="form-control" id="talla_m" name="talla_m" step="0.01"
+                                    min="1.00" max="2.50" value="{{ patient.talla_m or '' }}" onchange="calcularIMC()">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">
                                     <i class="fas fa-weight"></i> Peso (kg)
                                 </label>
-                                <input type="number" class="form-control" id="peso_kg" name="peso_kg"
-                                       step="0.1" min="30" max="300"
-                                       value="{{ patient.peso_kg or '' }}" onchange="calcularIMC()">
+                                <input type="number" class="form-control" id="peso_kg" name="peso_kg" step="0.1"
+                                    min="30" max="300" value="{{ patient.peso_kg or '' }}" onchange="calcularIMC()">
                             </div>
-                            
+
                             <div class="col-md-3">
-                                <div class="calculated-field {{ 'warning' if patient.imc and patient.imc >= 25 and patient.imc < 30 else 'danger' if patient.imc and patient.imc >= 30 else '' }}">
+                                <div
+                                    class="calculated-field {{ 'warning' if patient.imc and patient.imc >= 25 and patient.imc < 30 else 'danger' if patient.imc and patient.imc >= 30 else '' }}">
                                     <div class="value" id="imcValue">{{ patient.imc or '-' }}</div>
                                     <div class="label" id="imcCategoria">{{ patient.imc_categoria or 'IMC' }}</div>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <div class="calculated-field">
                                     <div class="value" id="grasaValue">{{ patient.porcentaje_grasa or '-' }}%</div>
                                     <div class="label">% Grasa Corporal</div>
                                 </div>
                             </div>
-                            
+
                             <div class="subsection-header">
                                 <i class="fas fa-hand-paper"></i> Pliegues Cutáneos (mm)
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Bicipital</label>
-                                <input type="number" class="form-control pliegue" id="pliegue_bicipital" 
-                                       name="pliegue_bicipital" step="0.1"
-                                       value="{{ patient.pliegue_bicipital or '' }}" onchange="calcularGrasa()">
+                                <input type="number" class="form-control pliegue" id="pliegue_bicipital"
+                                    name="pliegue_bicipital" step="0.1" value="{{ patient.pliegue_bicipital or '' }}"
+                                    onchange="calcularGrasa()">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Tricipital</label>
-                                <input type="number" class="form-control pliegue" id="pliegue_tricipital" 
-                                       name="pliegue_tricipital" step="0.1"
-                                       value="{{ patient.pliegue_tricipital or '' }}" onchange="calcularGrasa()">
+                                <input type="number" class="form-control pliegue" id="pliegue_tricipital"
+                                    name="pliegue_tricipital" step="0.1" value="{{ patient.pliegue_tricipital or '' }}"
+                                    onchange="calcularGrasa()">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Subescapular</label>
-                                <input type="number" class="form-control pliegue" id="pliegue_subescapular" 
-                                       name="pliegue_subescapular" step="0.1"
-                                       value="{{ patient.pliegue_subescapular or '' }}" onchange="calcularGrasa()">
+                                <input type="number" class="form-control pliegue" id="pliegue_subescapular"
+                                    name="pliegue_subescapular" step="0.1"
+                                    value="{{ patient.pliegue_subescapular or '' }}" onchange="calcularGrasa()">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Supracrestídeo</label>
-                                <input type="number" class="form-control pliegue" id="pliegue_supracrestideo" 
-                                       name="pliegue_supracrestideo" step="0.1"
-                                       value="{{ patient.pliegue_supracrestideo or '' }}" onchange="calcularGrasa()">
+                                <input type="number" class="form-control pliegue" id="pliegue_supracrestideo"
+                                    name="pliegue_supracrestideo" step="0.1"
+                                    value="{{ patient.pliegue_supracrestideo or '' }}" onchange="calcularGrasa()">
                             </div>
-                            
+
                             <div class="subsection-header">
                                 <i class="fas fa-ruler-horizontal"></i> Perímetros (cm)
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Brazo Relajado</label>
-                                <input type="number" class="form-control" id="perimetro_brazo" 
-                                       name="perimetro_brazo" step="0.1"
-                                       value="{{ patient.perimetro_brazo or '' }}">
+                                <input type="number" class="form-control" id="perimetro_brazo" name="perimetro_brazo"
+                                    step="0.1" value="{{ patient.perimetro_brazo or '' }}">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Cintura</label>
-                                <input type="number" class="form-control" id="perimetro_cintura" 
-                                       name="perimetro_cintura" step="0.1"
-                                       value="{{ patient.perimetro_cintura or '' }}" onchange="calcularICC()">
+                                <input type="number" class="form-control" id="perimetro_cintura"
+                                    name="perimetro_cintura" step="0.1" value="{{ patient.perimetro_cintura or '' }}"
+                                    onchange="calcularICC()">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Cadera</label>
-                                <input type="number" class="form-control" id="perimetro_cadera" 
-                                       name="perimetro_cadera" step="0.1"
-                                       value="{{ patient.perimetro_cadera or '' }}" onchange="calcularICC()">
+                                <input type="number" class="form-control" id="perimetro_cadera" name="perimetro_cadera"
+                                    step="0.1" value="{{ patient.perimetro_cadera or '' }}" onchange="calcularICC()">
                             </div>
-                            
+
                             <div class="col-md-3">
-                                <div class="calculated-field {{ 'danger' if patient.riesgo_cardiovascular == 'Alto' else 'warning' if patient.riesgo_cardiovascular == 'Moderado' else '' }}">
+                                <div
+                                    class="calculated-field {{ 'danger' if patient.riesgo_cardiovascular == 'Alto' else 'warning' if patient.riesgo_cardiovascular == 'Moderado' else '' }}">
                                     <div class="value" id="iccValue">{{ patient.indice_cintura_cadera or '-' }}</div>
                                     <div class="label" id="riesgoCV">{{ patient.riesgo_cardiovascular or 'ICC' }}</div>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Pantorrilla</label>
-                                <input type="number" class="form-control" id="perimetro_pantorrilla" 
-                                       name="perimetro_pantorrilla" step="0.1"
-                                       value="{{ patient.perimetro_pantorrilla or '' }}">
+                                <input type="number" class="form-control" id="perimetro_pantorrilla"
+                                    name="perimetro_pantorrilla" step="0.1"
+                                    value="{{ patient.perimetro_pantorrilla or '' }}">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Muñeca</label>
-                                <input type="number" class="form-control" id="perimetro_muneca" 
-                                       name="perimetro_muneca" step="0.1"
-                                       value="{{ patient.perimetro_muneca or '' }}">
+                                <input type="number" class="form-control" id="perimetro_muneca" name="perimetro_muneca"
+                                    step="0.1" value="{{ patient.perimetro_muneca or '' }}">
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- SECCIÓN 3: EVALUACIÓN BIOQUÍMICA -->
             <div class="section-accordion">
-                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse" data-bs-target="#section3">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#section3">
                     <div class="section-icon purple">
                         <i class="fas fa-vial"></i>
                     </div>
@@ -371,88 +383,90 @@
                             <div class="col-md-4">
                                 <label class="form-label">Fecha de Exámenes</label>
                                 <input type="date" class="form-control" id="fecha_examenes" name="fecha_examenes"
-                                       value="{{ patient.fecha_examenes or '' }}">
+                                    value="{{ patient.fecha_examenes or '' }}">
                             </div>
-                            
+
                             <div class="subsection-header">
                                 <i class="fas fa-tint"></i> Perfil Glucídico
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Glucosa Ayunas (mg/dL)</label>
                                 <input type="number" class="form-control" id="glucosa_ayunas" name="glucosa_ayunas"
-                                       step="0.1" value="{{ patient.glucosa_ayunas or '' }}">
+                                    step="0.1" value="{{ patient.glucosa_ayunas or '' }}">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">HbA1c (%)</label>
-                                <input type="number" class="form-control" id="hemoglobina_glicada" name="hemoglobina_glicada"
-                                       step="0.1" value="{{ patient.hemoglobina_glicada or '' }}">
+                                <input type="number" class="form-control" id="hemoglobina_glicada"
+                                    name="hemoglobina_glicada" step="0.1"
+                                    value="{{ patient.hemoglobina_glicada or '' }}">
                             </div>
-                            
+
                             <div class="subsection-header">
                                 <i class="fas fa-heart"></i> Perfil Lipídico
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Colesterol Total (mg/dL)</label>
                                 <input type="number" class="form-control" id="colesterol_total" name="colesterol_total"
-                                       step="0.1" value="{{ patient.colesterol_total or '' }}">
+                                    step="0.1" value="{{ patient.colesterol_total or '' }}">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">HDL (mg/dL)</label>
                                 <input type="number" class="form-control" id="colesterol_hdl" name="colesterol_hdl"
-                                       step="0.1" value="{{ patient.colesterol_hdl or '' }}">
+                                    step="0.1" value="{{ patient.colesterol_hdl or '' }}">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">LDL (mg/dL)</label>
                                 <input type="number" class="form-control" id="colesterol_ldl" name="colesterol_ldl"
-                                       step="0.1" value="{{ patient.colesterol_ldl or '' }}">
+                                    step="0.1" value="{{ patient.colesterol_ldl or '' }}">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Triglicéridos (mg/dL)</label>
                                 <input type="number" class="form-control" id="trigliceridos" name="trigliceridos"
-                                       step="0.1" value="{{ patient.trigliceridos or '' }}">
+                                    step="0.1" value="{{ patient.trigliceridos or '' }}">
                             </div>
-                            
+
                             <div class="subsection-header">
                                 <i class="fas fa-flask"></i> Otros Marcadores
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Hemoglobina (g/dL)</label>
-                                <input type="number" class="form-control" id="hemoglobina" name="hemoglobina"
-                                       step="0.1" value="{{ patient.hemoglobina or '' }}">
+                                <input type="number" class="form-control" id="hemoglobina" name="hemoglobina" step="0.1"
+                                    value="{{ patient.hemoglobina or '' }}">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Ferritina (ng/mL)</label>
-                                <input type="number" class="form-control" id="ferritina" name="ferritina"
-                                       step="0.1" value="{{ patient.ferritina or '' }}">
+                                <input type="number" class="form-control" id="ferritina" name="ferritina" step="0.1"
+                                    value="{{ patient.ferritina or '' }}">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Vitamina D (ng/mL)</label>
-                                <input type="number" class="form-control" id="vitamina_d" name="vitamina_d"
-                                       step="0.1" value="{{ patient.vitamina_d or '' }}">
+                                <input type="number" class="form-control" id="vitamina_d" name="vitamina_d" step="0.1"
+                                    value="{{ patient.vitamina_d or '' }}">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Vitamina B12 (pg/mL)</label>
                                 <input type="number" class="form-control" id="vitamina_b12" name="vitamina_b12"
-                                       step="0.1" value="{{ patient.vitamina_b12 or '' }}">
+                                    step="0.1" value="{{ patient.vitamina_b12 or '' }}">
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- SECCIÓN 4: ESTILO DE VIDA -->
             <div class="section-accordion">
-                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse" data-bs-target="#section4">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#section4">
                     <div class="section-icon orange">
                         <i class="fas fa-heart-pulse"></i>
                     </div>
@@ -468,75 +482,618 @@
                                 </label>
                                 <select class="form-select" id="horas_sueno" name="horas_sueno">
                                     <option value="">Seleccionar</option>
-                                    <option value="3-5" {{ 'selected' if patient.horas_sueno == '3-5' }}>3 a 5 horas</option>
-                                    <option value="5-6" {{ 'selected' if patient.horas_sueno == '5-6' }}>5 a 6 horas</option>
-                                    <option value="6-7" {{ 'selected' if patient.horas_sueno == '6-7' }}>6 a 7 horas</option>
-                                    <option value="7-8" {{ 'selected' if patient.horas_sueno == '7-8' }}>7 a 8 horas</option>
-                                    <option value="+8" {{ 'selected' if patient.horas_sueno == '+8' }}>Más de 8 horas</option>
+                                    <option value="3-5" {{ 'selected' if patient.horas_sueno=='3-5' }}>3 a 5 horas
+                                    </option>
+                                    <option value="5-6" {{ 'selected' if patient.horas_sueno=='5-6' }}>5 a 6 horas
+                                    </option>
+                                    <option value="6-7" {{ 'selected' if patient.horas_sueno=='6-7' }}>6 a 7 horas
+                                    </option>
+                                    <option value="7-8" {{ 'selected' if patient.horas_sueno=='7-8' }}>7 a 8 horas
+                                    </option>
+                                    <option value="+8" {{ 'selected' if patient.horas_sueno=='+8' }}>Más de 8 horas
+                                    </option>
                                 </select>
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <label class="form-label">
                                     <i class="fas fa-star"></i> Calidad del Sueño (1-10)
                                 </label>
-                                <input type="range" class="form-range" id="calidad_sueno" name="calidad_sueno"
-                                       min="1" max="10" value="{{ patient.calidad_sueno or 5 }}">
+                                <input type="range" class="form-range" id="calidad_sueno" name="calidad_sueno" min="1"
+                                    max="10" value="{{ patient.calidad_sueno or 5 }}"
+                                    oninput="document.getElementById('calidadSuenoValue').innerText = this.value">
                                 <div class="text-center">
-                                    <span id="calidadSuenoValue" class="fw-bold">{{ patient.calidad_sueno or 5 }}</span>/10
+                                    <span id="calidadSuenoValue" class="fw-bold">{{ patient.calidad_sueno or 5
+                                        }}</span>/10
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <label class="form-label">
                                     <i class="fas fa-brain"></i> Nivel de Estrés (1-10)
                                 </label>
-                                <input type="range" class="form-range" id="nivel_estres" name="nivel_estres"
-                                       min="1" max="10" value="{{ patient.nivel_estres or 5 }}">
+                                <input type="range" class="form-range" id="nivel_estres" name="nivel_estres" min="1"
+                                    max="10" value="{{ patient.nivel_estres or 5 }}"
+                                    oninput="document.getElementById('estresValue').innerText = this.value">
                                 <div class="text-center">
                                     <span id="estresValue" class="fw-bold">{{ patient.nivel_estres or 5 }}</span>/10
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <label class="form-label">
                                     <i class="fas fa-running"></i> Actividad Física
                                 </label>
-                                <select class="form-select" id="actividad_fisica" name="actividad_fisica" onchange="calcularGET()">
+                                <select class="form-select" id="actividad_fisica" name="actividad_fisica"
+                                    onchange="calcularGET()">
                                     <option value="">Seleccionar</option>
-                                    <option value="sedentario" {{ 'selected' if patient.actividad_fisica == 'sedentario' }}>Sedentario</option>
-                                    <option value="ligero" {{ 'selected' if patient.actividad_fisica == 'ligero' }}>Ligero (1-2x/sem)</option>
-                                    <option value="moderado" {{ 'selected' if patient.actividad_fisica == 'moderado' }}>Moderado (3-4x/sem)</option>
-                                    <option value="activo" {{ 'selected' if patient.actividad_fisica == 'activo' }}>Activo (5-6x/sem)</option>
-                                    <option value="muy_activo" {{ 'selected' if patient.actividad_fisica == 'muy_activo' }}>Muy Activo (diario)</option>
+                                    <option value="sedentario" {{ 'selected' if patient.actividad_fisica=='sedentario'
+                                        }}>Sedentario</option>
+                                    <option value="ligero" {{ 'selected' if patient.actividad_fisica=='ligero' }}>Ligero
+                                        (1-2x/sem)</option>
+                                    <option value="moderado" {{ 'selected' if patient.actividad_fisica=='moderado' }}>
+                                        Moderado (3-4x/sem)</option>
+                                    <option value="activo" {{ 'selected' if patient.actividad_fisica=='activo' }}>Activo
+                                        (5-6x/sem)</option>
+                                    <option value="muy_activo" {{ 'selected' if patient.actividad_fisica=='muy_activo'
+                                        }}>Muy Activo (diario)</option>
                                 </select>
                             </div>
-                            
+
                             <div class="col-md-4">
-                                <label class="form-label">
-                                    <i class="fas fa-dumbbell"></i> Tipo de Ejercicio
-                                </label>
+                                <label class="form-label">Tipo de Ejercicio</label>
                                 <input type="text" class="form-control" id="tipo_ejercicio" name="tipo_ejercicio"
-                                       value="{{ patient.tipo_ejercicio or '' }}" placeholder="Ej: Caminata, pesas, yoga">
+                                    value="{{ patient.tipo_ejercicio or '' }}">
                             </div>
-                            
+
+                            <div class="col-md-4">
+                                <label class="form-label">Duración (min/sesión)</label>
+                                <input type="number" class="form-control" id="duracion_ejercicio"
+                                    name="duracion_ejercicio" value="{{ patient.duracion_ejercicio or '' }}">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Percepción Esfuerzo (1-10)</label>
+                                <input type="number" class="form-control" id="percepcion_esfuerzo"
+                                    name="percepcion_esfuerzo" min="1" max="10"
+                                    value="{{ patient.percepcion_esfuerzo or '' }}">
+                            </div>
+
                             <div class="col-md-4">
                                 <label class="form-label">
-                                    <i class="fas fa-smoking"></i> ¿Fuma?
+                                    <i class="fas fa-smoking"></i> Hábito Tabáquico
                                 </label>
                                 <select class="form-select" id="fuma" name="fuma">
-                                    <option value="false" {{ 'selected' if not patient.fuma }}>No</option>
-                                    <option value="true" {{ 'selected' if patient.fuma }}>Sí</option>
+                                    <option value="false" {{ 'selected' if not patient.fuma }}>No fuma</option>
+                                    <option value="true" {{ 'selected' if patient.fuma }}>Fuma</option>
                                 </select>
+                            </div>
+
+                            <div class="col-md-4" id="fumaDetails" style="{{ 'display:none' if not patient.fuma }}">
+                                <label class="form-label">Cigarrillos/día</label>
+                                <input type="number" class="form-control" id="cigarrillos_dia" name="cigarrillos_dia"
+                                    value="{{ patient.cigarrillos_dia or '' }}">
+                            </div>
+
+                            <script>
+                                document.getElementById('fuma').addEventListener('change', function () {
+                                    document.getElementById('fumaDetails').style.display = this.value === 'true' ? 'block' : 'none';
+                                });
+                            </script>
+
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- SECCIÓN 4b: CONDUCTA Y ENTORNO -->
+            <div class="section-accordion">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#section4b">
+                    <div class="section-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <span>4b. Conducta y Entorno</span>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
+                </button>
+                <div class="collapse" id="section4b">
+                    <div class="accordion-content">
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-briefcase"></i> Profesión
+                                </label>
+                                <input type="text" class="form-control" id="profesion" name="profesion"
+                                    value="{{ patient.profesion or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-laptop-house"></i> Teletrabajo
+                                </label>
+                                <input type="text" class="form-control" id="teletrabajo" name="teletrabajo"
+                                    value="{{ patient.teletrabajo or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-utensils"></i> Quién Cocina
+                                </label>
+                                <input type="text" class="form-control" id="quien_cocina" name="quien_cocina"
+                                    value="{{ patient.quien_cocina or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-users"></i> Con Quién Vive
+                                </label>
+                                <input type="text" class="form-control" id="con_quien_vive" name="con_quien_vive"
+                                    value="{{ patient.con_quien_vive or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-map-marker-alt"></i> Dónde Come
+                                </label>
+                                <input type="text" class="form-control" id="donde_come" name="donde_come"
+                                    value="{{ patient.donde_come or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-motorcycle"></i> Delivery/Restaurante (veces/sem)
+                                </label>
+                                <input type="number" class="form-control" id="delivery_restaurante"
+                                    name="delivery_restaurante" min="0" max="7"
+                                    value="{{ patient.delivery_restaurante or '' }}">
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="subsection-header"><i class="fas fa-clock"></i> Horarios y Hábitos</div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Horario Desayuno</label>
+                                <input type="time" class="form-control" id="horario_desayuno" name="horario_desayuno"
+                                    value="{{ patient.horario_desayuno or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Horario Almuerzo</label>
+                                <input type="time" class="form-control" id="horario_almuerzo" name="horario_almuerzo"
+                                    value="{{ patient.horario_almuerzo or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Horario Cena</label>
+                                <input type="time" class="form-control" id="horario_cena" name="horario_cena"
+                                    value="{{ patient.horario_cena or '' }}">
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="pica_entre_comidas"
+                                        name="pica_entre_comidas" value="true" {{ 'checked' if
+                                        patient.pica_entre_comidas }}>
+                                    <label class="form-check-label" for="pica_entre_comidas">
+                                        Pica entre comidas
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="come_frente_tv"
+                                        name="come_frente_tv" value="true" {{ 'checked' if patient.come_frente_tv }}>
+                                    <label class="form-check-label" for="come_frente_tv">
+                                        Come frente a pantallas
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="come_rapido" name="come_rapido"
+                                        value="true" {{ 'checked' if patient.come_rapido }}>
+                                    <label class="form-check-label" for="come_rapido">
+                                        Come rápido
+                                    </label>
+                                </div>
+                            </div>
+
+                            {% if patient.menstruacion %}
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-venus"></i> Menstruación
+                                </label>
+                                <input type="text" class="form-control" id="menstruacion" name="menstruacion"
+                                    value="{{ patient.menstruacion or '' }}">
+                            </div>
+                            {% endif %}
+
+                            {% if patient.restricciones_alimentarias %}
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="fas fa-ban"></i> Restricciones Alimentarias
+                                </label>
+                                <div class="d-flex flex-wrap gap-2" id="restriccionesDisplay">
+                                    {% set restricciones = patient.restricciones_alimentarias %}
+                                    {% if restricciones is iterable and restricciones is not string %}
+                                    {% for r in restricciones %}
+                                    <span class="badge bg-warning text-dark"
+                                        style="font-size: 0.85rem; padding: 0.5rem 0.75rem; border-radius: 20px;">
+                                        <i class="fas fa-ban me-1"></i>{{ r|replace('_', ' ')|capitalize }}
+                                    </span>
+                                    {% endfor %}
+                                    {% else %}
+                                    <span class="text-muted">{{ restricciones }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 4c: SÍNTOMAS GI Y SALUD DIGESTIVA -->
+            <div class="section-accordion">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#section4c">
+                    <div class="section-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                        <i class="fas fa-stomach"></i>
+                    </div>
+                    <span>4c. Síntomas GI y Salud Digestiva</span>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
+                </button>
+                <div class="collapse" id="section4c">
+                    <div class="accordion-content">
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-toilet"></i> Frecuencia de Evacuación
+                                </label>
+                                <input type="text" class="form-control" id="frecuencia_evacuacion"
+                                    name="frecuencia_evacuacion" value="{{ patient.frecuencia_evacuacion or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-fire-alt"></i> Reflujo
+                                </label>
+                                <select class="form-select" id="reflujo" name="reflujo">
+                                    <option value="">Seleccionar</option>
+                                    <option value="si" {{ 'selected' if patient.reflujo=='si' }}>Sí</option>
+                                    <option value="no" {{ 'selected' if patient.reflujo=='no' }}>No</option>
+                                </select>
+                            </div>
+                            {% if patient.reflujo == 'si' %}
+                            <div class="col-md-4">
+                                <label class="form-label">Alimento que gatilla reflujo</label>
+                                <input type="text" class="form-control" value="{{ patient.reflujo_alimento or '' }}"
+                                    id="reflujo_alimento" name="reflujo_alimento">
+                            </div>
+                            {% endif %}
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-wind"></i> Hinchazón
+                                </label>
+                                <select class="form-select" id="hinchazon" name="hinchazon">
+                                    <option value="">Seleccionar</option>
+                                    <option value="si" {{ 'selected' if patient.hinchazon=='si' }}>Sí</option>
+                                    <option value="no" {{ 'selected' if patient.hinchazon=='no' }}>No</option>
+                                </select>
+                            </div>
+                            {% if patient.hinchazon == 'si' %}
+                            <div class="col-md-4">
+                                <label class="form-label">Alimento que gatilla hinchazón</label>
+                                <input type="text" class="form-control" value="{{ patient.hinchazon_alimento or '' }}"
+                                    id="hinchazon_alimento" name="hinchazon_alimento">
+                            </div>
+                            {% endif %}
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-allergies"></i> Alergias Alimentarias
+                                </label>
+                                <select class="form-select" id="tiene_alergias" name="tiene_alergias">
+                                    <option value="">Seleccionar</option>
+                                    <option value="si" {{ 'selected' if patient.tiene_alergias=='si' }}>Sí</option>
+                                    <option value="no" {{ 'selected' if patient.tiene_alergias=='no' }}>No</option>
+                                </select>
+                            </div>
+                            {% if patient.tiene_alergias == 'si' and patient.alergias_alimento %}
+                            <div class="col-md-8">
+                                <label class="form-label">Alimentos con alergia</label>
+                                <input type="text" class="form-control" value="{{ patient.alergias_alimento or '' }}"
+                                    id="alergias_alimento" name="alergias_alimento">
+                            </div>
+                            {% endif %}
+
+                            {% if patient.consistencia_heces %}
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-chart-bar"></i> Consistencia (Bristol)
+                                </label>
+                                <input type="text" class="form-control" value="{{ patient.consistencia_heces or '' }}"
+                                    id="consistencia_heces" name="consistencia_heces">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 4d: CONSUMO DE LÍQUIDOS -->
+            <div class="section-accordion">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#section4d">
+                    <div class="section-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <span>4d. Consumo de Líquidos</span>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
+                </button>
+                <div class="collapse" id="section4d">
+                    <div class="accordion-content">
+                        <div class="row g-4">
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-glass-water"></i> Agua (litros/día)
+                                </label>
+                                <input type="number" class="form-control" id="consumo_agua_litros"
+                                    name="consumo_agua_litros" step="0.1" min="0" max="10"
+                                    value="{{ patient.consumo_agua_litros or '' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-coffee"></i> Café (tazas/día)
+                                </label>
+                                <input type="number" class="form-control" id="consumo_cafe_tazas"
+                                    name="consumo_cafe_tazas" min="0" max="20"
+                                    value="{{ patient.consumo_cafe_tazas or '' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-mug-hot"></i> Té (tazas/día)
+                                </label>
+                                <input type="number" class="form-control" id="consumo_te_tazas" name="consumo_te_tazas"
+                                    min="0" max="20" value="{{ patient.consumo_te_tazas or '' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-wine-glass-alt"></i> Alcohol
+                                </label>
+                                <input type="text" class="form-control" id="consumo_alcohol_view" name="consumo_alcohol"
+                                    value="{{ patient.consumo_alcohol or '' }}">
+                            </div>
+                            {% if patient.tipo_alcohol %}
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-beer"></i> Tipo de Alcohol
+                                </label>
+                                <input type="text" class="form-control" id="tipo_alcohol" name="tipo_alcohol"
+                                    value="{{ patient.tipo_alcohol or '' }}">
+                            </div>
+                            {% endif %}
+                            {% if patient.consumo_bebidas_azucaradas %}
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-glass-whiskey"></i> Bebidas Azucaradas
+                                </label>
+                                <input type="text" class="form-control" id="consumo_bebidas_azucaradas"
+                                    name="consumo_bebidas_azucaradas"
+                                    value="{{ patient.consumo_bebidas_azucaradas or '' }}">
+                            </div>
+                            {% endif %}
+
+                            <div class="col-12 mt-4">
+                                <h6 class="text-primary fw-bold mb-3"><i class="fas fa-utensils me-2"></i>Hábitos y
+                                    Horarios (Ingesta Pública)</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label class="small text-muted d-block">Desayuno</label>
+                                        <strong>{{ patient.horario_desayuno or '--:--' }}</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="small text-muted d-block">Almuerzo</label>
+                                        <strong>{{ patient.horario_almuerzo or '--:--' }}</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="small text-muted d-block">Cena</label>
+                                        <strong>{{ patient.horario_cena or '--:--' }}</strong>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="small text-muted d-block">Cigarrillos/día</label>
+                                        <strong>{{ patient.cigarrillos_dia if patient.fuma else '0' }}</strong>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    {% if patient.pica_entre_comidas %}<span class="badge bg-info me-1">Pica entre
+                                        comidas</span>{% endif %}
+                                    {% if patient.come_frente_tv %}<span class="badge bg-info me-1">Frente a
+                                        TV/Celular</span>{% endif %}
+                                    {% if patient.come_rapido %}<span class="badge bg-info me-1">Come rápido</span>{%
+                                    endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- SECCIÓN 4e: REGISTRO 24 HORAS Y FRECUENCIA DE CONSUMO -->
+            <div class="section-accordion">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#section4e">
+                    <div class="section-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <span>4e. Registro 24 Horas y Frecuencia de Consumo</span>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
+                </button>
+                <div class="collapse" id="section4e">
+                    <div class="accordion-content">
+
+                        <!-- REGISTRO 24 HORAS -->
+                        <div class="subsection-header">
+                            <i class="fas fa-clock"></i> Registro Alimentario 24 Horas
+                        </div>
+
+                        <div id="registro24hContainer">
+                            {% set registro = patient.registro_24h %}
+                            {% if registro and registro is mapping %}
+                            {% set meal_labels = {'desayuno': 'Desayuno', 'colacion1': 'Colación AM', 'almuerzo':
+                            'Almuerzo', 'colacion2': 'Colación PM', 'cena': 'Cena'} %}
+                            {% for meal_key, items in registro.items() %}
+                            <div class="card mb-3"
+                                style="border: 1px solid var(--bt-border-default, #e2e8f0); border-radius: 12px; overflow: hidden;">
+                                <div class="card-header"
+                                    style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-bottom: 1px solid #bbf7d0; padding: 0.75rem 1rem;">
+                                    <h6 class="mb-0" style="font-weight: 600; color: #166534;">
+                                        <i
+                                            class="fas fa-{{ 'sun' if meal_key == 'desayuno' else 'apple-alt' if 'colacion' in meal_key else 'hamburger' if meal_key == 'almuerzo' else 'moon' }} me-2"></i>
+                                        {{ meal_labels.get(meal_key, meal_key|capitalize) }}
+                                        <span class="badge bg-success ms-2">{{ items|length }} alimento{{ 's' if
+                                            items|length > 1 }}</span>
+                                    </h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <table class="table table-sm mb-0" style="font-size: 0.875rem;">
+                                        <thead style="background: #f8fafc;">
+                                            <tr>
+                                                <th style="padding: 0.5rem 1rem; font-weight: 600; color: #64748b;">
+                                                    Grupo</th>
+                                                <th style="padding: 0.5rem 1rem; font-weight: 600; color: #64748b;">
+                                                    Alimento</th>
+                                                <th style="padding: 0.5rem 1rem; font-weight: 600; color: #64748b;">
+                                                    Cantidad</th>
+                                                <th style="padding: 0.5rem 1rem; font-weight: 600; color: #64748b;">
+                                                    Medida</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% if items is iterable and items is not string %}
+                                            {% for item in items %}
+                                            <tr>
+                                                <td style="padding: 0.5rem 1rem;">
+                                                    <span class="badge"
+                                                        style="background: #e0f2fe; color: #0369a1; font-size: 0.8rem;">{{
+                                                        item.grupo if item is mapping else item }}</span>
+                                                </td>
+                                                <td style="padding: 0.5rem 1rem; font-weight: 500;">{{ item.alimento
+                                                    if
+                                                    item is mapping else '-' }}</td>
+                                                <td style="padding: 0.5rem 1rem;">{{ item.cantidad if item is
+                                                    mapping
+                                                    else '-' }}</td>
+                                                <td style="padding: 0.5rem 1rem; color: #64748b;">{{ item.medida if
+                                                    item
+                                                    is mapping else '-' }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% elif registro and registro is string %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <pre
+                                    style="white-space: pre-wrap; margin: 0; font-family: inherit;">{{ registro }}</pre>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4" style="color: #94a3b8;">
+                                <i class="fas fa-utensils fa-2x mb-2"></i>
+                                <p class="mb-0">No hay registro alimentario 24h registrado</p>
+                                <small>Se completará cuando se llene el formulario de ingesta</small>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- FRECUENCIA DE CONSUMO SEMANAL -->
+                        <div class="subsection-header mt-4">
+                            <i class="fas fa-calendar-week"></i> Frecuencia de Consumo Semanal
+                        </div>
+
+                        <div id="frecuenciaConsumoContainer">
+                            {% set frecuencia = patient.frecuencia_consumo %}
+                            {% if frecuencia and frecuencia is mapping %}
+                            {% set freq_labels = {
+                            'frutas': '🍎 Frutas',
+                            'verduras': '🥦 Verduras',
+                            'cereales': '🌾 Cereales y Granos',
+                            'lacteos': '🥛 Lácteos',
+                            'carnes': '🥩 Carnes Rojas',
+                            'pollo': '🍗 Pollo/Aves',
+                            'pescado': '🐟 Pescado/Mariscos',
+                            'legumbres': '🫘 Legumbres',
+                            'huevos': '🥚 Huevos',
+                            'frituras': '🍟 Frituras',
+                            'snacks': '🍿 Snacks/Golosinas',
+                            'bebidas_azucaradas': '🥤 Bebidas Azucaradas',
+                            'comida_rapida': '🍔 Comida Rápida',
+                            'embutidos': '🌭 Embutidos',
+                            'agua': '💧 Agua',
+                            'pan': '🍞 Pan',
+                            'aceite': '🫒 Aceite/Grasas'
+                            } %}
+                            {% set freq_values = {
+                            'nunca': 'Nunca',
+                            '1-3_mes': '1-3x al mes',
+                            '1_sem': '1x a la semana',
+                            '2-4_sem': '2-4x a la semana',
+                            '5-6_sem': '5-6x a la semana',
+                            'diario': 'Diario',
+                            '2_dia': '2+ al día'
+                            } %}
+                            <div class="table-responsive">
+                                <table class="table table-sm" style="font-size: 0.875rem;">
+                                    <thead style="background: linear-gradient(135deg, #faf5ff, #f3e8ff);">
+                                        <tr>
+                                            <th
+                                                style="padding: 0.75rem 1rem; font-weight: 600; color: #6b21a8; width: 40%;">
+                                                Grupo Alimentario</th>
+                                            <th style="padding: 0.75rem 1rem; font-weight: 600; color: #6b21a8;">
+                                                Frecuencia</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for key, value in frecuencia.items() %}
+                                        <tr>
+                                            <td style="padding: 0.5rem 1rem; font-weight: 500;">
+                                                {{ freq_labels.get(key, key|replace('_', ' ')|capitalize) }}
+                                            </td>
+                                            <td style="padding: 0.5rem 1rem;">
+                                                {% set freq_color = '#22c55e' if value in ['diario', '2_diario',
+                                                '5-6_sem'] else '#f59e0b' if value in ['3-4_sem', '1-2_sem'] else
+                                                '#ef4444' if value == 'nunca' else '#94a3b8' %}
+                                                <span class="badge"
+                                                    style="background: {{ freq_color }}; color: white; font-size: 0.8rem; padding: 0.4rem 0.75rem; border-radius: 20px;">
+                                                    {{ freq_values.get(value, value|replace('_', ' ')) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% elif frecuencia and frecuencia is string %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <pre
+                                    style="white-space: pre-wrap; margin: 0; font-family: inherit;">{{ frecuencia }}</pre>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4" style="color: #94a3b8;">
+                                <i class="fas fa-calendar-week fa-2x mb-2"></i>
+                                <p class="mb-0">No hay datos de frecuencia de consumo</p>
+                                <small>Se completará cuando se llene el formulario de ingesta</small>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
             <!-- SECCIÓN 5: REQUERIMIENTOS NUTRICIONALES -->
             <div class="section-accordion">
-                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse" data-bs-target="#section5">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#section5">
                     <div class="section-icon teal">
                         <i class="fas fa-calculator"></i>
                     </div>
@@ -552,70 +1109,75 @@
                                     <div class="label">GEB (kcal)</div>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <div class="calculated-field">
                                     <div class="value" id="getValue">{{ patient.get_kcal or '-' }}</div>
                                     <div class="label">GET (kcal)</div>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-4">
-                                <button type="button" class="btn btn-primary w-100 h-100" onclick="calcularRequerimientos()">
+                                <button type="button" class="btn btn-primary w-100 h-100"
+                                    onclick="calcularRequerimientos()">
                                     <i class="fas fa-sync-alt me-2"></i>
                                     Recalcular
                                 </button>
                             </div>
-                            
+
                             <div class="subsection-header">
                                 <i class="fas fa-chart-pie"></i> Distribución de Macronutrientes
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Proteínas (%)</label>
-                                <input type="number" class="form-control" id="proteinas_porcentaje" name="proteinas_porcentaje"
-                                       value="{{ patient.proteinas_porcentaje or 20 }}" min="10" max="40" onchange="calcularMacros()">
+                                <input type="number" class="form-control" id="proteinas_porcentaje"
+                                    name="proteinas_porcentaje" value="{{ patient.proteinas_porcentaje or 20 }}"
+                                    min="10" max="40" onchange="calcularMacros()">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Carbohidratos (%)</label>
-                                <input type="number" class="form-control" id="carbohidratos_porcentaje" name="carbohidratos_porcentaje"
-                                       value="{{ patient.carbohidratos_porcentaje or 50 }}" min="30" max="70" onchange="calcularMacros()">
+                                <input type="number" class="form-control" id="carbohidratos_porcentaje"
+                                    name="carbohidratos_porcentaje" value="{{ patient.carbohidratos_porcentaje or 50 }}"
+                                    min="30" max="70" onchange="calcularMacros()">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <label class="form-label">Grasas (%)</label>
-                                <input type="number" class="form-control" id="grasas_porcentaje" name="grasas_porcentaje"
-                                       value="{{ patient.grasas_porcentaje or 30 }}" min="15" max="45" onchange="calcularMacros()">
+                                <input type="number" class="form-control" id="grasas_porcentaje"
+                                    name="grasas_porcentaje" value="{{ patient.grasas_porcentaje or 30 }}" min="15"
+                                    max="45" onchange="calcularMacros()">
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <div class="text-center">
                                     <span class="badge bg-success" id="totalPorcentaje">100%</span>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <div class="calculated-field">
                                     <div class="value" id="proteinasG">{{ patient.proteinas_g or '-' }}g</div>
                                     <div class="label">Proteínas</div>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <div class="calculated-field">
-                                    <div class="value" id="carbohidratosG">{{ patient.carbohidratos_g or '-' }}g</div>
+                                    <div class="value" id="carbohidratosG">{{ patient.carbohidratos_g or '-' }}g
+                                    </div>
                                     <div class="label">Carbohidratos</div>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <div class="calculated-field">
                                     <div class="value" id="grasasG">{{ patient.grasas_g or '-' }}g</div>
                                     <div class="label">Grasas</div>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-3">
                                 <div class="calculated-field">
                                     <div class="value" id="fibraG">{{ patient.fibra_g or '-' }}g</div>
@@ -626,10 +1188,11 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- SECCIÓN 6: DIAGNÓSTICO Y PLAN -->
             <div class="section-accordion">
-                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse" data-bs-target="#section6">
+                <button type="button" class="accordion-button-custom collapsed" data-bs-toggle="collapse"
+                    data-bs-target="#section6">
                     <div class="section-icon red">
                         <i class="fas fa-clipboard-check"></i>
                     </div>
@@ -643,40 +1206,43 @@
                                 <label class="form-label">
                                     <i class="fas fa-diagnoses"></i> Diagnóstico Nutricional
                                 </label>
-                                <textarea class="form-control" id="diagnostico_nutricional" name="diagnostico_nutricional"
-                                          rows="4">{{ patient.diagnostico_nutricional or '' }}</textarea>
+                                <textarea class="form-control" id="diagnostico_nutricional"
+                                    name="diagnostico_nutricional"
+                                    rows="4">{{ patient.diagnostico_nutricional or '' }}</textarea>
                             </div>
-                            
+
                             <div class="col-12">
                                 <label class="form-label">
                                     <i class="fas fa-tasks"></i> Objetivos Nutricionales
                                 </label>
-                                <textarea class="form-control" id="objetivos_nutricionales" name="objetivos_nutricionales"
-                                          rows="3" placeholder="Objetivos SMART...">{{ patient.objetivos_nutricionales or '' }}</textarea>
+                                <textarea class="form-control" id="objetivos_nutricionales"
+                                    name="objetivos_nutricionales" rows="3"
+                                    placeholder="Objetivos SMART...">{{ patient.objetivos_nutricionales or '' }}</textarea>
                             </div>
-                            
+
                             <div class="col-12">
                                 <label class="form-label">
                                     <i class="fas fa-list-alt"></i> Indicaciones
                                 </label>
                                 <textarea class="form-control" id="indicaciones" name="indicaciones"
-                                          rows="4">{{ patient.indicaciones or '' }}</textarea>
+                                    rows="4">{{ patient.indicaciones or '' }}</textarea>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label class="form-label">
                                     <i class="fas fa-calendar-check"></i> Fecha Próxima Cita
                                 </label>
-                                <input type="datetime-local" class="form-control" id="fecha_proxima_cita" 
-                                       name="fecha_proxima_cita" value="{{ patient.fecha_proxima_cita.strftime('%Y-%m-%dT%H:%M') if patient.fecha_proxima_cita else '' }}">
+                                <input type="datetime-local" class="form-control" id="fecha_proxima_cita"
+                                    name="fecha_proxima_cita"
+                                    value="{{ patient.fecha_proxima_cita.strftime('%Y-%m-%dT%H:%M') if patient.fecha_proxima_cita else '' }}">
                             </div>
-                            
+
                             <div class="col-12">
                                 <label class="form-label">
                                     <i class="fas fa-sticky-note"></i> Notas de Seguimiento
                                 </label>
                                 <textarea class="form-control" id="notas_seguimiento" name="notas_seguimiento"
-                                          rows="3">{{ patient.notas_seguimiento or '' }}</textarea>
+                                    rows="3">{{ patient.notas_seguimiento or '' }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -684,7 +1250,7 @@
             </div>
         </form>
     </div>
-    
+
     <!-- Quick Navigation -->
     <div class="quick-nav">
         <button class="quick-nav-item active" onclick="scrollToSection('section1')" title="Antecedentes">
@@ -699,6 +1265,18 @@
         <button class="quick-nav-item" onclick="scrollToSection('section4')" title="Estilo de Vida">
             <i class="fas fa-heart-pulse"></i>
         </button>
+        <button class="quick-nav-item" onclick="scrollToSection('section4b')" title="Conducta">
+            <i class="fas fa-home"></i>
+        </button>
+        <button class="quick-nav-item" onclick="scrollToSection('section4c')" title="Síntomas GI">
+            <i class="fas fa-stomach"></i>
+        </button>
+        <button class="quick-nav-item" onclick="scrollToSection('section4d')" title="Líquidos">
+            <i class="fas fa-tint"></i>
+        </button>
+        <button class="quick-nav-item" onclick="scrollToSection('section4e')" title="Registro 24h">
+            <i class="fas fa-utensils"></i>
+        </button>
         <button class="quick-nav-item" onclick="scrollToSection('section5')" title="Requerimientos">
             <i class="fas fa-calculator"></i>
         </button>
@@ -706,7 +1284,7 @@
             <i class="fas fa-clipboard-check"></i>
         </button>
     </div>
-    
+
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner">
@@ -716,8 +1294,9 @@
             <p class="mb-0 fw-bold">Guardando ficha...</p>
         </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/patient-file.js"></script>
 </body>
+
 </html>

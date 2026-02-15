@@ -24,6 +24,52 @@ class SubscriptionPlan:
     PROFESSIONAL = 'professional'  # Nutricionista - ilimitado
     ENTERPRISE = 'enterprise'  # Empresa - ilimitado
 
+# Especialidades de nutricionistas (key, label)
+NUTRITIONIST_SPECIALTIES = [
+    # Clinica / Medicina
+    ('nutricion_clinica', 'Nutricion Clinica'),
+    ('medicina_integrativa', 'Medicina Integrativa'),
+    ('nutricion_oncologica', 'Nutricion Oncologica'),
+    ('nutricion_renal', 'Nutricion Renal'),
+    ('nutricion_hepatica', 'Nutricion Hepatica'),
+    ('diabetes_metabolismo', 'Diabetes y Metabolismo'),
+    ('enfermedades_cardiovasculares', 'Enfermedades Cardiovasculares'),
+    ('nutricion_critica', 'Nutricion en Paciente Critico'),
+    # Peso y Composicion Corporal
+    ('control_peso', 'Control de Peso y Composicion Corporal'),
+    ('obesidad_cirugia_bariatrica', 'Obesidad y Cirugia Bariatrica'),
+    # Deporte y Rendimiento
+    ('nutricion_deportiva', 'Nutricion Deportiva'),
+    ('rendimiento_atletico', 'Rendimiento Atletico de Alto Nivel'),
+    # Etapas de Vida
+    ('nutricion_pediatrica', 'Nutricion Pediatrica'),
+    ('nutricion_geriatrica', 'Nutricion Geriatrica'),
+    ('embarazo_lactancia', 'Embarazo y Lactancia'),
+    ('nutricion_adolescente', 'Nutricion del Adolescente'),
+    # Digestivo y Alergias
+    ('gastroenterologia_nutricional', 'Gastroenterologia Nutricional'),
+    ('alergias_intolerancias', 'Alergias e Intolerancias Alimentarias'),
+    ('enfermedad_celiaca', 'Enfermedad Celiaca'),
+    # Salud Mental y Conducta
+    ('tca_conducta_alimentaria', 'Trastornos de Conducta Alimentaria'),
+    ('nutricion_psicologia', 'Nutricion y Psicologia (Mindful Eating)'),
+    # Dietas Especiales
+    ('alimentacion_vegetariana_vegana', 'Alimentacion Vegetariana y Vegana'),
+    ('nutricion_funcional', 'Nutricion Funcional'),
+    ('nutrigenomica', 'Nutrigenomica y Nutricion Personalizada'),
+    # Comunitaria y Empresarial
+    ('nutricion_comunitaria', 'Nutricion Comunitaria y Salud Publica'),
+    ('nutricion_empresarial', 'Nutricion Empresarial y Corporativa'),
+]
+
+SPECIALTIES_DICT = {key: label for key, label in NUTRITIONIST_SPECIALTIES}
+
+class BookingStatus:
+    PENDING = 'pendiente'
+    CONFIRMED = 'confirmada'
+    CANCELLED = 'cancelada'
+    COMPLETED = 'completada'
+
 
 # ============================================
 # MODELO: USER
@@ -52,7 +98,11 @@ class User(UserMixin, db.Model):
     
     # ===== CAMPOS ESPECÍFICOS NUTRICIONISTA =====
     license_number = db.Column(db.String(50))
-    specialization = db.Column(db.String(100))
+    specialization = db.Column(db.String(500))  # Comma-separated specialty keys
+    bio = db.Column(db.Text)  # Public bio/description
+    consulta_precio = db.Column(db.Integer)  # Consultation price in CLP
+    consulta_duracion = db.Column(db.Integer, default=60)  # Duration in minutes
+    banco_info = db.Column(db.Text)  # JSON: {banco, tipo_cuenta, numero, rut, email}
     
     # ===== CAMPOS ESPECÍFICOS EMPRESA =====
     company_name = db.Column(db.String(100))
@@ -74,8 +124,14 @@ class User(UserMixin, db.Model):
                              foreign_keys='UserRecipe.user_id')
     reviews = db.relationship('Review', backref='user', lazy='dynamic',
                             cascade='all, delete-orphan')
-    patient_files = db.relationship('PatientFile', backref='nutritionist', 
+    patient_files = db.relationship('PatientFile', backref='nutritionist',
                                    lazy='dynamic', cascade='all, delete-orphan')
+    schedules = db.relationship('NutritionistSchedule', backref='nutritionist',
+                               lazy='dynamic', cascade='all, delete-orphan')
+    bookings_as_nutri = db.relationship('Booking', backref='nutritionist',
+                                        lazy='dynamic', cascade='all, delete-orphan')
+    nutri_reviews = db.relationship('NutritionistReview', backref='nutritionist',
+                                    lazy='dynamic', cascade='all, delete-orphan')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -122,9 +178,34 @@ class User(UserMixin, db.Model):
         return self.recipes.order_by(UserRecipe.created_at.desc()).limit(limit).all()
     
     def get_patient_count(self):
-        """Obtener número de pacientes activos"""
+        """Obtener numero de pacientes activos"""
         return self.patient_files.filter_by(is_active=True).count()
-    
+
+    def get_specialties_list(self):
+        """Return list of specialty keys from comma-separated string"""
+        if not self.specialization:
+            return []
+        return [s.strip() for s in self.specialization.split(',') if s.strip()]
+
+    def get_specialties_labels(self):
+        """Return list of human-readable specialty labels"""
+        return [SPECIALTIES_DICT.get(k, k) for k in self.get_specialties_list()]
+
+    def has_specialty(self, key):
+        """Check if nutritionist has a specific specialty"""
+        return key in self.get_specialties_list()
+
+    def get_average_nutri_rating(self):
+        """Average rating from NutritionistReview"""
+        reviews = self.nutri_reviews.all()
+        if not reviews:
+            return 0
+        return round(sum(r.rating for r in reviews) / len(reviews), 1)
+
+    def get_nutri_review_count(self):
+        """Count of nutritionist reviews"""
+        return self.nutri_reviews.count()
+
     def __repr__(self):
         return f'<User {self.email}>'
 
@@ -182,8 +263,94 @@ class Review(db.Model):
 
 
 # ============================================
+# MODELO: NUTRITIONIST REVIEW
+# ============================================
+
+class NutritionistReview(db.Model):
+    __tablename__ = 'nutritionist_reviews'
+
+    id = db.Column(db.Integer, primary_key=True)
+    reviewer_name = db.Column(db.String(100), nullable=False)
+    reviewer_email = db.Column(db.String(120))
+    nutritionist_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    booking_id = db.Column(db.Integer, db.ForeignKey('bookings.id'), nullable=True)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.CheckConstraint('rating >= 1 AND rating <= 5', name='check_nutri_rating_range'),
+    )
+
+    def __repr__(self):
+        return f'<NutritionistReview {self.rating}★>'
+
+
+# ============================================
+# MODELO: NUTRITIONIST SCHEDULE
+# ============================================
+
+class NutritionistSchedule(db.Model):
+    __tablename__ = 'nutritionist_schedules'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nutritionist_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    day_of_week = db.Column(db.Integer, nullable=False)  # 0=Monday, 6=Sunday
+    start_time = db.Column(db.String(5), nullable=False, default='09:00')
+    end_time = db.Column(db.String(5), nullable=False, default='17:00')
+    slot_duration = db.Column(db.Integer, default=60)  # minutes
+    is_active = db.Column(db.Boolean, default=True)
+
+    def get_time_slots(self):
+        """Generate list of available time slot start times"""
+        slots = []
+        start_h, start_m = map(int, self.start_time.split(':'))
+        end_h, end_m = map(int, self.end_time.split(':'))
+        current = start_h * 60 + start_m
+        end = end_h * 60 + end_m
+        while current + self.slot_duration <= end:
+            h, m = divmod(current, 60)
+            slots.append(f'{h:02d}:{m:02d}')
+            current += self.slot_duration
+        return slots
+
+    def __repr__(self):
+        days = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom']
+        return f'<Schedule {days[self.day_of_week]} {self.start_time}-{self.end_time}>'
+
+
+# ============================================
+# MODELO: BOOKING
+# ============================================
+
+class Booking(db.Model):
+    __tablename__ = 'bookings'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nutritionist_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    patient_file_id = db.Column(db.Integer, db.ForeignKey('patient_files.id'), nullable=True)
+    client_name = db.Column(db.String(100), nullable=False)
+    client_email = db.Column(db.String(120), nullable=False)
+    client_phone = db.Column(db.String(20))
+    specialty = db.Column(db.String(50))
+    booking_date = db.Column(db.Date, nullable=False)
+    booking_time = db.Column(db.String(5), nullable=False)  # "HH:MM"
+    status = db.Column(db.String(20), default=BookingStatus.PENDING)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    patient_file = db.relationship('PatientFile', backref='booking')
+
+    def get_specialty_label(self):
+        return SPECIALTIES_DICT.get(self.specialty, self.specialty or '')
+
+    def __repr__(self):
+        return f'<Booking {self.client_name} {self.booking_date} {self.booking_time}>'
+
+
+# ============================================
 # MODELO: PATIENT FILE (Solo Nutricionistas)
-# Versión 2.0 - Completo con todos los campos
+# Version 2.0 - Completo con todos los campos
 # ============================================
 
 class PatientFile(db.Model):
@@ -208,6 +375,7 @@ class PatientFile(db.Model):
     sexo = db.Column(db.String(20))
     email = db.Column(db.String(120))
     telefono = db.Column(db.String(20))
+    rut = db.Column(db.String(20))  # RUT chileno (ej: 12.345.678-9)
     direccion = db.Column(db.String(200))
     ocupacion = db.Column(db.String(100))
     
@@ -312,27 +480,19 @@ class PatientFile(db.Model):
     tsh = db.Column(db.Float)
     fecha_examenes = db.Column(db.String(20))
     
-    # ===== 4. EVALUACIÓN CLÍNICA =====
+    # ===== 4. EVALUACIÓN CLÍNICA (Signos y GI) =====
     presion_sistolica = db.Column(db.Integer)
     presion_diastolica = db.Column(db.Integer)
     frecuencia_cardiaca = db.Column(db.Integer)
     
-    # Signos clínicos (JSON)
+    # Signos clínicos (JSON string o Text)
     signos_clinicos = db.Column(db.Text)  # Pelo, uñas, piel, etc.
     
-    # Síntomas gastrointestinales
-    sintomas_gi = db.Column(db.Text)  # JSON: náuseas, vómitos, diarrea, etc.
-    frecuencia_evacuacion = db.Column(db.String(50))
+    # Síntomas gastrointestinales (JSON)
+    sintomas_gi = db.Column(db.JSON)  # JSON: náuseas, vómitos, diarrea, etc.
     consistencia_heces = db.Column(db.String(50))  # Escala Bristol
     
-    # ===== 5. EVALUACIÓN DIETÉTICA =====
-    # Recordatorio 24 horas (JSON)
-    recordatorio_24h = db.Column(db.Text)
-    
-    # Frecuencia de consumo (JSON)
-    frecuencia_consumo = db.Column(db.Text)
-    
-    # Hábitos alimentarios
+    # ===== 5. HÁBITOS ALIMENTARIOS Y LÍQUIDOS =====
     comidas_por_dia = db.Column(db.Integer)
     horario_desayuno = db.Column(db.String(10))
     horario_almuerzo = db.Column(db.String(10))
@@ -340,8 +500,6 @@ class PatientFile(db.Model):
     pica_entre_comidas = db.Column(db.Boolean, default=False)
     come_frente_tv = db.Column(db.Boolean, default=False)
     come_rapido = db.Column(db.Boolean, default=False)
-    quien_cocina = db.Column(db.String(100))
-    donde_come = db.Column(db.String(100))
     
     # Consumo de líquidos
     consumo_agua_litros = db.Column(db.Float)
@@ -350,6 +508,7 @@ class PatientFile(db.Model):
     consumo_bebidas_azucaradas = db.Column(db.String(50))
     consumo_alcohol = db.Column(db.String(50))
     tipo_alcohol = db.Column(db.String(100))
+
     
     # ===== 6. ESTILO DE VIDA =====
     horas_sueno = db.Column(db.String(20))
@@ -689,12 +848,41 @@ class PatientFile(db.Model):
             'sexo': self.sexo,
             'email': self.email,
             'telefono': self.telefono,
+            'rut': self.rut,
             'motivo_consulta': self.motivo_consulta,
             'objetivos': self.objetivos,
             'diagnosticos': self.diagnosticos,
             'medicamentos': self.medicamentos,
+            'suplementos': self.suplementos,
+
+            # Conducta y Entorno
+            'profesion': self.profesion,
+            'teletrabajo': self.teletrabajo,
+            'quien_cocina': self.quien_cocina,
+            'con_quien_vive': self.con_quien_vive,
+            'donde_come': self.donde_come,
+            'horario_desayuno': self.horario_desayuno,
+            'horario_almuerzo': self.horario_almuerzo,
+            'horario_cena': self.horario_cena,
+            'pica_entre_comidas': self.pica_entre_comidas,
+            'come_frente_tv': self.come_frente_tv,
+            'come_rapido': self.come_rapido,
+
+            # Antropometria (both names for compatibility)
             'talla_m': self.talla_m,
+            'talla': self.talla_m,
             'peso_kg': self.peso_kg,
+            'peso': self.peso_kg,
+            'pliegue_bicipital': self.pliegue_bicipital,
+            'pliegue_tricipital': self.pliegue_tricipital,
+            'pliegue_subescapular': self.pliegue_subescapular,
+            'pliegue_supracrestideo': self.pliegue_supracrestideo,
+            'perimetro_brazo': self.perimetro_brazo,
+            'perimetro_cintura': self.perimetro_cintura,
+            'perimetro_cadera': self.perimetro_cadera,
+            'perimetro_pantorrilla': self.perimetro_pantorrilla,
+
+            # Calculated values
             'imc': self.imc,
             'imc_categoria': self.imc_categoria,
             'porcentaje_grasa': self.porcentaje_grasa,
@@ -707,15 +895,70 @@ class PatientFile(db.Model):
             'proteinas_g': self.proteinas_g,
             'carbohidratos_g': self.carbohidratos_g,
             'grasas_g': self.grasas_g,
-            # Nuevos campos
+
+            # Salud General
+            'horas_sueno': self.horas_sueno,
+            'calidad_sueno': self.calidad_sueno,
+            'observaciones_sueno': self.observaciones_sueno,
+            'nivel_estres': self.nivel_estres,
+            'gatillantes_estres': self.gatillantes_estres,
+            'manejo_estres': self.manejo_estres,
             'menstruacion': self.menstruacion,
-            'restricciones_alimentarias': self.restricciones_alimentarias,
+            'fuma': self.fuma,
+            'tabaco': self.tabaco,
+            'cigarrillos_dia': self.cigarrillos_dia,
+            'drogas': self.drogas,
             'actividad_fisica': self.actividad_fisica,
-            'delivery_restaurante': self.delivery_restaurante,
+            'tipo_ejercicio': self.tipo_ejercicio,
+            'duracion_ejercicio': self.duracion_ejercicio,
             'percepcion_esfuerzo': self.percepcion_esfuerzo,
+
+            # Consumo de liquidos
+            'consumo_agua_litros': self.consumo_agua_litros,
+            'consumo_cafe_tazas': self.consumo_cafe_tazas,
+            'consumo_te_tazas': self.consumo_te_tazas,
+            'consumo_alcohol': self.consumo_alcohol,
+            'tipo_alcohol': self.tipo_alcohol,
+            'consumo_bebidas_azucaradas': self.consumo_bebidas_azucaradas,
+
+            # Sintomas GI
+            'frecuencia_evacuacion': self.frecuencia_evacuacion,
+            'reflujo': self.reflujo,
+            'reflujo_alimento': self.reflujo_alimento,
+            'hinchazon': self.hinchazon,
+            'hinchazon_alimento': self.hinchazon_alimento,
+            'tiene_alergias': self.tiene_alergias,
+            'alergias_alimento': self.alergias_alimento,
+            'alergias': self.alergias,
+            'intolerancias': self.intolerancias,
+            'restricciones_alimentarias': self.restricciones_alimentarias,
+
+            # CRITICAL: Frecuencia de Consumo y Registro 24h
+            'frecuencia_consumo': self.frecuencia_consumo,
+            'registro_24h': self.registro_24h,
+
+            # Diagnostico y Plan
+            'diagnostico_nutricional': self.diagnostico_nutricional,
+            'objetivos_nutricionales': self.objetivos_nutricionales,
+            'indicaciones': self.indicaciones,
+            'notas_seguimiento': self.notas_seguimiento,
+            'plan_alimentario': self.plan_alimentario,
+            'metas_corto_plazo': self.metas_corto_plazo,
+            'metas_mediano_plazo': self.metas_mediano_plazo,
+            'metas_largo_plazo': self.metas_largo_plazo,
+            'fecha_proxima_cita': str(self.fecha_proxima_cita) if self.fecha_proxima_cita else None,
+
+            # Delivery/Restaurant
+            'delivery_restaurante': self.delivery_restaurante,
+
+            # Intake system
             'intake_token': self.intake_token,
             'intake_completed': self.intake_completed,
             'intake_completed_at': self.intake_completed_at.strftime('%Y-%m-%d %H:%M') if self.intake_completed_at else None,
+            'intake_url_sent': self.intake_url_sent,
+            'intake_url_sent_at': self.intake_url_sent_at.strftime('%Y-%m-%d %H:%M') if self.intake_url_sent_at else None,
+
+            # Timestamps
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M') if self.created_at else None,
             'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M') if self.updated_at else None,
             'is_active': self.is_active

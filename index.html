@@ -46,7 +46,7 @@
                     <li><a href="#audiencias" class="nav-link-custom">Soluciones</a></li>
                     <li><a href="#como-funciona" class="nav-link-custom">Cómo Funciona</a></li>
                     <li><a href="#precios" class="nav-link-custom">Precios</a></li>
-                    <li><a href="#testimonios" class="nav-link-custom">Testimonios</a></li>
+                    <li><a href="/booking" class="nav-link-custom" style="color:#10b981;font-weight:600;">Reservar Consulta</a></li>
                 </ul>
 
                 <!-- Auth Buttons Desktop + Mobile Header -->
@@ -76,7 +76,7 @@
                 <a href="#audiencias" class="mobile-menu-link">Soluciones</a>
                 <a href="#como-funciona" class="mobile-menu-link">Cómo Funciona</a>
                 <a href="#precios" class="mobile-menu-link">Precios</a>
-                <a href="#testimonios" class="mobile-menu-link">Testimonios</a>
+                <a href="/booking" class="mobile-menu-link" style="color:#10b981;font-weight:600;">Reservar Consulta</a>
             </div>
         </div>
     </nav>
@@ -492,6 +492,59 @@
                         <i class="fas fa-blender fa-8x text-success opacity-75"></i>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================
+         BOOKING CTA SECTION
+    ========================================= -->
+    <section id="reservar" style="padding:80px 0;background:linear-gradient(135deg,#ecfdf5 0%,#f0fdf4 50%,#f5f3ff 100%);">
+        <div class="container">
+            <div class="section-header-center">
+                <span class="section-badge" style="background:rgba(16,185,129,0.1);color:#059669;">Nuevo</span>
+                <h2 class="section-title" style="font-size:2rem;">Reserva tu Consulta Nutricional</h2>
+                <p class="section-subtitle" style="max-width:600px;margin:0 auto;">
+                    Encuentra al nutricionista ideal segun tus objetivos. Agenda online y recibe tu formulario pre-consulta al instante.
+                </p>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;max-width:880px;margin:2.5rem auto 0;">
+                <div style="background:#fff;border-radius:16px;padding:1.5rem;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.06);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+                    <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#ecfdf5,#d1fae5);display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.75rem;color:#059669;font-size:1.25rem;">
+                        <i class="fas fa-weight-scale"></i>
+                    </div>
+                    <h4 style="font-size:0.95rem;font-weight:600;margin:0 0 0.25rem;">Control de Peso</h4>
+                    <p style="font-size:0.8rem;color:#6b7280;margin:0;">Composicion corporal y nutricion personalizada</p>
+                </div>
+                <div style="background:#fff;border-radius:16px;padding:1.5rem;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.06);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+                    <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#ecfdf5,#d1fae5);display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.75rem;color:#059669;font-size:1.25rem;">
+                        <i class="fas fa-dumbbell"></i>
+                    </div>
+                    <h4 style="font-size:0.95rem;font-weight:600;margin:0 0 0.25rem;">Nutricion Deportiva</h4>
+                    <p style="font-size:0.8rem;color:#6b7280;margin:0;">Rendimiento y recuperacion atletica</p>
+                </div>
+                <div style="background:#fff;border-radius:16px;padding:1.5rem;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.06);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+                    <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#ecfdf5,#d1fae5);display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.75rem;color:#059669;font-size:1.25rem;">
+                        <i class="fas fa-stethoscope"></i>
+                    </div>
+                    <h4 style="font-size:0.95rem;font-weight:600;margin:0 0 0.25rem;">Nutricion Clinica</h4>
+                    <p style="font-size:0.8rem;color:#6b7280;margin:0;">Diabetes, cardiovascular, renal y mas</p>
+                </div>
+                <div style="background:#fff;border-radius:16px;padding:1.5rem;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.06);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+                    <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#ecfdf5,#d1fae5);display:inline-flex;align-items:center;justify-content:center;margin-bottom:0.75rem;color:#059669;font-size:1.25rem;">
+                        <i class="fas fa-baby-carriage"></i>
+                    </div>
+                    <h4 style="font-size:0.95rem;font-weight:600;margin:0 0 0.25rem;">Embarazo y Lactancia</h4>
+                    <p style="font-size:0.8rem;color:#6b7280;margin:0;">Nutricion en cada etapa de la maternidad</p>
+                </div>
+            </div>
+
+            <div style="text-align:center;margin-top:2rem;">
+                <a href="/booking" style="display:inline-flex;align-items:center;gap:0.75rem;padding:0.875rem 2.5rem;background:linear-gradient(135deg,#10b981,#059669);color:#fff;text-decoration:none;border-radius:12px;font-size:1rem;font-weight:600;box-shadow:0 4px 14px rgba(16,185,129,0.3);transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(16,185,129,0.4)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 4px 14px rgba(16,185,129,0.3)'">
+                    <i class="fas fa-calendar-check"></i>
+                    Ver todos los nutricionistas y reservar
+                </a>
             </div>
         </div>
     </section>

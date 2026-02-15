@@ -77,7 +77,7 @@ ESTRUCTURA_COMIDAS = {
     }
 }
 
-# Rotación de proteínas semanal para variedad
+# Rotación de proteínas semanal para variedad (omnívoros)
 ROTACION_PROTEINAS = {
     'lunes': {'almuerzo': 'pollo', 'cena': 'pescado'},
     'martes': {'almuerzo': 'vacuno', 'cena': 'pollo'},
@@ -86,6 +86,28 @@ ROTACION_PROTEINAS = {
     'viernes': {'almuerzo': 'pescado', 'cena': 'pollo'},
     'sabado': {'almuerzo': 'vacuno', 'cena': 'pescado'},
     'domingo': {'almuerzo': 'pollo', 'cena': 'huevo'}
+}
+
+# Rotación de proteínas para vegetarianos
+ROTACION_PROTEINAS_VEGETARIANO = {
+    'lunes': {'almuerzo': 'huevo', 'cena': 'legumbres'},
+    'martes': {'almuerzo': 'legumbres', 'cena': 'huevo'},
+    'miercoles': {'almuerzo': 'huevo', 'cena': 'tofu'},
+    'jueves': {'almuerzo': 'legumbres', 'cena': 'huevo'},
+    'viernes': {'almuerzo': 'tofu', 'cena': 'legumbres'},
+    'sabado': {'almuerzo': 'huevo', 'cena': 'legumbres'},
+    'domingo': {'almuerzo': 'legumbres', 'cena': 'huevo'}
+}
+
+# Rotación de proteínas para veganos (sin productos animales)
+ROTACION_PROTEINAS_VEGANO = {
+    'lunes': {'almuerzo': 'legumbres', 'cena': 'tofu'},
+    'martes': {'almuerzo': 'tofu', 'cena': 'legumbres'},
+    'miercoles': {'almuerzo': 'legumbres', 'cena': 'tempeh'},
+    'jueves': {'almuerzo': 'tofu', 'cena': 'legumbres'},
+    'viernes': {'almuerzo': 'legumbres', 'cena': 'tofu'},
+    'sabado': {'almuerzo': 'tempeh', 'cena': 'legumbres'},
+    'domingo': {'almuerzo': 'legumbres', 'cena': 'tofu'}
 }
 
 
@@ -172,8 +194,40 @@ class PautaInteligente:
         
         # 4. Analizar frecuencia de consumo
         self.frecuencia = self._analizar_frecuencia()
-        
-        # 5. Control de uso diario/semanal
+
+        # 5. Extraer alergias, intolerancias y restricciones del paciente
+        self.alergias = self._extraer_lista_paciente('alergias')
+        self.intolerancias = self._extraer_lista_paciente('intolerancias')
+        self.restricciones = self._extraer_lista_paciente('restricciones_alimentarias')
+
+        # 6. Detectar dieta especial (vegano, vegetariano)
+        self.es_vegano = self._detectar_dieta('vegano')
+        self.es_vegetariano = self._detectar_dieta('vegetariano') or self.es_vegano
+
+        # 7. Extraer grupos de alimentos excluidos (frecuencia = 0)
+        self.grupos_excluidos = self._detectar_grupos_excluidos()
+
+        # 8. Analizar objetivos del paciente
+        self.objetivos_parsed = self._analizar_objetivos()
+
+        if self.alergias or self.intolerancias or self.restricciones:
+            print(f"⚠️ Filtros alimentarios activos:")
+            if self.alergias: print(f"   🚫 Alergias: {self.alergias}")
+            if self.intolerancias: print(f"   🚫 Intolerancias: {self.intolerancias}")
+            if self.restricciones: print(f"   🚫 Restricciones: {self.restricciones}")
+
+        if self.es_vegano:
+            print(f"🌱 DIETA VEGANA DETECTADA - Sin productos animales")
+        elif self.es_vegetariano:
+            print(f"🥬 DIETA VEGETARIANA DETECTADA - Sin carne/pescado")
+
+        if self.grupos_excluidos:
+            print(f"🚫 Grupos excluidos (frecuencia=0): {self.grupos_excluidos}")
+
+        if self.objetivos_parsed:
+            print(f"🎯 Objetivos: {self.objetivos_parsed}")
+
+        # 9. Control de uso diario/semanal
         self.usados_dia = set()
         self.usados_semana = defaultdict(int)
     
@@ -571,9 +625,293 @@ class PautaInteligente:
         print(f"\n📊 FRECUENCIA DE CONSUMO:")
         print(f"   Alta (>=5 días): {frecuencia['alta']}")
         print(f"   Media (3-4 días): {frecuencia['media']}")
-        
+
         return frecuencia
-    
+
+    def _detectar_dieta(self, tipo_dieta: str) -> bool:
+        """Detecta si el paciente sigue una dieta específica (vegano, vegetariano)"""
+        tipo_lower = tipo_dieta.lower()
+
+        # Buscar en restricciones_alimentarias
+        for restriccion in self.restricciones:
+            if tipo_lower in restriccion.lower():
+                return True
+
+        # Buscar en objetivos
+        objetivos = self.patient.get('objetivos', '')
+        if isinstance(objetivos, str) and tipo_lower in objetivos.lower():
+            return True
+        if isinstance(objetivos, list):
+            for obj in objetivos:
+                if tipo_lower in str(obj).lower():
+                    return True
+
+        # Buscar en motivo_consulta
+        motivo = self.patient.get('motivo_consulta', '')
+        if isinstance(motivo, str) and tipo_lower in motivo.lower():
+            return True
+
+        return False
+
+    def _detectar_grupos_excluidos(self) -> Set[str]:
+        """Detecta grupos de alimentos que el paciente NO consume (frecuencia = 0)"""
+        excluidos = set()
+
+        freq_data = self.patient.get('frecuencia_consumo')
+        if not freq_data:
+            return excluidos
+
+        if isinstance(freq_data, str):
+            try:
+                freq_data = json.loads(freq_data)
+            except:
+                return excluidos
+
+        # Mapeo de campos de frecuencia a grupos de alimentos
+        mapeo_freq_grupos = {
+            'frutas': 'frutas',
+            'verduras': 'verduras',
+            'cereales': 'cereales',
+            'legumbres': 'legumbres',
+            'lacteos': 'lacteos',
+            'huevos': 'huevos',
+            'carnes': 'carnes',
+            'pescados': 'pescados',
+            'frituras': 'frituras',
+            'azucares': 'azucares',
+            'alcohol': 'alcohol',
+        }
+
+        for campo, grupo in mapeo_freq_grupos.items():
+            valor = freq_data.get(campo)
+            if valor is not None:
+                try:
+                    valor_int = int(valor)
+                    if valor_int == 0:
+                        excluidos.add(grupo)
+                        print(f"   🚫 {grupo}: excluido (frecuencia=0)")
+                except (ValueError, TypeError):
+                    pass
+
+        return excluidos
+
+    def _analizar_objetivos(self) -> Dict:
+        """Analiza los objetivos del paciente para ajustar la pauta"""
+        objetivos_parsed = {
+            'bajar_peso': False,
+            'subir_peso': False,
+            'aumentar_proteina': False,
+            'reducir_azucar': False,
+            'aumentar_fibra': False,
+            'mejorar_hidratacion': False,
+            'fraccionamiento': False,
+            'raw': []
+        }
+
+        objetivos = self.patient.get('objetivos', '')
+
+        if isinstance(objetivos, str):
+            try:
+                objetivos_list = json.loads(objetivos)
+            except:
+                objetivos_list = [o.strip() for o in objetivos.split(',') if o.strip()]
+        elif isinstance(objetivos, list):
+            objetivos_list = objetivos
+        else:
+            objetivos_list = []
+
+        objetivos_parsed['raw'] = objetivos_list
+
+        # Detectar objetivos específicos
+        for obj in objetivos_list:
+            obj_lower = str(obj).lower()
+
+            if any(kw in obj_lower for kw in ['bajar', 'perder', 'reducir peso', 'adelgazar']):
+                objetivos_parsed['bajar_peso'] = True
+            if any(kw in obj_lower for kw in ['subir', 'ganar', 'aumentar peso', 'engordar', 'masa']):
+                objetivos_parsed['subir_peso'] = True
+            if any(kw in obj_lower for kw in ['proteina', 'proteína', 'musculo', 'músculo']):
+                objetivos_parsed['aumentar_proteina'] = True
+            if any(kw in obj_lower for kw in ['azucar', 'azúcar', 'dulce', 'glucosa']):
+                objetivos_parsed['reducir_azucar'] = True
+            if any(kw in obj_lower for kw in ['fibra', 'digestion', 'digestión', 'intestin']):
+                objetivos_parsed['aumentar_fibra'] = True
+            if any(kw in obj_lower for kw in ['agua', 'hidrat', 'líquido', 'liquido']):
+                objetivos_parsed['mejorar_hidratacion'] = True
+            if any(kw in obj_lower for kw in ['fraccionar', 'comidas', 'horarios']):
+                objetivos_parsed['fraccionamiento'] = True
+
+        return objetivos_parsed
+
+    # ============================================
+    # FILTROS DE ALERGIAS, INTOLERANCIAS Y RESTRICCIONES
+    # ============================================
+
+    def _extraer_lista_paciente(self, campo: str) -> List[str]:
+        """Extrae una lista del paciente, normalizando desde string o JSON"""
+        valor = self.patient.get(campo, [])
+        if isinstance(valor, str):
+            try:
+                import json
+                valor = json.loads(valor)
+            except (json.JSONDecodeError, TypeError):
+                valor = [v.strip() for v in valor.split(',') if v.strip()] if valor else []
+        if not isinstance(valor, list):
+            valor = [valor] if valor else []
+        return [str(v).lower().strip() for v in valor if v]
+
+    # Mapeo de alergenos a palabras clave en nombres de alimentos
+    ALLERGY_KEYWORDS = {
+        'lactosa': ['lacteo', 'lácteo', 'leche', 'queso', 'yogur', 'yoghurt', 'mantequilla', 'crema', 'quesillo', 'ricotta'],
+        'gluten': ['trigo', 'cebada', 'centeno', 'pan', 'pasta', 'fideo', 'harina', 'galleta', 'cereal', 'avena', 'granola'],
+        'huevo': ['huevo', 'yema', 'clara', 'mayonesa'],
+        'mariscos': ['marisco', 'camarón', 'langosta', 'mejillón', 'almeja', 'jaiba', 'pulpo', 'calamar'],
+        'pescado': ['pescado', 'salmón', 'atún', 'bacalao', 'sardina', 'merluza', 'reineta', 'congrio', 'jurel', 'trucha', 'tilapia'],
+        'frutos secos': ['nuez', 'almendra', 'avellana', 'pistacho', 'castaña', 'pecana'],
+        'maní': ['maní', 'cacahuate', 'cacahuete', 'mantequilla de maní'],
+        'soya': ['soya', 'soja', 'tofu', 'tempeh', 'edamame', 'lecitina'],
+    }
+
+    # Alimentos solo permitidos en desayuno/colaciones (NO en almuerzo/cena)
+    BREAKFAST_ONLY_KEYWORDS = ['natur', 'granola', 'muesli', 'corn flakes', 'cereal de desayuno', 'cereal inflado']
+
+    def _tiene_alergeno(self, nombre_alimento: str) -> bool:
+        """Verifica si un alimento contiene algún alérgeno del paciente"""
+        nombre_lower = nombre_alimento.lower()
+
+        for alergia in self.alergias:
+            keywords = self.ALLERGY_KEYWORDS.get(alergia, [alergia])
+            for keyword in keywords:
+                if keyword in nombre_lower:
+                    return True
+
+        for intolerancia in self.intolerancias:
+            keywords = self.ALLERGY_KEYWORDS.get(intolerancia, [intolerancia])
+            for keyword in keywords:
+                if keyword in nombre_lower:
+                    return True
+
+        return False
+
+    def _es_restriccion_alimentaria(self, alimento) -> bool:
+        """Verifica si un alimento viola las restricciones alimentarias del paciente"""
+        nombre_lower = alimento.nombre.lower()
+        grupo_lower = alimento.grupo_normalizado.lower()
+        subgrupo_lower = alimento.subgrupo_original.lower() if alimento.subgrupo_original else ''
+
+        # VEGANO: Sin ningún producto animal
+        if self.es_vegano:
+            # Excluir carnes, pescados, mariscos
+            animal_keywords = [
+                'vacuno', 'pollo', 'cerdo', 'carne', 'pavo', 'cordero', 'jamón', 'jamon',
+                'embutido', 'salchicha', 'tocino', 'bacon', 'chorizo', 'longaniza',
+                'pescado', 'salmon', 'salmón', 'atún', 'atun', 'merluza', 'reineta',
+                'congrio', 'jurel', 'sardina', 'trucha', 'tilapia', 'bacalao',
+                'marisco', 'camarón', 'camaron', 'langosta', 'jaiba', 'pulpo', 'calamar',
+                'nugget', 'hamburguesa de carne', 'filete', 'bistec', 'lomo', 'costilla'
+            ]
+            if any(kw in nombre_lower for kw in animal_keywords):
+                return True
+
+            # Excluir lácteos y huevos
+            dairy_egg_keywords = [
+                'leche', 'queso', 'quesillo', 'ricotta', 'mozzarella', 'parmesano',
+                'yogur', 'yogurt', 'mantequilla', 'crema', 'nata', 'flan',
+                'huevo', 'clara', 'yema', 'mayonesa', 'tortilla',
+                'miel', 'helado', 'manjar'
+            ]
+            if any(kw in nombre_lower for kw in dairy_egg_keywords):
+                return True
+
+            # Verificar grupo
+            if grupo_lower in ('lacteos', 'lácteos', 'proteina'):
+                if 'carne' in subgrupo_lower or 'pescado' in subgrupo_lower or 'huevo' in subgrupo_lower:
+                    return True
+
+        # VEGETARIANO: Sin carne ni pescado, pero permite lácteos y huevos
+        elif self.es_vegetariano:
+            meat_fish_keywords = [
+                'vacuno', 'pollo', 'cerdo', 'carne', 'pavo', 'cordero', 'jamón', 'jamon',
+                'embutido', 'salchicha', 'tocino', 'bacon', 'chorizo', 'longaniza',
+                'pescado', 'salmon', 'salmón', 'atún', 'atun', 'merluza', 'reineta',
+                'congrio', 'jurel', 'sardina', 'trucha', 'tilapia', 'bacalao',
+                'marisco', 'camarón', 'camaron', 'langosta', 'jaiba', 'pulpo', 'calamar',
+                'nugget', 'hamburguesa de carne', 'filete', 'bistec', 'lomo', 'costilla'
+            ]
+            if any(kw in nombre_lower for kw in meat_fish_keywords):
+                return True
+
+        # Otras restricciones
+        for restriccion in self.restricciones:
+            if restriccion == 'sin_gluten':
+                gluten_kw = ['trigo', 'cebada', 'centeno', 'pan', 'pasta', 'fideo', 'galleta', 'harina']
+                if any(kw in nombre_lower for kw in gluten_kw):
+                    return True
+            elif restriccion == 'sin_lactosa':
+                lactose_kw = ['leche', 'queso', 'yogur', 'crema', 'mantequilla', 'helado', 'flan']
+                if any(kw in nombre_lower for kw in lactose_kw):
+                    return True
+            elif restriccion == 'sin_mariscos':
+                seafood_kw = ['marisco', 'camarón', 'camaron', 'langosta', 'jaiba', 'pulpo', 'calamar', 'mejillón']
+                if any(kw in nombre_lower for kw in seafood_kw):
+                    return True
+
+        return False
+
+    def _es_grupo_excluido(self, alimento) -> bool:
+        """Verifica si el alimento pertenece a un grupo excluido por frecuencia = 0"""
+        grupo_lower = alimento.grupo_normalizado.lower()
+        nombre_lower = alimento.nombre.lower()
+
+        for grupo_excluido in self.grupos_excluidos:
+            ge_lower = grupo_excluido.lower()
+
+            # Match directo de grupo
+            if ge_lower in grupo_lower or grupo_lower in ge_lower:
+                return True
+
+            # Match por nombre para grupos específicos
+            if ge_lower == 'carnes':
+                meat_kw = ['vacuno', 'pollo', 'cerdo', 'carne', 'pavo', 'cordero', 'jamón', 'embutido']
+                if any(kw in nombre_lower for kw in meat_kw):
+                    return True
+            elif ge_lower == 'pescados':
+                fish_kw = ['pescado', 'salmon', 'salmón', 'atún', 'atun', 'merluza', 'trucha']
+                if any(kw in nombre_lower for kw in fish_kw):
+                    return True
+            elif ge_lower == 'lacteos':
+                dairy_kw = ['leche', 'queso', 'yogur', 'mantequilla', 'crema']
+                if any(kw in nombre_lower for kw in dairy_kw):
+                    return True
+            elif ge_lower == 'huevos':
+                egg_kw = ['huevo', 'tortilla', 'omelette']
+                if any(kw in nombre_lower for kw in egg_kw):
+                    return True
+            elif ge_lower == 'cereales':
+                cereal_kw = ['pan', 'arroz', 'pasta', 'fideo', 'cereal', 'avena']
+                if any(kw in nombre_lower for kw in cereal_kw):
+                    return True
+
+        return False
+
+    def _es_cereal_desayuno_en_comida_principal(self, nombre_alimento: str, tiempo: str) -> bool:
+        """Excluye cereales de desayuno de almuerzo/cena"""
+        if tiempo not in ('almuerzo', 'cena'):
+            return False
+        nombre_lower = nombre_alimento.lower()
+        return any(kw in nombre_lower for kw in self.BREAKFAST_ONLY_KEYWORDS)
+
+    def _validar_combinacion_alimentos(self, alimentos: list, nuevo_alimento) -> bool:
+        """Valida combinaciones de alimentos (ej: pan sin acompañamiento)"""
+        nombre_lower = nuevo_alimento.nombre.lower()
+        grupo = nuevo_alimento.grupo_normalizado.lower()
+
+        # Si se está removiendo palta, verificar que no quede pan solo
+        if grupo in ('grasas',) and 'palta' in nombre_lower:
+            return True  # palta siempre es bienvenida
+
+        return True
+
     def _buscar_alimento_inteligente(self, grupo_requerido: str, kcal_objetivo: float,
                                       tiempo: str, dia: str, 
                                       proteina_tipo: str = None) -> Optional[AlimentoSeleccionado]:
@@ -604,11 +942,27 @@ class PautaInteligente:
         for alimento in self.alimentos_db:
             if not self._match_grupo(alimento.grupo_normalizado, grupo_requerido):
                 continue
-            
+
+            # FILTRO: Alergias e intolerancias del paciente
+            if self._tiene_alergeno(alimento.nombre):
+                continue
+
+            # FILTRO: Restricciones alimentarias (vegetariano, vegano, sin_gluten, etc.)
+            if self._es_restriccion_alimentaria(alimento):
+                continue
+
+            # FILTRO: Grupos excluidos por frecuencia = 0
+            if self._es_grupo_excluido(alimento):
+                continue
+
+            # FILTRO: Cereales de desayuno NO en almuerzo/cena (Natur, granola, etc.)
+            if self._es_cereal_desayuno_en_comida_principal(alimento.nombre, tiempo):
+                continue
+
             if proteina_tipo and grupo_requerido == 'proteina':
                 if not self._match_proteina(alimento, proteina_tipo):
                     continue
-            
+
             alimento_id = f"{alimento.nombre}_{alimento.subgrupo_original}"
             if alimento_id in self.usados_dia:
                 continue
@@ -678,49 +1032,75 @@ class PautaInteligente:
         """Verifica si un grupo coincide"""
         g1 = grupo_alimento.lower().strip()
         g2 = grupo_requerido.lower().strip()
-        
+
         # Match exacto
         if g1 == g2:
             return True
-        
+
         # Match para proteínas (el grupo normalizado debería ser 'proteina')
         if g2 == 'proteina':
+            # Para veganos/vegetarianos, las legumbres cuentan como proteína
+            if self.es_vegano or self.es_vegetariano:
+                if g1 in ['legumbres', 'leguminosas', 'alternativas_proteicas_vegetales', 'alternativas proteicas vegetales']:
+                    return True
+                if 'soya' in g1 or 'soja' in g1 or 'tofu' in g1:
+                    return True
+
             if g1 in ['proteina', 'carnes', 'pescados', 'huevos', 'carneos', 'carneos_y_derivados']:
                 return True
             # También verificar si contiene palabras clave
             if 'carne' in g1 or 'pescado' in g1 or 'huevo' in g1 or 'pollo' in g1:
                 return True
-        
+
         # Match para cereales
         if g2 == 'cereales':
             if g1 in ['cereales', 'panes', 'panes_y_cereales', 'arroz', 'pasta']:
                 return True
             if 'cereal' in g1 or 'pan' in g1:
                 return True
-        
+
         # Match para lácteos
         if g2 == 'lacteos':
+            # Para veganos, alternativas vegetales cuentan como lácteos
+            if self.es_vegano:
+                if 'vegetal' in g1 or 'soya' in g1 or 'almendra' in g1 or 'avena' in g1:
+                    return True
             if g1 in ['lacteos', 'lácteos', 'leche', 'yogurt', 'queso']:
                 return True
-        
+
+        # Match para legumbres
+        if g2 == 'legumbres':
+            if g1 in ['legumbres', 'leguminosas', 'legumbres_secas']:
+                return True
+
         return False
     
     def _match_proteina(self, alimento: AlimentoBase, tipo: str) -> bool:
         """Verifica si es del tipo de proteína especificado"""
         nombre_lower = alimento.nombre.lower()
-        subgrupo_lower = alimento.subgrupo_original.lower()
-        
+        subgrupo_lower = alimento.subgrupo_original.lower() if alimento.subgrupo_original else ''
+        grupo_lower = alimento.grupo_normalizado.lower()
+
         if tipo == 'pollo':
             return 'pollo' in nombre_lower or 'pavo' in nombre_lower or 'ave' in subgrupo_lower or 'nugget' in nombre_lower
         elif tipo == 'vacuno':
             return 'vacuno' in nombre_lower or 'res' in nombre_lower or 'carne' in nombre_lower
         elif tipo == 'pescado':
-            return 'pescado' in nombre_lower or 'salmon' in nombre_lower or 'atun' in nombre_lower
+            return 'pescado' in nombre_lower or 'salmon' in nombre_lower or 'salmón' in nombre_lower or 'atun' in nombre_lower or 'atún' in nombre_lower
         elif tipo == 'cerdo':
             return 'cerdo' in nombre_lower
         elif tipo == 'huevo':
-            return 'huevo' in nombre_lower
-        
+            return 'huevo' in nombre_lower or 'tortilla' in nombre_lower or 'omelette' in nombre_lower
+
+        # Proteínas vegetales/veganas
+        elif tipo == 'tofu':
+            return 'tofu' in nombre_lower or 'soya' in nombre_lower or 'soja' in nombre_lower
+        elif tipo == 'tempeh':
+            return 'tempeh' in nombre_lower or 'seitán' in nombre_lower or 'seitan' in nombre_lower or 'proteina vegetal' in nombre_lower
+        elif tipo == 'legumbres':
+            return ('legumbre' in grupo_lower or 'leguminosa' in grupo_lower or
+                    any(kw in nombre_lower for kw in ['poroto', 'lenteja', 'garbanzo', 'arveja', 'haba', 'frijol', 'alubia']))
+
         return True
     
     def _match_alimento(self, alimento: AlimentoBase, alimento_paciente: AlimentoBase) -> bool:
@@ -765,12 +1145,25 @@ class PautaInteligente:
     
     def _generar_tiempo_comida(self, tiempo: str, kcal_objetivo: float, dia: str) -> Dict:
         """Genera un tiempo de comida completo"""
-        
+
         config = DISTRIBUCION_BASE[tiempo]
         estructura = ESTRUCTURA_COMIDAS.get(tiempo, {})
-        
-        grupos_requeridos = estructura.get('grupos_requeridos', ['cereales'])
-        grupos_opcionales = estructura.get('grupos_opcionales', [])
+
+        grupos_requeridos = list(estructura.get('grupos_requeridos', ['cereales']))
+        grupos_opcionales = list(estructura.get('grupos_opcionales', []))
+
+        # Ajustar grupos para veganos
+        if self.es_vegano:
+            # Reemplazar lácteos por legumbres/frutas
+            if 'lacteos' in grupos_requeridos:
+                grupos_requeridos.remove('lacteos')
+                if tiempo in ['desayuno', 'colacion_pm']:
+                    grupos_requeridos.append('frutas')  # Fruta en vez de lácteo
+                else:
+                    grupos_requeridos.append('legumbres')
+
+            # Para proteína, asegurar que busque alternativas vegetales
+            # (esto ya está manejado por _match_grupo y _match_proteina)
         
         n_grupos = len(grupos_requeridos)
         kcal_por_grupo = kcal_objetivo / n_grupos if n_grupos > 0 else kcal_objetivo
@@ -780,7 +1173,13 @@ class PautaInteligente:
         
         proteina_tipo = None
         if tiempo in ['almuerzo', 'cena']:
-            rotacion = ROTACION_PROTEINAS.get(dia, {})
+            # Seleccionar rotación según dieta
+            if self.es_vegano:
+                rotacion = ROTACION_PROTEINAS_VEGANO.get(dia, {})
+            elif self.es_vegetariano:
+                rotacion = ROTACION_PROTEINAS_VEGETARIANO.get(dia, {})
+            else:
+                rotacion = ROTACION_PROTEINAS.get(dia, {})
             proteina_tipo = rotacion.get(tiempo)
         
         for grupo in grupos_requeridos:
@@ -802,7 +1201,21 @@ class PautaInteligente:
                 if alimento:
                     alimentos.append(alimento)
                     kcal_acumulado += alimento.kcal
-        
+
+        # POST-VALIDACIÓN: Pan no debe quedar solo sin proteína o grasa
+        has_pan = any('pan' in a.nombre.lower() for a in alimentos)
+        protein_fat_keywords = ('proteina', 'grasas', 'lacteos', 'carne', 'pescado', 'huevo', 'aceite', 'palta')
+        has_protein_or_fat = any(
+            any(kw in a.grupo.lower() for kw in protein_fat_keywords)
+            for a in alimentos
+        )
+        if has_pan and not has_protein_or_fat and len(alimentos) < 4:
+            # Agregar una grasa como acompañamiento (ej: palta, mantequilla)
+            grasa = self._buscar_alimento_inteligente('grasas', 80, tiempo, dia)
+            if grasa:
+                alimentos.append(grasa)
+                kcal_acumulado += grasa.kcal
+
         totales = {
             'kcal': round(sum(a.kcal for a in alimentos), 0),
             'proteinas': round(sum(a.proteinas for a in alimentos), 1),
@@ -927,14 +1340,31 @@ class PautaInteligente:
             for d in dias.values()
         )
         
+        # Determinar tipo de dieta para el output
+        dieta_tipo = 'omnivora'
+        if self.es_vegano:
+            dieta_tipo = 'vegana'
+        elif self.es_vegetariano:
+            dieta_tipo = 'vegetariana'
+
         return {
             'tipo': 'semanal',
-            'version': '4.0',
+            'version': '4.1',
             'generado_en': datetime.now().isoformat(),
             'paciente': {
                 'id': self.patient.get('id'),
                 'nombre': self.patient.get('nombre'),
                 'objetivos': self.patient.get('objetivos')
+            },
+            'configuracion_dieta': {
+                'tipo_dieta': dieta_tipo,
+                'es_vegano': self.es_vegano,
+                'es_vegetariano': self.es_vegetariano,
+                'restricciones': list(self.restricciones),
+                'alergias': list(self.alergias),
+                'intolerancias': list(self.intolerancias),
+                'grupos_excluidos': list(self.grupos_excluidos),
+                'objetivos_detectados': self.objetivos_parsed
             },
             'requerimientos': requerimientos,
             'tiempos_comida': {

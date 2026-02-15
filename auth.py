@@ -4,7 +4,7 @@ Registro simplificado con campos obligatorios
 """
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
-from models import db, User, UserType, SubscriptionPlan
+from models import db, User, UserType, SubscriptionPlan, NUTRITIONIST_SPECIALTIES
 from email_validator import validate_email, EmailNotValidError
 from datetime import datetime
 
@@ -50,14 +50,16 @@ def register():
                 flash('Por favor completa todos los campos obligatorios', 'danger')
                 return render_template('register.html', 
                                      countries=LATAM_COUNTRIES,
-                                     cities=CHILE_CITIES)
+                                     cities=CHILE_CITIES,
+                                     specialties=NUTRITIONIST_SPECIALTIES)
             
             # Validar ciudad si es Chile
             if country == 'Chile' and not city:
                 flash('La ciudad es obligatoria para Chile', 'danger')
                 return render_template('register.html',
                                      countries=LATAM_COUNTRIES,
-                                     cities=CHILE_CITIES)
+                                     cities=CHILE_CITIES,
+                                     specialties=NUTRITIONIST_SPECIALTIES)
             
             # Validar email
             try:
@@ -67,20 +69,23 @@ def register():
                 flash('Email inválido', 'danger')
                 return render_template('register.html',
                                      countries=LATAM_COUNTRIES,
-                                     cities=CHILE_CITIES)
+                                     cities=CHILE_CITIES,
+                                     specialties=NUTRITIONIST_SPECIALTIES)
             
             # Validar contraseña
             if len(password) < 6:
                 flash('La contraseña debe tener al menos 6 caracteres', 'danger')
                 return render_template('register.html',
                                      countries=LATAM_COUNTRIES,
-                                     cities=CHILE_CITIES)
+                                     cities=CHILE_CITIES,
+                                     specialties=NUTRITIONIST_SPECIALTIES)
             
             if password != confirm_password:
                 flash('Las contraseñas no coinciden', 'danger')
                 return render_template('register.html',
                                      countries=LATAM_COUNTRIES,
-                                     cities=CHILE_CITIES)
+                                     cities=CHILE_CITIES,
+                                     specialties=NUTRITIONIST_SPECIALTIES)
             
             # Validar fecha de nacimiento
             try:
@@ -97,14 +102,16 @@ def register():
                 flash('Fecha de nacimiento inválida', 'danger')
                 return render_template('register.html',
                                      countries=LATAM_COUNTRIES,
-                                     cities=CHILE_CITIES)
+                                     cities=CHILE_CITIES,
+                                     specialties=NUTRITIONIST_SPECIALTIES)
             
             # Verificar duplicados
             if User.query.filter_by(email=email).first():
                 flash('Este email ya está registrado', 'danger')
                 return render_template('register.html',
                                      countries=LATAM_COUNTRIES,
-                                     cities=CHILE_CITIES)
+                                     cities=CHILE_CITIES,
+                                     specialties=NUTRITIONIST_SPECIALTIES)
             
             # Determinar plan según tipo
             if user_type == UserType.CLIENTE:
@@ -134,7 +141,7 @@ def register():
             # Campos opcionales específicos
             if user_type == UserType.NUTRICIONISTA:
                 new_user.license_number = request.form.get('license_number', '').strip()
-                new_user.specialization = request.form.get('specialization', '').strip()
+                new_user.specialization = ','.join(request.form.getlist('specialization'))
             elif user_type == UserType.EMPRESA:
                 new_user.company_name = request.form.get('company_name', '').strip()
                 new_user.company_rut = request.form.get('company_rut', '').strip()
@@ -163,7 +170,8 @@ def register():
     
     return render_template('register.html',
                          countries=LATAM_COUNTRIES,
-                         cities=CHILE_CITIES)
+                         cities=CHILE_CITIES,
+                         specialties=NUTRITIONIST_SPECIALTIES)
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])

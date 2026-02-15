@@ -498,9 +498,202 @@
     };
     
     // ============================================
+    // GENERAR PAUTA ALIMENTARIA
+    // ============================================
+
+    window.generarPauta = async function() {
+        const patientId = elements.patientId?.value;
+        if (!patientId) {
+            showToast('Error: No se encontro el ID del paciente', 'error');
+            return;
+        }
+
+        // Show loading state
+        const btnPauta = document.getElementById('btnPauta');
+        const originalText = btnPauta.innerHTML;
+        btnPauta.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Generando...</span>';
+        btnPauta.disabled = true;
+
+        try {
+            const response = await fetch(`/api/generar-pauta/${patientId}`);
+            const result = await response.json();
+
+            if (result.success) {
+                // Store pauta data
+                const pauta = result.pauta;
+
+                // Show pauta modal or redirect to pauta view
+                showPautaModal(pauta);
+                showToast('Pauta generada exitosamente', 'success');
+            } else {
+                throw new Error(result.error || 'Error generando pauta');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast(error.message || 'Error generando pauta', 'error');
+        } finally {
+            btnPauta.innerHTML = originalText;
+            btnPauta.disabled = false;
+        }
+    };
+
+    function showPautaModal(pauta) {
+        // Create modal to show pauta
+        const config = pauta.configuracion_dieta || {};
+        const reqs = pauta.requerimientos || {};
+        const tiempos = pauta.tiempos_comida || {};
+
+        let dietaInfo = '';
+        if (config.es_vegano) {
+            dietaInfo = '<span class="badge bg-success me-2"><i class="fas fa-leaf"></i> Vegano</span>';
+        } else if (config.es_vegetariano) {
+            dietaInfo = '<span class="badge bg-info me-2"><i class="fas fa-seedling"></i> Vegetariano</span>';
+        }
+
+        if (config.restricciones && config.restricciones.length > 0) {
+            dietaInfo += config.restricciones.map(r => `<span class="badge bg-warning text-dark me-1">${r}</span>`).join('');
+        }
+
+        let tiemposInfo = '';
+        if (tiempos.activos) {
+            tiemposInfo = `<small class="text-muted">Tiempos activos: ${tiempos.activos.join(', ')}</small>`;
+        }
+        if (tiempos.excluidos && tiempos.excluidos.length > 0) {
+            tiemposInfo += `<br><small class="text-warning">Excluidos: ${tiempos.excluidos.join(', ')}</small>`;
+        }
+
+        const modalHtml = `
+            <div class="modal fade" id="pautaModal" tabindex="-1">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-utensils me-2"></i>
+                                Pauta Alimentaria Semanal
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>Configuracion:</strong>
+                                    ${dietaInfo}
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-3"><strong>GET:</strong> ${reqs.get_kcal || '-'} kcal</div>
+                                    <div class="col-md-3"><strong>Proteinas:</strong> ${reqs.proteinas_g || '-'}g</div>
+                                    <div class="col-md-3"><strong>Carbohidratos:</strong> ${reqs.carbohidratos_g || '-'}g</div>
+                                    <div class="col-md-3"><strong>Grasas:</strong> ${reqs.grasas_g || '-'}g</div>
+                                </div>
+                                ${tiemposInfo}
+                            </div>
+
+                            <ul class="nav nav-tabs" id="pautaTabs" role="tablist">
+                                ${Object.keys(pauta.dias || {}).map((dia, i) => `
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link ${i === 0 ? 'active' : ''}" id="tab-${dia}" data-bs-toggle="tab"
+                                            data-bs-target="#pane-${dia}" type="button" role="tab">
+                                            ${dia.charAt(0).toUpperCase() + dia.slice(1)}
+                                        </button>
+                                    </li>
+                                `).join('')}
+                            </ul>
+
+                            <div class="tab-content mt-3" id="pautaTabContent">
+                                ${Object.entries(pauta.dias || {}).map(([dia, diaData], i) => `
+                                    <div class="tab-pane fade ${i === 0 ? 'show active' : ''}" id="pane-${dia}" role="tabpanel">
+                                        ${Object.entries(diaData.tiempos || {}).map(([tiempo, tiempoData]) => `
+                                            <div class="card mb-3">
+                                                <div class="card-header bg-light d-flex justify-content-between">
+                                                    <strong>${tiempoData.nombre}</strong>
+                                                    <span class="badge bg-primary">${tiempoData.totales?.kcal || 0} kcal</span>
+                                                </div>
+                                                <div class="card-body p-2">
+                                                    <table class="table table-sm table-striped mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Alimento</th>
+                                                                <th>Porcion</th>
+                                                                <th class="text-end">Kcal</th>
+                                                                <th class="text-end">Prot</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            ${(tiempoData.alimentos || []).map(a => `
+                                                                <tr ${a.es_preferido ? 'class="table-success"' : ''}>
+                                                                    <td>${a.nombre} ${a.es_preferido ? '<i class="fas fa-star text-warning" title="Preferido del paciente"></i>' : ''}</td>
+                                                                    <td>${a.cantidad} ${a.medida_casera}</td>
+                                                                    <td class="text-end">${Math.round(a.kcal)}</td>
+                                                                    <td class="text-end">${a.proteinas?.toFixed(1) || 0}g</td>
+                                                                </tr>
+                                                            `).join('')}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                        <div class="alert alert-secondary">
+                                            <strong>Total del dia:</strong>
+                                            ${diaData.totales?.kcal || 0} kcal |
+                                            ${diaData.totales?.proteinas || 0}g prot |
+                                            ${diaData.totales?.carbohidratos || 0}g carbs |
+                                            ${diaData.totales?.lipidos || 0}g lip
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="button" class="btn btn-primary" onclick="guardarPauta(${JSON.stringify(pauta).replace(/"/g, '&quot;')})">
+                                <i class="fas fa-save me-2"></i>Guardar Pauta
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="window.print()">
+                                <i class="fas fa-print me-2"></i>Imprimir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if any
+        document.getElementById('pautaModal')?.remove();
+
+        // Add modal to DOM
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('pautaModal'));
+        modal.show();
+    }
+
+    window.guardarPauta = async function(pauta) {
+        const patientId = elements.patientId?.value;
+        if (!patientId) return;
+
+        try {
+            const response = await fetch(`/api/guardar-pauta/${patientId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pauta: pauta })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                showToast('Pauta guardada exitosamente', 'success');
+            } else {
+                throw new Error(result.error || 'Error guardando pauta');
+            }
+        } catch (error) {
+            showToast(error.message || 'Error guardando pauta', 'error');
+        }
+    };
+
+    // ============================================
     // INICIALIZACIÓN
     // ============================================
-    
+
     function initSliders() {
         // Calidad del sueño
         const calidadSueno = elements.calidadSueno;
