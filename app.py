@@ -2066,6 +2066,45 @@ def debug_auth():
 
     return jsonify(results)
 
+@app.route('/api/debug-db', methods=['GET'])
+def debug_database():
+    """Debug endpoint to check database schema"""
+    try:
+        from sqlalchemy import text, inspect
+        inspector = inspect(db.engine)
+
+        results = {
+            'tables': inspector.get_table_names(),
+            'patient_files_columns': [],
+            'users_columns': [],
+            'test_query': None
+        }
+
+        if 'patient_files' in results['tables']:
+            results['patient_files_columns'] = [
+                {'name': col['name'], 'type': str(col['type'])}
+                for col in inspector.get_columns('patient_files')
+            ]
+
+        if 'users' in results['tables']:
+            results['users_columns'] = [
+                {'name': col['name'], 'type': str(col['type'])}
+                for col in inspector.get_columns('users')
+            ]
+
+        # Test query
+        try:
+            count = PatientFile.query.count()
+            results['patient_count'] = count
+            results['test_query'] = 'OK'
+        except Exception as e:
+            results['test_query'] = f'ERROR: {str(e)}'
+
+        return jsonify(results)
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
+
 @app.route('/api/migrate-db', methods=['GET', 'POST'])
 def migrate_database():
     """Endpoint para agregar columnas faltantes a la base de datos"""
