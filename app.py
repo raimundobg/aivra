@@ -2070,6 +2070,23 @@ def debug_auth():
 
     return jsonify(results)
 
+@app.route('/api/test-write', methods=['POST', 'GET'])
+def test_write_noauth():
+    """Test database write WITHOUT auth"""
+    try:
+        patient = PatientFile(
+            nutricionista_id=1,
+            nombre='Test-' + datetime.utcnow().strftime('%H%M%S'),
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+        db.session.add(patient)
+        db.session.commit()
+        return jsonify({'success': True, 'patient_id': patient.id})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/test-save', methods=['POST'])
 @login_required
 def test_save_patient():
