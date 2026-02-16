@@ -2070,6 +2070,37 @@ def debug_auth():
 
     return jsonify(results)
 
+@app.route('/api/test-save', methods=['POST'])
+@login_required
+def test_save_patient():
+    """Minimal test endpoint for patient save"""
+    try:
+        data = request.json or {}
+        nombre = data.get('nombre', 'Test')
+
+        patient = PatientFile(
+            nutricionista_id=current_user.id,
+            nombre=nombre,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+        db.session.add(patient)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'patient_id': patient.id,
+            'message': 'Test save worked!'
+        })
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
 @app.route('/api/debug-db', methods=['GET'])
 def debug_database():
     """Debug endpoint to check database schema"""
