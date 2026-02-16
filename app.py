@@ -944,32 +944,16 @@ def create_patient():
 
         log_debug(f"[OK] Paciente creado: {new_patient.nombre} (Ficha #{new_patient.ficha_numero})")
 
-        # Auto-generate intake token and send email if patient has email
-        email_sent = False
+        # Generate intake token (but do NOT send email here - it blocks the response)
         intake_url = None
         if new_patient.email:
             new_patient.generate_intake_token()
             intake_url = new_patient.get_intake_url(request.host_url.rstrip('/'))
-            log_debug(f"[EMAIL] Token generado, intake_url={intake_url}")
-
-            if is_mail_configured():
-                log_debug(f"[EMAIL] Intentando enviar email a {new_patient.email}...")
-                result = send_intake_email(
-                    new_patient,
-                    intake_url,
-                    current_user.get_full_name()
-                )
-                if result['success']:
-                    new_patient.mark_url_sent()
-                    email_sent = True
-                    log_debug(f"[EMAIL] OK - Email de intake enviado a {new_patient.email}")
-                else:
-                    log_debug(f"[EMAIL] FAIL - No se pudo enviar email: {result.get('error')}")
-            else:
-                log_debug(f"[EMAIL] No configurado. Token generado: {intake_url}")
-
             db.session.commit()
-            log_debug(f"[EMAIL] Commit final OK")
+            log_debug(f"[CREATE-PATIENT] Token generado, intake_url={intake_url}")
+            log_debug(f"[CREATE-PATIENT] Email NO enviado automaticamente (usar endpoint /send-intake-email)")
+
+        log_debug(f"[CREATE-PATIENT] Respondiendo OK al frontend")
 
         return jsonify({
             'success': True,
@@ -977,7 +961,7 @@ def create_patient():
             'patient_id': new_patient.id,
             'ficha_numero': new_patient.ficha_numero,
             'redirect_url': f'/dashboard/nutritionist/patient/{new_patient.id}',
-            'email_sent': email_sent,
+            'email_sent': False,
             'intake_url': intake_url
         }), 201
         
