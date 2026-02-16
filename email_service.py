@@ -1,13 +1,19 @@
 """
 email_service.py - Servicio de envio de emails para BiteTrack
+Supports Resend (HTTP API) and Flask-Mail (SMTP) as fallback.
 """
 from flask_mail import Mail, Message
 from flask import render_template, current_app
 import os
+import json
 import threading
+import requests
 
 mail = Mail()
 
+# ============================================
+# INITIALIZATION
+# ============================================
 
 def init_mail(app):
     """Initialize Flask-Mail with app config from environment variables."""
@@ -21,17 +27,55 @@ def init_mail(app):
         'MAIL_DEFAULT_SENDER',
         os.environ.get('MAIL_USERNAME', 'noreply@bitetrack.cl')
     )
-    # SMTP timeout to prevent worker hangs (10 seconds connect, 15 seconds total)
     app.config['MAIL_TIMEOUT'] = 10
     mail.init_app(app)
     return mail
 
 
-def _send_mail_with_timeout(msg, timeout=15):
-    """Send email with a hard timeout to prevent worker hangs."""
-    result = {'success': False, 'error': 'Timeout'}
+# ============================================
+# SENDING BACKENDS
+# ============================================
 
-    # Capture Flask app context for the thread
+def _send_via_resend(to, subject, html, text):
+    """Send email via Resend HTTP API (no SMTP needed)."""
+    api_key = os.environ.get('RESEND_API_KEY', '')
+    if not api_key:
+        return {'success': False, 'error': 'RESEND_API_KEY not configured'}
+
+    from_email = os.environ.get(
+        'RESEND_FROM',
+        os.environ.get('MAIL_DEFAULT_SENDER',
+                       os.environ.get('MAIL_USERNAME', 'BiteTrack <onboarding@resend.dev>'))
+    )
+
+    try:
+        resp = requests.post(
+            'https://api.resend.com/emails',
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+            },
+            json={
+                'from': from_email,
+                'to': [to] if isinstance(to, str) else to,
+                'subject': subject,
+                'html': html,
+                'text': text,
+            },
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            return {'success': True, 'error': None}
+        else:
+            error_msg = resp.json().get('message', resp.text)
+            return {'success': False, 'error': f'Resend API error ({resp.status_code}): {error_msg}'}
+    except Exception as e:
+        return {'success': False, 'error': f'Resend request failed: {str(e)}'}
+
+
+def _send_via_smtp(msg, timeout=15):
+    """Send email via SMTP with a hard timeout to prevent worker hangs."""
+    result = {'success': False, 'error': 'Timeout'}
     app = current_app._get_current_object()
 
     def _send():
@@ -42,7 +86,7 @@ def _send_mail_with_timeout(msg, timeout=15):
             result['error'] = None
         except Exception as e:
             result['error'] = str(e)
-            app.logger.error(f"[EMAIL-THREAD] Error: {str(e)}")
+            app.logger.error(f"[EMAIL-SMTP] Error: {str(e)}")
 
     t = threading.Thread(target=_send)
     t.start()
@@ -50,11 +94,46 @@ def _send_mail_with_timeout(msg, timeout=15):
 
     if t.is_alive():
         result['error'] = f'SMTP timeout after {timeout}s'
-        app.logger.warning(f"[EMAIL-THREAD] SMTP timeout after {timeout}s")
+        app.logger.warning(f"[EMAIL-SMTP] SMTP timeout after {timeout}s")
 
-    app.logger.info(f"[EMAIL-THREAD] Result: success={result['success']}, error={result.get('error')}")
     return result
 
+
+def _send_email(to, subject, html, text):
+    """
+    Send email using the best available backend.
+    Priority: Resend (HTTP) > SMTP (Flask-Mail)
+    """
+    app = current_app._get_current_object()
+
+    # Try Resend first (HTTP-based, works on Railway)
+    resend_key = os.environ.get('RESEND_API_KEY', '')
+    if resend_key:
+        app.logger.info(f"[EMAIL] Sending via Resend to {to}")
+        result = _send_via_resend(to, subject, html, text)
+        app.logger.info(f"[EMAIL] Resend result: {result}")
+        if result['success']:
+            return result
+        app.logger.warning(f"[EMAIL] Resend failed, trying SMTP fallback: {result['error']}")
+
+    # Fallback to SMTP
+    smtp_user = os.environ.get('MAIL_USERNAME', '')
+    smtp_pass = os.environ.get('MAIL_PASSWORD', '')
+    if smtp_user and smtp_pass:
+        app.logger.info(f"[EMAIL] Sending via SMTP to {to}")
+        msg = Message(subject=subject, recipients=[to] if isinstance(to, str) else to)
+        msg.html = html
+        msg.body = text
+        result = _send_via_smtp(msg, timeout=15)
+        app.logger.info(f"[EMAIL] SMTP result: {result}")
+        return result
+
+    return {'success': False, 'error': 'No email backend configured (set RESEND_API_KEY or MAIL_USERNAME/MAIL_PASSWORD)'}
+
+
+# ============================================
+# PUBLIC API
+# ============================================
 
 def send_intake_email(patient, intake_url, nutritionist_name):
     """
@@ -67,21 +146,16 @@ def send_intake_email(patient, intake_url, nutritionist_name):
         return {'success': False, 'error': 'El paciente no tiene email registrado'}
 
     try:
-        msg = Message(
-            subject=f'Formulario Pre-Consulta - {nutritionist_name}',
-            recipients=[patient.email]
-        )
+        subject = f'Formulario Pre-Consulta - {nutritionist_name}'
 
-        # Render HTML email template
-        msg.html = render_template(
+        html = render_template(
             'email/intake_invitation.html',
             patient_name=patient.nombre,
             nutritionist_name=nutritionist_name,
             intake_url=intake_url
         )
 
-        # Plain text fallback
-        msg.body = (
+        text = (
             f"Hola {patient.nombre},\n\n"
             f"{nutritionist_name} te ha agendado una consulta nutricional.\n\n"
             f"Por favor completa tu formulario pre-consulta en el siguiente enlace:\n"
@@ -90,7 +164,7 @@ def send_intake_email(patient, intake_url, nutritionist_name):
             f"Saludos,\nEquipo BiteTrack"
         )
 
-        return _send_mail_with_timeout(msg, timeout=15)
+        return _send_email(patient.email, subject, html, text)
 
     except Exception as e:
         current_app.logger.error(f"Error enviando email a {patient.email}: {str(e)}")
@@ -107,7 +181,6 @@ def send_booking_confirmation(booking, nutritionist, intake_url):
     if not booking.client_email:
         return {'success': False, 'error': 'El cliente no tiene email'}
 
-    import json
     banco_info = {}
     if nutritionist.banco_info:
         try:
@@ -116,12 +189,9 @@ def send_booking_confirmation(booking, nutritionist, intake_url):
             banco_info = {}
 
     try:
-        msg = Message(
-            subject=f'Confirmacion de Cita - {nutritionist.get_full_name()}',
-            recipients=[booking.client_email]
-        )
+        subject = f'Confirmacion de Cita - {nutritionist.get_full_name()}'
 
-        msg.html = render_template(
+        html = render_template(
             'email/booking_confirmation.html',
             client_name=booking.client_name,
             nutritionist_name=nutritionist.get_full_name(),
@@ -133,7 +203,7 @@ def send_booking_confirmation(booking, nutritionist, intake_url):
             consulta_precio=nutritionist.consulta_precio,
         )
 
-        msg.body = (
+        text = (
             f"Hola {booking.client_name},\n\n"
             f"Tu cita con {nutritionist.get_full_name()} ha sido reservada.\n\n"
             f"Fecha: {booking.booking_date.strftime('%d/%m/%Y')}\n"
@@ -143,7 +213,7 @@ def send_booking_confirmation(booking, nutritionist, intake_url):
             f"Saludos,\nEquipo BiteTrack"
         )
 
-        return _send_mail_with_timeout(msg, timeout=15)
+        return _send_email(booking.client_email, subject, html, text)
 
     except Exception as e:
         current_app.logger.error(f"Error enviando confirmacion a {booking.client_email}: {str(e)}")
@@ -151,7 +221,10 @@ def send_booking_confirmation(booking, nutritionist, intake_url):
 
 
 def is_mail_configured():
-    """Check if mail credentials are set (not just defaults)."""
+    """Check if any email backend is configured."""
+    resend_key = os.environ.get('RESEND_API_KEY', '')
+    if resend_key:
+        return True
     username = os.environ.get('MAIL_USERNAME', '')
     password = os.environ.get('MAIL_PASSWORD', '')
     return bool(username and password)

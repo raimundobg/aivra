@@ -20,6 +20,7 @@ Flask-Login==0.6.3
 
 # === EMAIL ===
 Flask-Mail==0.10.0
+requests>=2.31.0
 
 # === CONFIGURACIÓN ===
 python-dotenv>=1.0.0
