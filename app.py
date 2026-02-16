@@ -2792,11 +2792,11 @@ def api_nutri_profile_save():
 if AUTH_ENABLED:
     with app.app_context():
         try:
+            from sqlalchemy import text, inspect
             db.create_all()
             print("Tablas de base de datos creadas/verificadas")
 
             # Auto-migrar columnas nuevas
-            from sqlalchemy import text, inspect
             inspector = inspect(db.engine)
 
             new_columns = {
@@ -2836,7 +2836,8 @@ if AUTH_ENABLED:
                     db.session.commit()
 
         except Exception as e:
-            print(f"Error creando tablas: {e}")
+            print(f"[WARNING] DB init: {e}")
+            db.session.rollback()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
