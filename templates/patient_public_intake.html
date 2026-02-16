@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario Pre-Consulta - ZenLab Pro</title>
+    <title>Formulario Pre-Consulta - BiteTrack</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -42,7 +44,7 @@
             color: white;
             padding: 1.5rem 0;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .public-header h1 {
@@ -69,7 +71,7 @@
         .progress-wrapper {
             background: white;
             padding: 1rem 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -157,7 +159,7 @@
             border-radius: 1.5rem;
             padding: 2rem;
             margin-bottom: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             display: none;
         }
 
@@ -167,8 +169,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .section-title {
@@ -410,7 +419,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255,255,255,0.9);
+            background: rgba(255, 255, 255, 0.9);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -436,13 +445,137 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .loading-text {
             margin-top: 1rem;
             font-weight: 600;
             color: var(--gray-700);
+        }
+
+        /* Bristol Scale Cards */
+        .bristol-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .bristol-card {
+            border: 2px solid var(--gray-200);
+            border-radius: 1rem;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .bristol-card:hover {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.03);
+        }
+
+        .bristol-card.selected {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.08);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+        }
+
+        .bristol-card input {
+            display: none;
+        }
+
+        .bristol-type {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .bristol-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            line-height: 1.2;
+        }
+
+        .bristol-desc {
+            font-size: 0.625rem;
+            color: var(--gray-600);
+            margin-top: 0.25rem;
+        }
+
+        /* EFC Grid */
+        .efc-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .efc-table th {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            text-align: center;
+            padding: 0.5rem 0.25rem;
+            border-bottom: 2px solid var(--gray-200);
+            white-space: nowrap;
+        }
+
+        .efc-table th:first-child {
+            text-align: left;
+            min-width: 140px;
+        }
+
+        .efc-table td {
+            padding: 0.375rem 0.25rem;
+            text-align: center;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .efc-table td:first-child {
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .efc-table tr:hover {
+            background: rgba(16, 185, 129, 0.02);
+        }
+
+        .efc-radio {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border: 2px solid var(--gray-200);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .efc-radio:hover {
+            border-color: var(--primary);
+        }
+
+        .efc-radio input {
+            display: none;
+        }
+
+        .efc-radio.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .efc-radio.selected::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
         }
 
         /* Responsive */
@@ -495,9 +628,20 @@
                 padding: 0.375rem 0.75rem;
                 font-size: 0.8125rem;
             }
+
+            .efc-table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .bristol-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 0.5rem;
+            }
         }
     </style>
 </head>
+
 <body>
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
@@ -509,15 +653,15 @@
     <header class="public-header">
         <div class="container">
             <div class="logo-container">
-                <img src="/images/logo.png" alt="ZenLab Pro" onerror="this.style.display='none'">
+                <img src="/images/logo.png" alt="BiteTrack" onerror="this.style.display='none'">
             </div>
             {% if error %}
-                <h1><i class="fas fa-exclamation-triangle me-2"></i>Error</h1>
+            <h1><i class="fas fa-exclamation-triangle me-2"></i>Error</h1>
             {% elif already_completed %}
-                <h1><i class="fas fa-check-circle me-2"></i>Formulario Completado</h1>
+            <h1><i class="fas fa-check-circle me-2"></i>Formulario Completado</h1>
             {% else %}
-                <h1>Formulario Pre-Consulta</h1>
-                <p>Completa tus datos antes de tu cita con {{ nutritionist_name }}</p>
+            <h1>Formulario Pre-Consulta</h1>
+            <p>Completa tus datos antes de tu cita con {{ nutritionist_name }}</p>
             {% endif %}
         </div>
     </header>
@@ -564,6 +708,14 @@
                 <div class="step-circle">4</div>
                 <div class="step-label">Objetivos</div>
             </div>
+            <div class="progress-step" data-step="5">
+                <div class="step-circle">5</div>
+                <div class="step-label">Registro 24h</div>
+            </div>
+            <div class="progress-step" data-step="6">
+                <div class="step-circle">6</div>
+                <div class="step-label">Frecuencia</div>
+            </div>
         </div>
     </div>
 
@@ -580,40 +732,52 @@
                 <div class="row g-3">
                     <div class="col-12">
                         <label class="form-label">Nombre completo <span class="required">*</span></label>
-                        <input type="text" class="form-control" name="nombre"
-                               value="{{ patient.nombre or '' }}" required
-                               placeholder="Tu nombre completo">
+                        <input type="text" class="form-control" name="nombre" value="{{ patient.nombre or '' }}"
+                            required placeholder="Tu nombre completo">
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label">Fecha de nacimiento <span class="required">*</span></label>
                         <input type="date" class="form-control" name="fecha_nacimiento"
-                               value="{{ patient.fecha_nacimiento or '' }}" required>
+                            value="{{ patient.fecha_nacimiento or '' }}" required>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label">Sexo <span class="required">*</span></label>
                         <select class="form-select" name="sexo" required>
                             <option value="">Seleccionar...</option>
-                            <option value="Femenino" {% if patient.sexo == 'Femenino' %}selected{% endif %}>Femenino</option>
-                            <option value="Masculino" {% if patient.sexo == 'Masculino' %}selected{% endif %}>Masculino</option>
-                            <option value="Otro" {% if patient.sexo == 'Otro' %}selected{% endif %}>Otro</option>
-                            <option value="Prefiero no decir" {% if patient.sexo == 'Prefiero no decir' %}selected{% endif %}>Prefiero no decir</option>
+                            <option value="Femenino" {% if patient.sexo=='Femenino' %}selected{% endif %}>Femenino
+                            </option>
+                            <option value="Masculino" {% if patient.sexo=='Masculino' %}selected{% endif %}>Masculino
+                            </option>
+                            <option value="Otro" {% if patient.sexo=='Otro' %}selected{% endif %}>Otro</option>
+                            <option value="Prefiero no decir" {% if patient.sexo=='Prefiero no decir' %}selected{% endif
+                                %}>Prefiero no decir</option>
                         </select>
                     </div>
 
                     <div class="col-12">
                         <label class="form-label">Ocupacion / Profesion</label>
-                        <input type="text" class="form-control" name="ocupacion"
-                               value="{{ patient.ocupacion or '' }}"
-                               placeholder="Ej: Ingeniero, Estudiante, etc.">
+                        <input type="text" class="form-control" name="ocupacion" value="{{ patient.ocupacion or '' }}"
+                            placeholder="Ej: Ingeniero, Estudiante, etc.">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Peso (kg) <span class="required">*</span></label>
+                        <input type="number" class="form-control" name="peso" step="0.1"
+                            value="{{ patient.peso_kg or '' }}" required placeholder="Ej: 70.5">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Estatura (m) <span class="required">*</span></label>
+                        <input type="number" class="form-control" name="talla" step="0.01"
+                            value="{{ patient.talla_m or '' }}" required placeholder="Ej: 1.75">
                     </div>
 
                     <div class="col-12">
                         <label class="form-label">Direccion (opcional)</label>
-                        <input type="text" class="form-control" name="direccion"
-                               value="{{ patient.direccion or '' }}"
-                               placeholder="Ciudad, Comuna">
+                        <input type="text" class="form-control" name="direccion" value="{{ patient.direccion or '' }}"
+                            placeholder="Ciudad, Comuna">
                     </div>
                 </div>
 
@@ -674,19 +838,19 @@
                     <div class="col-12">
                         <label class="form-label">Medicamentos actuales</label>
                         <textarea class="form-control" name="medicamentos" rows="2"
-                                  placeholder="Lista los medicamentos que tomas actualmente (nombre y dosis si la conoces)">{{ patient.medicamentos or '' }}</textarea>
+                            placeholder="Lista los medicamentos que tomas actualmente (nombre y dosis si la conoces)">{{ patient.medicamentos or '' }}</textarea>
                     </div>
 
                     <div class="col-12">
                         <label class="form-label">Suplementos o vitaminas</label>
                         <textarea class="form-control" name="suplementos" rows="2"
-                                  placeholder="Vitaminas, minerales, proteinas, etc.">{{ patient.suplementos or '' }}</textarea>
+                            placeholder="Vitaminas, minerales, proteinas, etc.">{{ patient.suplementos or '' }}</textarea>
                     </div>
 
                     <div class="col-12">
                         <label class="form-label">Cirugias anteriores</label>
                         <textarea class="form-control" name="cirugias" rows="2"
-                                  placeholder="Lista cirugias relevantes y el ano aproximado">{{ patient.cirugias or '' }}</textarea>
+                            placeholder="Lista cirugias relevantes y el ano aproximado">{{ patient.cirugias or '' }}</textarea>
                     </div>
 
                     <div class="col-12">
@@ -718,13 +882,13 @@
                     <div class="col-12">
                         <label class="form-label">Alergias alimentarias</label>
                         <textarea class="form-control" name="alergias" rows="2"
-                                  placeholder="Ej: Mani, mariscos, lactosa, gluten...">{{ patient.alergias or '' }}</textarea>
+                            placeholder="Ej: Mani, mariscos, lactosa, gluten...">{{ patient.alergias or '' }}</textarea>
                     </div>
 
                     <div class="col-12">
                         <label class="form-label">Intolerancias</label>
                         <textarea class="form-control" name="intolerancias" rows="2"
-                                  placeholder="Alimentos que te caen mal o te producen malestar">{{ patient.intolerancias or '' }}</textarea>
+                            placeholder="Alimentos que te caen mal o te producen malestar">{{ patient.intolerancias or '' }}</textarea>
                     </div>
                 </div>
 
@@ -762,9 +926,8 @@
                         <label class="form-label">Calidad de sueno</label>
                         <div class="range-container">
                             <div class="range-value" id="suenoValue">5</div>
-                            <input type="range" class="form-range" name="calidad_sueno"
-                                   min="1" max="10" value="5"
-                                   oninput="document.getElementById('suenoValue').textContent = this.value">
+                            <input type="range" class="form-range" name="calidad_sueno" min="1" max="10" value="5"
+                                oninput="document.getElementById('suenoValue').innerText = this.value">
                             <div class="range-labels">
                                 <span>Muy mala</span>
                                 <span>Excelente</span>
@@ -776,9 +939,8 @@
                         <label class="form-label">Nivel de estres</label>
                         <div class="range-container">
                             <div class="range-value" id="estresValue">5</div>
-                            <input type="range" class="form-range" name="nivel_estres"
-                                   min="1" max="10" value="5"
-                                   oninput="document.getElementById('estresValue').textContent = this.value">
+                            <input type="range" class="form-range" name="nivel_estres" min="1" max="10" value="5"
+                                oninput="document.getElementById('estresValue').innerText = this.value">
                             <div class="range-labels">
                                 <span>Muy bajo</span>
                                 <span>Muy alto</span>
@@ -801,7 +963,7 @@
                     <div class="col-12">
                         <label class="form-label">Tipo de ejercicio que realizas</label>
                         <input type="text" class="form-control" name="tipo_ejercicio"
-                               placeholder="Ej: Caminar, correr, gimnasio, yoga, natacion...">
+                            placeholder="Ej: Caminar, correr, gimnasio, yoga, natacion...">
                     </div>
 
                     <div class="col-md-6">
@@ -816,14 +978,53 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Tabaco</label>
-                        <select class="form-select" name="tabaco">
-                            <option value="">Seleccionar...</option>
-                            <option value="no">No fumo</option>
-                            <option value="ex">Ex fumador</option>
-                            <option value="ocasional">Ocasionalmente</option>
-                            <option value="si">Si, fumo regularmente</option>
+                        <label class="form-label">¿Fumas actualmente?</label>
+                        <select class="form-select" name="fuma" onchange="toggleCigarrillos(this.value)">
+                            <option value="false">No</option>
+                            <option value="true">Si</option>
                         </select>
+                    </div>
+
+                    <div class="col-md-6" id="cigarrillos_wrapper" style="display: none;">
+                        <label class="form-label">¿Cuantos cigarrillos al dia?</label>
+                        <input type="number" class="form-control" name="cigarrillos_dia" value="0" min="0">
+                    </div>
+
+                    <div class="col-12 mt-3 p-3 bg-light rounded-4">
+                        <label class="form-label d-block"><i class="fas fa-clock me-2 text-primary"></i>Tus horarios
+                            habituales de comida</label>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <label class="small text-muted">Desayuno</label>
+                                <input type="time" class="form-control" name="horario_desayuno">
+                            </div>
+                            <div class="col-4">
+                                <label class="small text-muted">Almuerzo</label>
+                                <input type="time" class="form-control" name="horario_almuerzo">
+                            </div>
+                            <div class="col-4">
+                                <label class="small text-muted">Cena</label>
+                                <input type="time" class="form-control" name="horario_cena">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Habitos al comer</label>
+                        <div class="checkbox-pills">
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="pica_entre_comidas" value="true">
+                                Pica entre comidas
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="come_frente_tv" value="true">
+                                Come frente a TV/Celular
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="come_rapido" value="true">
+                                Come muy rapido
+                            </label>
+                        </div>
                     </div>
 
                     <div class="col-12">
@@ -882,7 +1083,7 @@
                     <div class="col-12">
                         <label class="form-label">Motivo de consulta <span class="required">*</span></label>
                         <textarea class="form-control" name="motivo_consulta" rows="4" required
-                                  placeholder="Cuentanos por que buscas atencion nutricional. Que te preocupa? Que te gustaria lograr?">{{ patient.motivo_consulta or '' }}</textarea>
+                            placeholder="Cuentanos por que buscas atencion nutricional. Que te preocupa? Que te gustaria lograr?">{{ patient.motivo_consulta or '' }}</textarea>
                     </div>
 
                     <div class="col-12">
@@ -961,14 +1162,194 @@
                         </div>
                     </div>
 
-                    <div class="col-12 mt-4">
-                        <div class="alert alert-info" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: none; border-radius: 1rem;">
-                            <div class="d-flex align-items-center gap-3">
-                                <i class="fas fa-info-circle fa-2x text-primary"></i>
-                                <div>
-                                    <strong>Casi listo!</strong>
-                                    <p class="mb-0 small">Al enviar este formulario, tu nutricionista recibira tus datos y podra preparar mejor tu consulta.</p>
-                                </div>
+                    <!-- Bristol Scale -->
+                    <div class="col-12 mt-3">
+                        <label class="form-label">Consistencia habitual de tus deposiciones (Escala de Bristol)</label>
+                        <p class="small text-muted mb-3">Selecciona la opcion que mejor describa tu situacion mas
+                            frecuente</p>
+                        <div class="bristol-grid" id="bristolGroup">
+                            <label class="bristol-card" onclick="selectBristol(this)">
+                                <input type="radio" name="consistencia_heces" value="1">
+                                <div class="bristol-type">&#9679;&#9679;&#9679;</div>
+                                <div class="bristol-label">Tipo 1</div>
+                                <div class="bristol-desc">Trozos duros separados</div>
+                            </label>
+                            <label class="bristol-card" onclick="selectBristol(this)">
+                                <input type="radio" name="consistencia_heces" value="2">
+                                <div class="bristol-type">&#11044;&#11044;</div>
+                                <div class="bristol-label">Tipo 2</div>
+                                <div class="bristol-desc">Forma de salchicha grumosa</div>
+                            </label>
+                            <label class="bristol-card" onclick="selectBristol(this)">
+                                <input type="radio" name="consistencia_heces" value="3">
+                                <div class="bristol-type">&#9644;&#9644;</div>
+                                <div class="bristol-label">Tipo 3</div>
+                                <div class="bristol-desc">Salchicha con grietas</div>
+                            </label>
+                            <label class="bristol-card" onclick="selectBristol(this)">
+                                <input type="radio" name="consistencia_heces" value="4">
+                                <div class="bristol-type">&#9646;</div>
+                                <div class="bristol-label">Tipo 4</div>
+                                <div class="bristol-desc">Lisa y suave (ideal)</div>
+                            </label>
+                            <label class="bristol-card" onclick="selectBristol(this)">
+                                <input type="radio" name="consistencia_heces" value="5">
+                                <div class="bristol-type">&#8226; &#8226;</div>
+                                <div class="bristol-label">Tipo 5</div>
+                                <div class="bristol-desc">Trozos blandos</div>
+                            </label>
+                            <label class="bristol-card" onclick="selectBristol(this)">
+                                <input type="radio" name="consistencia_heces" value="6">
+                                <div class="bristol-type">&#8767;</div>
+                                <div class="bristol-label">Tipo 6</div>
+                                <div class="bristol-desc">Pastosa, blanda</div>
+                            </label>
+                            <label class="bristol-card" onclick="selectBristol(this)">
+                                <input type="radio" name="consistencia_heces" value="7">
+                                <div class="bristol-type">&#8776;</div>
+                                <div class="bristol-label">Tipo 7</div>
+                                <div class="bristol-desc">Liquida, acuosa</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button type="button" class="btn-nav btn-prev" onclick="prevStep()">
+                        <i class="fas fa-arrow-left"></i> Anterior
+                    </button>
+                    <button type="button" class="btn-nav btn-next" onclick="nextStep()">
+                        Siguiente <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 5: Registro Alimentario 24 Horas -->
+            <div class="form-section" data-step="5">
+                <div class="section-title">
+                    <i class="fas fa-history"></i>
+                    <span>Registro Alimentario de 24 Horas</span>
+                </div>
+                <p class="text-muted mb-4 small">
+                    Por favor describe lo que comiste ayer. Selecciona el grupo, luego el alimento y la cantidad.
+                </p>
+
+                <div id="registro24hContainer">
+                    <ul class="nav nav-pills mb-3" id="mealTabs" role="tablist">
+                        {% for meal in ['desayuno', 'colacion1', 'almuerzo', 'colacion2', 'cena'] %}
+                        <li class="nav-item">
+                            <button class="nav-link {% if loop.first %}active{% endif %} rounded-pill"
+                                id="{{ meal }}-tab" data-bs-toggle="pill" data-bs-target="#{{ meal }}" type="button"
+                                role="tab">
+                                {{ meal|replace('colacion1', 'Col. AM')|replace('colacion2', 'Col. PM')|capitalize }}
+                            </button>
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    <div class="tab-content" id="mealTabContent">
+                        {% for meal in ['desayuno', 'colacion1', 'almuerzo', 'colacion2', 'cena'] %}
+                        <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="{{ meal }}"
+                            role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-registro" id="{{ meal }}Table">
+                                    <thead>
+                                        <tr>
+                                            <th>Grupo</th>
+                                            <th>Alimento</th>
+                                            <th>Cantidad</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody data-meal="{{ meal }}">
+                                        <!-- JS will add rows here -->
+                                        <tr class="meal-row">
+                                            <td>
+                                                <select class="form-select form-select-sm grupo-select"
+                                                    onchange="onPublicGrupoChange(this)">
+                                                    <option value="">Grupo...</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm alimento-select" disabled
+                                                    onchange="onPublicAlimentoChange(this)">
+                                                    <option value="">Selecciona...</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm porcion-select" disabled>
+                                                    <option value="">Cant...</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm text-danger"
+                                                    onclick="removePublicRow(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                onclick="addPublicRow('{{ meal }}')">
+                                <i class="fas fa-plus me-1"></i> Agregar alimento
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button type="button" class="btn-nav btn-prev" onclick="prevStep()">
+                        <i class="fas fa-arrow-left"></i> Anterior
+                    </button>
+                    <button type="button" class="btn-nav btn-next" onclick="nextStep()">
+                        Siguiente <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 6: Encuesta de Frecuencia de Consumo (EFC) -->
+            <div class="form-section" data-step="6">
+                <div class="section-title">
+                    <i class="fas fa-utensils"></i>
+                    <span>Frecuencia de Consumo</span>
+                </div>
+
+                <p class="text-muted mb-3" style="font-size: 0.9375rem;">
+                    Indica con que frecuencia consumes los siguientes alimentos. Esto nos ayuda a entender tus habitos
+                    alimentarios.
+                </p>
+
+                <div class="efc-table-wrapper">
+                    <table class="efc-table" id="efcTable">
+                        <thead>
+                            <tr>
+                                <th>Alimento</th>
+                                <th>Nunca</th>
+                                <th>1-3/mes</th>
+                                <th>1/sem</th>
+                                <th>2-4/sem</th>
+                                <th>5-6/sem</th>
+                                <th>Diario</th>
+                                <th>2+/dia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="col-12 mt-4">
+                    <div class="alert alert-info"
+                        style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: none; border-radius: 1rem;">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="fas fa-info-circle fa-2x text-primary"></i>
+                            <div>
+                                <strong>Ultimo paso!</strong>
+                                <p class="mb-0 small">Al enviar este formulario, tu nutricionista recibira tus datos y
+                                    podra preparar mejor tu consulta.</p>
                             </div>
                         </div>
                     </div>
@@ -1002,12 +1383,162 @@
     {% if not error and not already_completed %}
     <script>
         let currentStep = 1;
-        const totalSteps = 4;
+        const totalSteps = 6;
         const token = '{{ patient.intake_token }}';
+
+        // EFC food items
+        const efcItems = [
+            { name: 'Frutas', icon: 'fas fa-apple-alt' },
+            { name: 'Verduras y ensaladas', icon: 'fas fa-carrot' },
+            { name: 'Leche / yogur', icon: 'fas fa-glass-whiskey' },
+            { name: 'Queso', icon: 'fas fa-cheese' },
+            { name: 'Carnes rojas (vacuno, cerdo)', icon: 'fas fa-drumstick-bite' },
+            { name: 'Pollo / pavo', icon: 'fas fa-drumstick-bite' },
+            { name: 'Pescados / mariscos', icon: 'fas fa-fish' },
+            { name: 'Huevos', icon: 'fas fa-egg' },
+            { name: 'Legumbres (porotos, lentejas, garbanzos)', icon: 'fas fa-seedling' },
+            { name: 'Pan', icon: 'fas fa-bread-slice' },
+            { name: 'Arroz / pasta / fideos', icon: 'fas fa-utensils' },
+            { name: 'Cereales / avena / granola', icon: 'fas fa-wheat-awn' },
+            { name: 'Papas / tuberculos', icon: 'fas fa-utensils' },
+            { name: 'Frutos secos (nueces, almendras)', icon: 'fas fa-tree' },
+            { name: 'Aceite de oliva / palta', icon: 'fas fa-oil-can' },
+            { name: 'Mantequilla / margarina', icon: 'fas fa-cube' },
+            { name: 'Embutidos / fiambres', icon: 'fas fa-bacon' },
+            { name: 'Snacks / galletas / papas fritas', icon: 'fas fa-cookie-bite' },
+            { name: 'Dulces / chocolate / postres', icon: 'fas fa-candy-cane' },
+            { name: 'Bebidas azucaradas / jugos envasados', icon: 'fas fa-glass-cheers' },
+            { name: 'Cafe / te', icon: 'fas fa-mug-hot' },
+            { name: 'Comida rapida / delivery', icon: 'fas fa-hamburger' }
+        ];
+
+        const efcFrequencies = ['nunca', '1-3_mes', '1_sem', '2-4_sem', '5-6_sem', 'diario', '2_dia'];
+
+        function toggleCigarrillos(value) {
+            const wrapper = document.getElementById('cigarrillos_wrapper');
+            if (wrapper) {
+                wrapper.style.display = (value === 'true') ? 'block' : 'none';
+            }
+        }
+
+        // Build EFC table dynamically
+        function buildEFCTable() {
+            const tbody = document.querySelector('#efcTable tbody');
+            efcItems.forEach((item, idx) => {
+                const tr = document.createElement('tr');
+                let cells = `<td><i class="${item.icon} me-2" style="color: var(--primary); width: 16px;"></i>${item.name}</td>`;
+                efcFrequencies.forEach(freq => {
+                    const radioId = `efc_${idx}_${freq}`;
+                    cells += `<td>
+                        <label class="efc-radio" onclick="selectEFC(this)" for="${radioId}">
+                            <input type="radio" name="efc_${idx}" value="${freq}" id="${radioId}">
+                        </label>
+                    </td>`;
+                });
+                tr.innerHTML = cells;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- 24h Recall Logic ---
+        let publicAlimentosDB = {};
+        const mults = [
+            { v: 0.25, l: '¼' }, { v: 0.33, l: '⅓' }, { v: 0.5, l: '½' },
+            { v: 0.75, l: '¾' }, { v: 1, l: '1' }, { v: 1.5, l: '1½' },
+            { v: 2, l: '2' }, { v: 3, l: '3' }, { v: 4, l: '4' }
+        ];
+
+        async function loadPublicAlimentos() {
+            try {
+                const res = await fetch('/api/alimentos');
+                const result = await res.json();
+                if (result.success) {
+                    publicAlimentosDB = result.data;
+                    populateAllGrupoSelects();
+                }
+            } catch (e) { console.error("Error loading alimentos", e); }
+        }
+
+        function populateAllGrupoSelects() {
+            const selects = document.querySelectorAll('.grupo-select');
+            const groups = Object.keys(publicAlimentosDB);
+            selects.forEach(sel => {
+                const val = sel.value;
+                sel.innerHTML = '<option value="">Grupo...</option>' +
+                    groups.map(g => `<option value="${g}">${g.replace(/_/g, ' ').toUpperCase()}</option>`).join('');
+                sel.value = val;
+            });
+        }
+
+        window.onPublicGrupoChange = function (sel) {
+            const row = sel.closest('tr');
+            const group = sel.value;
+            const alimSel = row.querySelector('.alimento-select');
+            const porcSel = row.querySelector('.porcion-select');
+
+            alimSel.innerHTML = '<option value="">Selecciona...</option>';
+            alimSel.disabled = !group;
+            porcSel.innerHTML = '<option value="">Cant...</option>';
+            porcSel.disabled = true;
+
+            if (group && publicAlimentosDB[group]) {
+                const subgrupos = publicAlimentosDB[group];
+                let options = '';
+                Object.keys(subgrupos).forEach(sg => {
+                    subgrupos[sg].forEach((alim, idx) => {
+                        options += `<option value="${sg}|${idx}">${alim.nombre}</option>`;
+                    });
+                });
+                alimSel.innerHTML += options;
+            }
+        }
+
+        window.onPublicAlimentoChange = function (sel) {
+            const row = sel.closest('tr');
+            const porcSel = row.querySelector('.porcion-select');
+            porcSel.innerHTML = mults.map(m => `<option value="${m.v}">${m.l}</option>`).join('');
+            porcSel.value = "1";
+            porcSel.disabled = !sel.value;
+        }
+
+        window.addPublicRow = function (meal) {
+            const tbody = document.querySelector(`tbody[data-meal="${meal}"]`);
+            const tr = document.createElement('tr');
+            tr.className = 'meal-row';
+            tr.innerHTML = `
+                <td><select class="form-select form-select-sm grupo-select" onchange="onPublicGrupoChange(this)"></select></td>
+                <td><select class="form-select form-select-sm alimento-select" disabled onchange="onPublicAlimentoChange(this)"><option value="">Selecciona...</option></select></td>
+                <td><select class="form-select form-select-sm porcion-select" disabled><option value="">Cant...</option></select></td>
+                <td><button type="button" class="btn btn-sm text-danger" onclick="removePublicRow(this)"><i class="fas fa-trash"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+            populateAllGrupoSelects();
+        }
+
+        window.removePublicRow = function (btn) {
+            const row = btn.closest('tr');
+            const tbody = row.parentElement;
+            if (tbody.querySelectorAll('tr').length > 1) row.remove();
+        }
+
+
+        function selectEFC(label) {
+            // Deselect siblings in same row
+            const row = label.closest('tr');
+            row.querySelectorAll('.efc-radio').forEach(r => r.classList.remove('selected'));
+            label.classList.add('selected');
+            label.querySelector('input').checked = true;
+        }
+
+        function selectBristol(card) {
+            document.querySelectorAll('.bristol-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            card.querySelector('input').checked = true;
+        }
 
         // Initialize checkbox pills
         document.querySelectorAll('.checkbox-pill').forEach(pill => {
-            pill.addEventListener('click', function(e) {
+            pill.addEventListener('click', function (e) {
                 if (e.target.tagName !== 'INPUT') {
                     const checkbox = this.querySelector('input[type="checkbox"]');
                     checkbox.checked = !checkbox.checked;
@@ -1015,7 +1546,6 @@
                 this.classList.toggle('selected', this.querySelector('input').checked);
             });
 
-            // Set initial state
             const checkbox = pill.querySelector('input[type="checkbox"]');
             if (checkbox.checked) {
                 pill.classList.add('selected');
@@ -1050,7 +1580,6 @@
         }
 
         function nextStep() {
-            // Validate current step
             const currentSection = document.querySelector(`.form-section[data-step="${currentStep}"]`);
             const requiredFields = currentSection.querySelectorAll('[required]');
             let valid = true;
@@ -1083,7 +1612,7 @@
         }
 
         // Form submission
-        document.getElementById('intakeForm').addEventListener('submit', async function(e) {
+        document.getElementById('intakeForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const loadingOverlay = document.getElementById('loadingOverlay');
@@ -1106,6 +1635,59 @@
                 data[group] = Array.from(checkboxes).map(cb => cb.value);
             });
 
+            // Handle boolean checkboxes
+            ['pica_entre_comidas', 'come_frente_tv', 'come_rapido'].forEach(field => {
+                const cb = document.querySelector(`input[name="${field}"]`);
+                data[field] = cb ? cb.checked : false;
+            });
+
+            // Handle fuma explicitly as boolean
+            data.fuma = data.fuma === 'true';
+
+            // Collect Bristol Scale
+            const bristolChecked = document.querySelector('input[name="consistencia_heces"]:checked');
+            if (bristolChecked) {
+                data.consistencia_heces = bristolChecked.value;
+            }
+
+            // Collect EFC data
+            const frecuencia_consumo = {};
+            efcItems.forEach((item, idx) => {
+                const checked = document.querySelector(`input[name="efc_${idx}"]:checked`);
+                if (checked) {
+                    frecuencia_consumo[item.name] = checked.value;
+                }
+            });
+            // Collect 24h Record
+            const registro_24h = {};
+            ['desayuno', 'colacion1', 'almuerzo', 'colacion2', 'cena'].forEach(meal => {
+                const rows = document.querySelectorAll(`tbody[data-meal="${meal}"] tr`);
+                const items = [];
+                rows.forEach(row => {
+                    const group = row.querySelector('.grupo-select').value;
+                    const alimVal = row.querySelector('.alimento-select').value;
+                    const cant = row.querySelector('.porcion-select').value;
+                    if (group && alimVal) {
+                        const [subgroup, idx] = alimVal.split('|');
+                        const alimento = publicAlimentosDB[group][subgroup][parseInt(idx)];
+                        items.push({
+                            grupo: group,
+                            subgrupo: subgroup,
+                            alimento: alimento.nombre,
+                            alimento_idx: idx,
+                            cantidad: cant,
+                            medida: alimento.medida_casera,
+                            kcal: Math.round(alimento.kcal * parseFloat(cant)),
+                            prot: (alimento.proteinas * parseFloat(cant)).toFixed(1)
+                        });
+                    }
+                });
+                if (items.length > 0) registro_24h[meal] = items;
+            });
+            data.registro_24h = registro_24h;
+
+            data.frecuencia_consumo = frecuencia_consumo;
+
             try {
                 const response = await fetch(`/api/intake/${token}`, {
                     method: 'POST',
@@ -1120,7 +1702,6 @@
                 loadingOverlay.classList.remove('show');
 
                 if (result.success) {
-                    // Hide form and show success message
                     document.getElementById('intakeForm').style.display = 'none';
                     document.querySelector('.progress-wrapper').style.display = 'none';
                     document.getElementById('successMessage').style.display = 'block';
@@ -1136,8 +1717,11 @@
         });
 
         // Initialize
+        buildEFCTable();
+        loadPublicAlimentos();
         updateProgress();
     </script>
     {% endif %}
 </body>
+
 </html>

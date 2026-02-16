@@ -16,6 +16,14 @@ if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
+# Cargar variables de entorno desde .env
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    print("[OK] Variables de entorno cargadas desde .env")
+except ImportError:
+    pass  # dotenv no instalado, usar variables de entorno del sistema
+
 # Agregar el directorio actual al path para importar el generador
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -506,6 +514,86 @@ def delete_patients_bulk():
     except Exception as e:
         db.session.rollback()
         log_debug(f"[ERROR] Bulk delete failed: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/patients/invite', methods=['POST'])
+@login_required
+def invite_patient():
+    """Crear paciente e invitarlo a llenar formulario previo"""
+    if current_user.user_type != 'nutricionista':
+        return jsonify({'error': 'No autorizado'}), 403
+
+    try:
+        data = request.get_json()
+        nombre = data.get('nombre', 'Paciente')
+        email = data.get('email')
+        telefono = data.get('telefono', '')
+        nota = data.get('nota', '')
+
+        if not email:
+            return jsonify({'success': False, 'error': 'Email es requerido'}), 400
+
+        # Verificar si ya existe un paciente con este email para este nutricionista
+        existing = PatientFile.query.filter_by(
+            nutricionista_id=current_user.id,
+            email=email,
+            is_active=True
+        ).first()
+
+        if existing:
+            # Si ya existe, regenerar token y reenviar
+            patient = existing
+            patient.generate_intake_token()
+        else:
+            # Crear nuevo paciente con datos minimos
+            patient = PatientFile(
+                nutricionista_id=current_user.id,
+                nombre=nombre,
+                email=email,
+                telefono=telefono,
+                motivo_consulta=nota if nota else 'Formulario pre-consulta pendiente',
+                is_active=True,
+                intake_completed=False
+            )
+            patient.generate_intake_token()
+            db.session.add(patient)
+
+        db.session.flush()
+
+        # Construir URL del formulario
+        base_url = request.host_url.rstrip('/')
+        intake_url = f"{base_url}/intake/{patient.intake_token}"
+
+        # Intentar enviar email
+        email_sent = False
+        if is_mail_configured():
+            try:
+                result = send_intake_email(
+                    patient,
+                    intake_url,
+                    current_user.get_full_name() if hasattr(current_user, 'get_full_name') else current_user.first_name
+                )
+                email_sent = result.get('success', False)
+                patient.intake_url_sent = email_sent
+                if email_sent:
+                    patient.intake_url_sent_at = datetime.utcnow()
+            except Exception as e:
+                log_debug(f"[WARNING] Error enviando email: {e}")
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'patient_id': patient.id,
+            'intake_url': intake_url,
+            'email_sent': email_sent,
+            'message': f'Invitacion {"enviada por email" if email_sent else "creada (copiar link manualmente)"}'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        log_debug(f"[ERROR] Invite patient failed: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1070,6 +1158,22 @@ def submit_public_intake(token):
             patient.ocupacion = data.get('ocupacion')
         if data.get('direccion'):
             patient.direccion = data.get('direccion')
+
+        # Medidas antropometricas
+        if data.get('peso'):
+            try:
+                patient.peso_kg = float(data.get('peso'))
+            except:
+                pass
+        if data.get('talla'):
+            try:
+                patient.talla_m = float(data.get('talla'))
+            except:
+                pass
+
+        # Calcular IMC automaticamente si hay peso y talla
+        if patient.peso_kg and patient.talla_m and patient.talla_m > 0:
+            patient.imc = round(patient.peso_kg / (patient.talla_m ** 2), 1)
 
         # Motivo de consulta y objetivos
         if data.get('motivo_consulta'):
@@ -2217,6 +2321,125 @@ def guardar_pauta_endpoint_post(patient_id):
         return jsonify({'success': False, 'error': 'No pauta provided'}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================
+# GROQ AI - Alertas y Chatbot
+# ============================================
+
+# Intentar usar Gemini, si no está disponible usar Groq como fallback
+try:
+    from gemini_service import generar_alertas_paciente, chat_con_asistente, obtener_sugerencias_chat, ia_disponible
+    print("[OK] Usando Gemini AI Service")
+except ImportError:
+    try:
+        from groq_service import generar_alertas_paciente, chat_con_asistente, obtener_sugerencias_chat, ia_disponible
+        print("[OK] Usando Groq AI Service")
+    except ImportError:
+        # Fallback sin IA
+        def generar_alertas_paciente(data): return []
+        def chat_con_asistente(msg, ctx=None, hist=None): return "IA no disponible"
+        def obtener_sugerencias_chat(ctx=None): return []
+        def ia_disponible(): return False
+        print("[WARNING] Ningun servicio de IA disponible")
+
+@app.route('/api/patient/<int:patient_id>/alertas', methods=['GET'])
+@login_required
+def get_patient_alertas(patient_id):
+    """Genera alertas IA para un paciente"""
+    try:
+        patient = PatientFile.query.get_or_404(patient_id)
+
+        # Convertir paciente a diccionario
+        patient_data = patient.to_dict() if hasattr(patient, 'to_dict') else {
+            'nombre': patient.nombre,
+            'edad': patient.edad,
+            'sexo': patient.sexo,
+            'imc': patient.imc,
+            'peso': patient.peso,
+            'talla': patient.talla,
+            'porcentaje_grasa': patient.porcentaje_grasa,
+            'perimetro_cintura': patient.perimetro_cintura,
+            'actividad_fisica': patient.actividad_fisica,
+            'consumo_agua_litros': patient.consumo_agua_litros,
+            'calidad_sueno': patient.calidad_sueno,
+            'nivel_estres': patient.nivel_estres,
+            'horas_sueno': patient.horas_sueno,
+            'diagnosticos': patient.diagnosticos,
+            'alergias': patient.alergias,
+            'intolerancias': patient.intolerancias,
+            'restricciones_alimentarias': patient.restricciones_alimentarias,
+            'objetivos': patient.objetivos,
+            'motivo_consulta': patient.motivo_consulta,
+            'reflujo': patient.reflujo,
+            'hinchazon': patient.hinchazon,
+            'consistencia_heces': patient.consistencia_heces,
+            'fuma': patient.fuma,
+        }
+
+        alertas = generar_alertas_paciente(patient_data)
+
+        return jsonify({
+            'success': True,
+            'alertas': alertas,
+            'ia_disponible': ia_disponible()
+        })
+    except Exception as e:
+        print(f"Error generating alertas: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/chat', methods=['POST'])
+@login_required
+def chat_endpoint():
+    """Endpoint del chatbot asistente"""
+    try:
+        data = request.json
+        mensaje = data.get('mensaje', '')
+        patient_id = data.get('patient_id')
+        historial = data.get('historial', [])
+
+        if not mensaje:
+            return jsonify({'success': False, 'error': 'Mensaje vacio'}), 400
+
+        # Obtener contexto del paciente si se proporciona
+        contexto_paciente = None
+        if patient_id:
+            patient = PatientFile.query.get(patient_id)
+            if patient:
+                contexto_paciente = patient.to_dict() if hasattr(patient, 'to_dict') else {
+                    'nombre': patient.nombre,
+                    'edad': patient.edad,
+                    'sexo': patient.sexo,
+                    'imc': patient.imc,
+                    'peso': patient.peso,
+                    'diagnosticos': patient.diagnosticos,
+                    'objetivos': patient.objetivos,
+                    'motivo_consulta': patient.motivo_consulta,
+                }
+
+        respuesta = chat_con_asistente(mensaje, contexto_paciente, historial)
+        sugerencias = obtener_sugerencias_chat(contexto_paciente)
+
+        return jsonify({
+            'success': True,
+            'respuesta': respuesta,
+            'sugerencias': sugerencias
+        })
+    except Exception as e:
+        print(f"Error in chat: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/ia/status', methods=['GET'])
+@login_required
+def ia_status():
+    """Verifica el estado del servicio de IA"""
+    return jsonify({
+        'disponible': ia_disponible(),
+        'mensaje': 'Gemini AI activo' if ia_disponible() else 'Configure GEMINI_API_KEY para habilitar IA'
+    })
+
 
 # ============================================
 # BOOKING SYSTEM - Page Routes

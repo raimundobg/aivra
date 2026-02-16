@@ -1,0 +1,46 @@
+# Environment and secrets
+.env
+*.env
+gmaipassword.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+
+# Database
+*.db
+instance/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+error_log.txt
+
+# Test files
+test_*.py
+nul
+
+# Backups
+*.backup
+*BACKUP*/
+
+# Claude
+.claude/
+
+# Temporary
+*.tmp
+*.temp

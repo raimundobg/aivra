@@ -62,6 +62,12 @@
                         <span>Generar Pauta</span>
                     </button>
 
+                    <button type="button" class="btn-ficha btn-alertas" id="btnAlertas" onclick="cargarAlertasIA()"
+                        style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">
+                        <i class="fas fa-brain"></i>
+                        <span>Alertas IA</span>
+                    </button>
+
                     <button type="button" class="btn-ficha btn-edit" id="btnEdit" onclick="toggleEditMode()">
                         <i class="fas fa-edit"></i>
                         <span>Editar</span>
@@ -105,6 +111,23 @@
             <div class="summary-item">
                 <div class="summary-value" id="summaryProteinas">{{ patient.proteinas_g or '-' }}g</div>
                 <div class="summary-label">Proteínas</div>
+            </div>
+        </div>
+
+        <!-- Alertas IA Container -->
+        <div id="alertasIAContainer" class="alertas-ia-container mb-4" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="m-0">
+                    <i class="fas fa-brain text-purple me-2"></i>
+                    Alertas Inteligentes
+                    <span class="badge bg-purple ms-2">IA</span>
+                </h5>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cerrarAlertasIA()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="alertasIAContent" class="row g-3">
+                <!-- Alertas se cargan aqui via JS -->
             </div>
         </div>
 
@@ -742,12 +765,38 @@
                 <div class="collapse" id="section4c">
                     <div class="accordion-content">
                         <div class="row g-4">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">
-                                    <i class="fas fa-toilet"></i> Frecuencia de Evacuación
+                                    <i class="fas fa-toilet"></i> Frecuencia de Evacuacion
                                 </label>
                                 <input type="text" class="form-control" id="frecuencia_evacuacion"
                                     name="frecuencia_evacuacion" value="{{ patient.frecuencia_evacuacion or '' }}">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">
+                                    <i class="fas fa-chart-line"></i> Escala de Bristol
+                                </label>
+                                {% set bristol_val = patient.consistencia_heces|int if patient.consistencia_heces else 0 %}
+                                <div class="d-flex gap-1">
+                                    {% for i in range(1, 8) %}
+                                    <span class="badge {{ 'bg-danger' if i in [1,2] else 'bg-success' if i in [3,4] else 'bg-warning text-dark' if i == 5 else 'bg-orange' }} {{ 'border border-dark border-2' if bristol_val == i else 'opacity-25' }}"
+                                        style="padding: 0.5rem; font-size: 0.9rem; {% if i in [6,7] %}background-color: #fd7e14 !important;{% endif %}">
+                                        {{ i }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                                <small class="text-muted">
+                                    {% if bristol_val == 1 %}Constipacion severa
+                                    {% elif bristol_val == 2 %}Constipacion leve
+                                    {% elif bristol_val == 3 %}Normal
+                                    {% elif bristol_val == 4 %}Ideal
+                                    {% elif bristol_val == 5 %}Falta fibra
+                                    {% elif bristol_val == 6 %}Diarrea leve
+                                    {% elif bristol_val == 7 %}Diarrea severa
+                                    {% else %}No registrado{% endif %}
+                                </small>
+                                <input type="hidden" id="consistencia_heces" name="consistencia_heces"
+                                    value="{{ patient.consistencia_heces or '' }}">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">
@@ -1248,6 +1297,69 @@
                     </div>
                 </div>
             </div>
+
+            <!-- SECCION 7: GRAFICO ARANA DE HABITOS -->
+            <div class="card mb-4" id="section7">
+                <button class="accordion-btn collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#sectionRadar" aria-expanded="false">
+                    <i class="fas fa-chart-pie section-icon text-info"></i>
+                    <span>7. Resumen Visual de Habitos</span>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
+                </button>
+                <div class="collapse show" id="sectionRadar">
+                    <div class="accordion-content">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="chart-container" style="position: relative; height: 320px;">
+                                    <canvas id="habitosRadarChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="habits-summary p-3 bg-light rounded-3">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="fas fa-clipboard-list me-2 text-primary"></i>
+                                        Evaluacion de Habitos
+                                    </h6>
+                                    <div class="habits-grid">
+                                        <div class="habit-item d-flex justify-content-between align-items-center py-2 border-bottom">
+                                            <span><i class="fas fa-tint text-info me-2"></i>Hidratacion</span>
+                                            <span class="badge" id="badgeAgua">--</span>
+                                        </div>
+                                        <div class="habit-item d-flex justify-content-between align-items-center py-2 border-bottom">
+                                            <span><i class="fas fa-bed text-primary me-2"></i>Calidad Sueno</span>
+                                            <span class="badge" id="badgeSueno">--</span>
+                                        </div>
+                                        <div class="habit-item d-flex justify-content-between align-items-center py-2 border-bottom">
+                                            <span><i class="fas fa-brain text-purple me-2"></i>Manejo Estres</span>
+                                            <span class="badge" id="badgeEstres">--</span>
+                                        </div>
+                                        <div class="habit-item d-flex justify-content-between align-items-center py-2 border-bottom">
+                                            <span><i class="fas fa-running text-warning me-2"></i>Actividad Fisica</span>
+                                            <span class="badge" id="badgeActividad">--</span>
+                                        </div>
+                                        <div class="habit-item d-flex justify-content-between align-items-center py-2 border-bottom">
+                                            <span><i class="fas fa-apple-alt text-success me-2"></i>Frutas y Verduras</span>
+                                            <span class="badge" id="badgeFrutasVerduras">--</span>
+                                        </div>
+                                        <div class="habit-item d-flex justify-content-between align-items-center py-2">
+                                            <span><i class="fas fa-clock text-secondary me-2"></i>Fraccionamiento</span>
+                                            <span class="badge" id="badgeFraccionamiento">--</span>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="text-center">
+                                        <span class="text-muted small">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Escala: 0-10 (10 = optimo)
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </form>
     </div>
 
@@ -1280,9 +1392,49 @@
         <button class="quick-nav-item" onclick="scrollToSection('section5')" title="Requerimientos">
             <i class="fas fa-calculator"></i>
         </button>
-        <button class="quick-nav-item" onclick="scrollToSection('section6')" title="Diagnóstico">
+        <button class="quick-nav-item" onclick="scrollToSection('section6')" title="Diagnostico">
             <i class="fas fa-clipboard-check"></i>
         </button>
+        <button class="quick-nav-item" onclick="scrollToSection('section7')" title="Grafico Habitos">
+            <i class="fas fa-chart-pie"></i>
+        </button>
+    </div>
+
+    <!-- Chatbot Floating Button -->
+    <button type="button" class="chatbot-fab" id="chatbotFab" onclick="toggleChatbot()" title="Asistente IA">
+        <i class="fas fa-robot"></i>
+    </button>
+
+    <!-- Chatbot Modal -->
+    <div class="chatbot-container" id="chatbotContainer" style="display: none;">
+        <div class="chatbot-header">
+            <div class="chatbot-title">
+                <i class="fas fa-robot me-2"></i>
+                BiteBot - Asistente IA
+            </div>
+            <button type="button" class="chatbot-close" onclick="toggleChatbot()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="chat-message bot">
+                <div class="message-content">
+                    Hola! Soy BiteBot, tu asistente de nutricion.
+                    Puedo ayudarte con consultas sobre este paciente o temas de nutricion clinica.
+                </div>
+            </div>
+        </div>
+        <div class="chatbot-suggestions" id="chatbotSuggestions">
+            <button class="suggestion-btn" onclick="enviarSugerencia(this)">Estrategias para este paciente?</button>
+            <button class="suggestion-btn" onclick="enviarSugerencia(this)">Como mejorar adherencia?</button>
+        </div>
+        <div class="chatbot-input">
+            <input type="text" id="chatInput" placeholder="Escribe tu pregunta..."
+                onkeypress="if(event.key==='Enter')enviarMensaje()">
+            <button type="button" onclick="enviarMensaje()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Loading Overlay -->
@@ -1296,7 +1448,571 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="/js/patient-file.js"></script>
+    <script>
+        // Radar Chart de Habitos
+        document.addEventListener('DOMContentLoaded', function() {
+            initHabitosRadarChart();
+        });
+
+        function initHabitosRadarChart() {
+            const ctx = document.getElementById('habitosRadarChart');
+            if (!ctx) return;
+
+            // Calcular scores basados en los datos del paciente
+            const scores = calcularHabitosScores();
+
+            // Colores
+            const primaryColor = 'rgba(16, 185, 129, 0.7)';
+            const primaryBorder = 'rgba(16, 185, 129, 1)';
+
+            const radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Hidratacion', 'Sueno', 'Estres', 'Actividad', 'Frutas/Verduras', 'Fraccionamiento'],
+                    datasets: [{
+                        label: 'Habitos del Paciente',
+                        data: [
+                            scores.hidratacion,
+                            scores.sueno,
+                            scores.estres,
+                            scores.actividad,
+                            scores.frutasVerduras,
+                            scores.fraccionamiento
+                        ],
+                        backgroundColor: primaryColor,
+                        borderColor: primaryBorder,
+                        borderWidth: 2,
+                        pointBackgroundColor: primaryBorder,
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: primaryBorder
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 10,
+                            min: 0,
+                            ticks: {
+                                stepSize: 2,
+                                font: { size: 10 }
+                            },
+                            pointLabels: {
+                                font: { size: 11, weight: 'bold' }
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Actualizar badges
+            actualizarBadges(scores);
+        }
+
+        function calcularHabitosScores() {
+            // Hidratacion: basado en consumo_agua_litros (2L = 10)
+            const aguaInput = document.querySelector('[name="consumo_agua_litros"]');
+            const agua = parseFloat(aguaInput?.value || aguaInput?.textContent) || 0;
+            const hidratacion = Math.min(10, (agua / 2) * 10);
+
+            // Sueno: basado en calidad_sueno (1-10)
+            const suenoInput = document.getElementById('calidad_sueno');
+            const sueno = parseFloat(suenoInput?.value) || 5;
+
+            // Estres: invertido (1 = muy estresado = malo, 10 = tranquilo = bueno)
+            const estresInput = document.getElementById('nivel_estres');
+            const estresRaw = parseFloat(estresInput?.value) || 5;
+            const estres = 10 - estresRaw; // Invertir: menos estres = mejor
+
+            // Actividad Fisica
+            const actividadSelect = document.getElementById('actividad_fisica');
+            const actividadMap = {
+                'sedentario': 2,
+                'ligero': 4,
+                'ligera': 4,
+                'moderado': 6,
+                'moderada': 6,
+                'activo': 8,
+                'activa': 8,
+                'muy_activo': 10,
+                'muy_activa': 10
+            };
+            const actividadVal = actividadSelect?.value || 'sedentario';
+            const actividad = actividadMap[actividadVal.toLowerCase()] || 2;
+
+            // Frutas y Verduras: basado en frecuencia semanal
+            const frutasRadio = document.querySelector('input[name="freq_frutas"]:checked');
+            const verdurasRadio = document.querySelector('input[name="freq_verduras"]:checked');
+            const frutas = parseInt(frutasRadio?.value) || 0;
+            const verduras = parseInt(verdurasRadio?.value) || 0;
+            const frutasVerduras = Math.min(10, ((frutas + verduras) / 14) * 10);
+
+            // Fraccionamiento: basado en tiempos de comida (5 tiempos = ideal)
+            const desayuno = document.getElementById('horario_desayuno')?.value ? 1 : 0;
+            const almuerzo = document.getElementById('horario_almuerzo')?.value ? 1 : 0;
+            const cena = document.getElementById('horario_cena')?.value ? 1 : 0;
+            // Asumimos colaciones si hay horarios principales
+            const tiemposComida = desayuno + almuerzo + cena;
+            const fraccionamiento = Math.min(10, (tiemposComida / 3) * 10);
+
+            return {
+                hidratacion: Math.round(hidratacion * 10) / 10,
+                sueno: Math.round(sueno * 10) / 10,
+                estres: Math.round(estres * 10) / 10,
+                actividad: Math.round(actividad * 10) / 10,
+                frutasVerduras: Math.round(frutasVerduras * 10) / 10,
+                fraccionamiento: Math.round(fraccionamiento * 10) / 10
+            };
+        }
+
+        function actualizarBadges(scores) {
+            const getBadgeClass = (score) => {
+                if (score >= 7) return 'bg-success';
+                if (score >= 4) return 'bg-warning text-dark';
+                return 'bg-danger';
+            };
+
+            const items = [
+                { id: 'badgeAgua', score: scores.hidratacion },
+                { id: 'badgeSueno', score: scores.sueno },
+                { id: 'badgeEstres', score: scores.estres },
+                { id: 'badgeActividad', score: scores.actividad },
+                { id: 'badgeFrutasVerduras', score: scores.frutasVerduras },
+                { id: 'badgeFraccionamiento', score: scores.fraccionamiento }
+            ];
+
+            items.forEach(item => {
+                const el = document.getElementById(item.id);
+                if (el) {
+                    el.textContent = item.score + '/10';
+                    el.className = 'badge ' + getBadgeClass(item.score);
+                }
+            });
+        }
+
+        // ============================================
+        // ALERTAS IA
+        // ============================================
+        async function cargarAlertasIA() {
+            const patientId = document.getElementById('patientId').value;
+            const container = document.getElementById('alertasIAContainer');
+            const content = document.getElementById('alertasIAContent');
+            const btn = document.getElementById('btnAlertas');
+
+            // Show loading
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Analizando...</span>';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`/api/patient/${patientId}/alertas`);
+                const result = await response.json();
+
+                if (result.success) {
+                    content.innerHTML = result.alertas.map(alerta => `
+                        <div class="col-md-6 col-lg-4">
+                            <div class="alerta-card alerta-${alerta.tipo}">
+                                <div class="alerta-icon">
+                                    <i class="fas fa-${alerta.icono || 'exclamation-circle'}"></i>
+                                </div>
+                                <div class="alerta-body">
+                                    <h6 class="alerta-titulo">${alerta.titulo}</h6>
+                                    <p class="alerta-mensaje">${alerta.mensaje}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    container.style.display = 'block';
+                    container.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                content.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error al cargar alertas: ${error.message}
+                        </div>
+                    </div>
+                `;
+                container.style.display = 'block';
+            } finally {
+                btn.innerHTML = '<i class="fas fa-brain"></i> <span>Alertas IA</span>';
+                btn.disabled = false;
+            }
+        }
+
+        function cerrarAlertasIA() {
+            document.getElementById('alertasIAContainer').style.display = 'none';
+        }
+
+        // ============================================
+        // CHATBOT
+        // ============================================
+        let chatHistorial = [];
+
+        function toggleChatbot() {
+            const container = document.getElementById('chatbotContainer');
+            const fab = document.getElementById('chatbotFab');
+
+            if (container.style.display === 'none') {
+                container.style.display = 'flex';
+                fab.innerHTML = '<i class="fas fa-times"></i>';
+                document.getElementById('chatInput').focus();
+            } else {
+                container.style.display = 'none';
+                fab.innerHTML = '<i class="fas fa-robot"></i>';
+            }
+        }
+
+        function enviarSugerencia(btn) {
+            document.getElementById('chatInput').value = btn.textContent;
+            enviarMensaje();
+        }
+
+        async function enviarMensaje() {
+            const input = document.getElementById('chatInput');
+            const mensaje = input.value.trim();
+            if (!mensaje) return;
+
+            const patientId = document.getElementById('patientId').value;
+            const messagesContainer = document.getElementById('chatbotMessages');
+
+            // Agregar mensaje del usuario
+            messagesContainer.innerHTML += `
+                <div class="chat-message user">
+                    <div class="message-content">${escapeHtml(mensaje)}</div>
+                </div>
+            `;
+            input.value = '';
+
+            // Agregar indicador de carga
+            messagesContainer.innerHTML += `
+                <div class="chat-message bot loading" id="chatLoading">
+                    <div class="message-content">
+                        <i class="fas fa-spinner fa-spin me-2"></i>Pensando...
+                    </div>
+                </div>
+            `;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        mensaje: mensaje,
+                        patient_id: patientId,
+                        historial: chatHistorial
+                    })
+                });
+
+                const result = await response.json();
+
+                // Remover loading
+                document.getElementById('chatLoading')?.remove();
+
+                if (result.success) {
+                    // Agregar al historial
+                    chatHistorial.push({ role: 'user', content: mensaje });
+                    chatHistorial.push({ role: 'assistant', content: result.respuesta });
+
+                    // Mostrar respuesta
+                    messagesContainer.innerHTML += `
+                        <div class="chat-message bot">
+                            <div class="message-content">${formatearRespuesta(result.respuesta)}</div>
+                        </div>
+                    `;
+
+                    // Actualizar sugerencias
+                    if (result.sugerencias) {
+                        const suggestionsContainer = document.getElementById('chatbotSuggestions');
+                        suggestionsContainer.innerHTML = result.sugerencias.map(s =>
+                            `<button class="suggestion-btn" onclick="enviarSugerencia(this)">${s}</button>`
+                        ).join('');
+                    }
+                } else {
+                    messagesContainer.innerHTML += `
+                        <div class="chat-message bot error">
+                            <div class="message-content">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                Error: ${result.error}
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('chatLoading')?.remove();
+                messagesContainer.innerHTML += `
+                    <div class="chat-message bot error">
+                        <div class="message-content">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Error de conexion
+                        </div>
+                    </div>
+                `;
+            }
+
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatearRespuesta(texto) {
+            // Convertir saltos de linea a <br>
+            return texto
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>');
+        }
+    </script>
+
+    <!-- Estilos para Alertas IA y Chatbot -->
+    <style>
+        /* Alertas IA */
+        .alertas-ia-container {
+            background: linear-gradient(135deg, #f3e8ff 0%, #fae8ff 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid #e9d5ff;
+        }
+
+        .bg-purple { background: #8b5cf6 !important; }
+        .text-purple { color: #8b5cf6 !important; }
+
+        .alerta-card {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #6b7280;
+        }
+
+        .alerta-danger { border-left-color: #ef4444; }
+        .alerta-danger .alerta-icon { color: #ef4444; }
+
+        .alerta-warning { border-left-color: #f59e0b; }
+        .alerta-warning .alerta-icon { color: #f59e0b; }
+
+        .alerta-info { border-left-color: #3b82f6; }
+        .alerta-info .alerta-icon { color: #3b82f6; }
+
+        .alerta-success { border-left-color: #10b981; }
+        .alerta-success .alerta-icon { color: #10b981; }
+
+        .alerta-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .alerta-titulo {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+        }
+
+        .alerta-mensaje {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        /* Chatbot FAB */
+        .chatbot-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .chatbot-fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 24px rgba(139, 92, 246, 0.5);
+        }
+
+        /* Chatbot Container */
+        .chatbot-container {
+            position: fixed;
+            bottom: 100px;
+            right: 24px;
+            width: 380px;
+            max-width: calc(100vw - 48px);
+            height: 500px;
+            max-height: calc(100vh - 150px);
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            z-index: 1001;
+            overflow: hidden;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chatbot-title {
+            font-weight: 600;
+        }
+
+        .chatbot-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        .chatbot-close:hover { opacity: 1; }
+
+        .chatbot-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .chat-message {
+            max-width: 85%;
+        }
+
+        .chat-message.user {
+            align-self: flex-end;
+        }
+
+        .chat-message.user .message-content {
+            background: #8b5cf6;
+            color: white;
+            border-radius: 1rem 1rem 0.25rem 1rem;
+        }
+
+        .chat-message.bot .message-content {
+            background: #f3f4f6;
+            color: #1f2937;
+            border-radius: 1rem 1rem 1rem 0.25rem;
+        }
+
+        .chat-message.error .message-content {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .message-content {
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .chatbot-suggestions {
+            padding: 0.5rem 1rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .suggestion-btn {
+            background: #f3f4f6;
+            border: none;
+            padding: 0.375rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .suggestion-btn:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .chatbot-input {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #e5e7eb;
+            gap: 0.5rem;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            border: 1px solid #e5e7eb;
+            border-radius: 1.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .chatbot-input input:focus {
+            outline: none;
+            border-color: #8b5cf6;
+        }
+
+        .chatbot-input button {
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .chatbot-input button:hover {
+            background: #7c3aed;
+        }
+
+        @media (max-width: 480px) {
+            .chatbot-container {
+                width: 100%;
+                height: 100%;
+                max-height: 100%;
+                bottom: 0;
+                right: 0;
+                border-radius: 0;
+            }
+        }
+    </style>
 </body>
 
 </html>

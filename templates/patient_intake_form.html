@@ -75,9 +75,9 @@
 <form id="patientIntakeForm" novalidate>
 
     <!-- ============================================ -->
-    <!-- SECCIÓN 1: ANTECEDENTES GENERALES -->
+    <!-- SECCION 1: ANTECEDENTES GENERALES -->
     <!-- ============================================ -->
-    <div class="bt-glass-panel mb-4">
+    <div class="bt-glass-panel mb-4" id="section1">
         <div class="d-flex align-items-center mb-4 pb-2 border-bottom border-light">
             <div class="icon-square bg-primary bg-opacity-10 text-primary me-3 text-center rounded-3"
                 style="width: 40px; height: 40px; line-height: 40px;">
@@ -199,9 +199,9 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- SECCIÓN 2: ANTROPOMETRÍA (Moved Up) -->
+    <!-- SECCION 2: ANTROPOMETRIA -->
     <!-- ============================================ -->
-    <div class="bt-glass-panel mb-4">
+    <div class="bt-glass-panel mb-4" id="section2">
         <div class="d-flex align-items-center mb-4 pb-2 border-bottom border-light">
             <div class="icon-square bg-success bg-opacity-10 text-success me-3 text-center rounded-3"
                 style="width: 40px; height: 40px; line-height: 40px;">
@@ -287,9 +287,9 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- SECCIÓN 3: CONDUCTA Y ENTORNO -->
+    <!-- SECCION 3: CONDUCTA Y ENTORNO -->
     <!-- ============================================ -->
-    <div class="bt-glass-panel mb-4">
+    <div class="bt-glass-panel mb-4" id="section3">
         <div class="d-flex align-items-center mb-4 pb-2 border-bottom border-light">
             <div class="icon-square bg-info bg-opacity-10 text-info me-3 text-center rounded-3"
                 style="width: 40px; height: 40px; line-height: 40px;">
@@ -377,9 +377,9 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- SECCIÓN 4: SALUD GENERAL Y HÁBITOS -->
+    <!-- SECCION 4: SALUD GENERAL Y HABITOS -->
     <!-- ============================================ -->
-    <div class="bt-glass-panel mb-4">
+    <div class="bt-glass-panel mb-4" id="section4">
         <div class="d-flex align-items-center mb-4 pb-2 border-bottom border-light">
             <div class="icon-square bg-warning bg-opacity-10 text-warning me-3 text-center rounded-3"
                 style="width: 40px; height: 40px; line-height: 40px;">
@@ -535,7 +535,7 @@
     <!-- ============================================ -->
     <!-- SECCION 5: SINTOMAS GI Y RESTRICCIONES -->
     <!-- ============================================ -->
-    <div class="bt-glass-panel mb-4">
+    <div class="bt-glass-panel mb-4" id="section5">
         <div class="d-flex align-items-center mb-4 pb-2 border-bottom border-light">
             <div class="icon-square bg-danger bg-opacity-10 text-danger me-3 text-center rounded-3"
                 style="width: 40px; height: 40px; line-height: 40px;">
@@ -545,26 +545,68 @@
         </div>
 
         <div class="row g-4">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label fw-medium text-secondary" for="frecuencia_evacuacion">Evacuaciones</label>
                 <select class="form-select bg-light border-0" id="frecuencia_evacuacion" name="frecuencia_evacuacion">
                     <option value="diaria">Diaria</option>
-                    <option value="dia_por_medio">Día por medio</option>
-                    <option value="constipacion">Constipación</option>
+                    <option value="dia_por_medio">Dia por medio</option>
+                    <option value="constipacion">Constipacion</option>
                 </select>
             </div>
 
-            <div class="col-md-4">
-                <div class="form-check form-switch mt-4">
+            <!-- Escala de Bristol -->
+            <div class="col-md-9">
+                <label class="form-label fw-medium text-secondary">
+                    <i class="fas fa-chart-line me-1"></i>Escala de Bristol
+                    <small class="text-muted ms-2">(Consistencia de deposiciones)</small>
+                </label>
+                <div class="d-flex flex-wrap gap-2 bristol-scale">
+                    <button type="button" class="btn btn-outline-secondary bristol-btn" data-value="1" title="Tipo 1: Trozos duros separados">
+                        <span class="bristol-icon">&#9679;&#9679;&#9679;</span>
+                        <small>1</small>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary bristol-btn" data-value="2" title="Tipo 2: Forma de salchicha con grumos">
+                        <span class="bristol-icon">&#9644;&#9679;</span>
+                        <small>2</small>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary bristol-btn" data-value="3" title="Tipo 3: Salchicha con grietas">
+                        <span class="bristol-icon">&#9644;&#9644;</span>
+                        <small>3</small>
+                    </button>
+                    <button type="button" class="btn btn-outline-success bristol-btn" data-value="4" title="Tipo 4: Lisa y suave (ideal)">
+                        <span class="bristol-icon">&#9644;</span>
+                        <small>4</small>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary bristol-btn" data-value="5" title="Tipo 5: Trozos blandos con bordes definidos">
+                        <span class="bristol-icon">&#8226;&#8226;</span>
+                        <small>5</small>
+                    </button>
+                    <button type="button" class="btn btn-outline-warning bristol-btn" data-value="6" title="Tipo 6: Pedazos blandos, bordes irregulares">
+                        <span class="bristol-icon">&#8230;</span>
+                        <small>6</small>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger bristol-btn" data-value="7" title="Tipo 7: Acuoso, sin solidos">
+                        <span class="bristol-icon">&#126;&#126;</span>
+                        <small>7</small>
+                    </button>
+                </div>
+                <input type="hidden" id="consistencia_heces" name="consistencia_heces" value="">
+                <small class="text-muted d-block mt-1">
+                    <span id="bristolDescription">Selecciona un tipo (4 = ideal)</span>
+                </small>
+            </div>
+
+            <div class="col-md-6">
+                <div class="form-check form-switch mt-2">
                     <input class="form-check-input" type="checkbox" id="reflujo" name="reflujo" value="si">
                     <label class="form-check-label" for="reflujo">Reflujo / Acidez</label>
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="form-check form-switch mt-4">
+            <div class="col-md-6">
+                <div class="form-check form-switch mt-2">
                     <input class="form-check-input" type="checkbox" id="hinchazon" name="hinchazon" value="si">
-                    <label class="form-check-label" for="hinchazon">Hinchazón / Distensión</label>
+                    <label class="form-check-label" for="hinchazon">Hinchazon / Distension</label>
                 </div>
             </div>
 
@@ -572,58 +614,57 @@
             <div class="col-12 mt-3 p-3 bg-light rounded-3">
                 <label class="form-label fw-bold text-dark mb-3"><i
                         class="fas fa-ban me-2 text-danger"></i>Restricciones Alimentarias</label>
-                <div class="d-flex flex-wrap gap-3">
+                <div class="d-flex flex-wrap gap-3 restricciones-group">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="restricciones[]" value="vegetariano"
+                        <input class="form-check-input restriccion-check" type="checkbox" value="vegetariano"
                             id="res_veg">
                         <label class="form-check-label" for="res_veg">Vegetariano</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="restricciones[]" value="vegano"
+                        <input class="form-check-input restriccion-check" type="checkbox" value="vegano"
                             id="res_vegan">
                         <label class="form-check-label" for="res_vegan">Vegano</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="restricciones[]" value="sin_gluten"
+                        <input class="form-check-input restriccion-check" type="checkbox" value="sin_gluten"
                             id="res_gf">
                         <label class="form-check-label" for="res_gf">Sin Gluten</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="restricciones[]" value="sin_lactosa"
+                        <input class="form-check-input restriccion-check" type="checkbox" value="sin_lactosa"
                             id="res_lf">
                         <label class="form-check-label" for="res_lf">Sin Lactosa</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="restricciones[]" value="kosher"
+                        <input class="form-check-input restriccion-check" type="checkbox" value="kosher"
                             id="res_kosher">
                         <label class="form-check-label" for="res_kosher">Kosher</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="restricciones[]" value="halal"
+                        <input class="form-check-input restriccion-check" type="checkbox" value="halal"
                             id="res_halal">
                         <label class="form-check-label" for="res_halal">Halal</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="restricciones[]" value="alergias"
-                            id="res_alergia">
-                        <label class="form-check-label" for="res_alergia">Alergias (Detallar)</label>
+                        <input class="form-check-input restriccion-check" type="checkbox" value="sin_mariscos"
+                            id="res_mariscos">
+                        <label class="form-check-label" for="res_mariscos">Sin Mariscos</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="restricciones[]" value="preferencia"
-                            id="res_pref">
-                        <label class="form-check-label" for="res_pref">Preferencias/Gustos</label>
+                        <input class="form-check-input restriccion-check" type="checkbox" value="sin_frutos_secos"
+                            id="res_nuts">
+                        <label class="form-check-label" for="res_nuts">Sin Frutos Secos</label>
                     </div>
                 </div>
-                <!-- Hidden input for JSON compatibility if needed, though checkboxes usually submit as array -->
                 <input type="hidden" name="restricciones_alimentarias" id="restricciones_alimentarias">
             </div>
         </div>
     </div>
 
     <!-- ============================================ -->
-    <!-- SECCIÓN 6: FRECUENCIA DE CONSUMO -->
+    <!-- SECCION 6: FRECUENCIA DE CONSUMO -->
     <!-- ============================================ -->
-    <div class="bt-glass-panel mb-4">
+    <div class="bt-glass-panel mb-4" id="section6">
         <div class="d-flex align-items-center mb-4 pb-2 border-bottom border-light">
             <div class="icon-square bg-secondary bg-opacity-10 text-secondary me-3 text-center rounded-3"
                 style="width: 40px; height: 40px; line-height: 40px;">
@@ -828,9 +869,9 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- SECCIÓN 7: RECORDATORIO 24 HORAS -->
+    <!-- SECCION 7: RECORDATORIO 24 HORAS -->
     <!-- ============================================ -->
-    <div class="bt-glass-panel mb-4">
+    <div class="bt-glass-panel mb-4" id="section7">
         <div class="d-flex align-items-center mb-4 pb-2 border-bottom border-light">
             <div class="icon-square bg-purple bg-opacity-10 text-purple me-3 text-center rounded-3"
                 style="width: 40px; height: 40px; line-height: 40px; color: #8b5cf6;">
@@ -1337,6 +1378,31 @@
 
 </form>
 
+<!-- Quick Navigation - Right Side -->
+<div class="quick-nav" id="quickNav">
+    <button class="quick-nav-item active" onclick="scrollToSection('section1')" title="Antecedentes">
+        <i class="fas fa-user"></i>
+    </button>
+    <button class="quick-nav-item" onclick="scrollToSection('section2')" title="Antropometria">
+        <i class="fas fa-ruler-combined"></i>
+    </button>
+    <button class="quick-nav-item" onclick="scrollToSection('section3')" title="Conducta">
+        <i class="fas fa-home"></i>
+    </button>
+    <button class="quick-nav-item" onclick="scrollToSection('section4')" title="Salud/Habitos">
+        <i class="fas fa-heartbeat"></i>
+    </button>
+    <button class="quick-nav-item" onclick="scrollToSection('section5')" title="Sintomas GI">
+        <i class="fas fa-stomach"></i>
+    </button>
+    <button class="quick-nav-item" onclick="scrollToSection('section6')" title="Frecuencia">
+        <i class="fas fa-calendar-week"></i>
+    </button>
+    <button class="quick-nav-item" onclick="scrollToSection('section7')" title="Registro 24h">
+        <i class="fas fa-utensils"></i>
+    </button>
+</div>
+
 <!-- Sticky Actions Bottom Bar - Glassmorphism -->
 <div class="sticky-actions" id="stickyActions">
     <div class="sticky-actions-inner">
@@ -1414,7 +1480,78 @@
                 .map(btn => btn.dataset.objetivo);
             document.getElementById('objetivos').value = selected.join(',');
         }
+
+        // Quick Navigation
+        window.scrollToSection = function(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Update active state
+                document.querySelectorAll('.quick-nav-item').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.closest('.quick-nav-item')?.classList.add('active');
+            }
+        };
+
+        // Show quick-nav on scroll
+        window.addEventListener('scroll', function() {
+            const quickNav = document.getElementById('quickNav');
+            if (quickNav) {
+                quickNav.style.opacity = window.scrollY > 200 ? '1' : '0.3';
+            }
+        });
     });
+
+    // Quick Nav Styles
+    const quickNavStyles = document.createElement('style');
+    quickNavStyles.textContent = `
+        .quick-nav {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1000;
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+        .quick-nav:hover {
+            opacity: 1 !important;
+        }
+        .quick-nav-item {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid var(--bt-border-default, #e5e7eb);
+            background: var(--bt-bg-surface-solid, white);
+            color: var(--bt-fg-muted, #6b7280);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .quick-nav-item:hover {
+            border-color: var(--bt-brand-primary, #10b981);
+            color: var(--bt-brand-primary, #10b981);
+            transform: scale(1.1);
+        }
+        .quick-nav-item.active {
+            background: var(--bt-brand-primary, #10b981);
+            border-color: var(--bt-brand-primary, #10b981);
+            color: white;
+        }
+        @media (max-width: 768px) {
+            .quick-nav {
+                display: none;
+            }
+        }
+    `;
+    document.head.appendChild(quickNavStyles);
 
 </script>
 {% endblock %}

@@ -296,8 +296,19 @@
             <i class="fas fa-user-plus"></i>
         </div>
         <h3 class="bt-action-title">Ingresar un Paciente</h3>
-        <p class="bt-action-desc">Registrar nueva ficha con datos antropométricos</p>
+        <p class="bt-action-desc">Registrar nueva ficha con datos antropometricos</p>
     </a>
+
+    <button type="button" class="bt-action-card" data-bs-toggle="modal" data-bs-target="#invitePatientModal"
+        style="border: none; text-align: left; cursor: pointer;">
+        <div class="bt-action-icon purple" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+            <i class="fas fa-envelope"></i>
+        </div>
+        <h3 class="bt-action-title">Invitar Paciente</h3>
+        <p class="bt-action-desc">Enviar formulario previo por email</p>
+        <span class="badge bg-purple text-white"
+            style="position: absolute; top: 12px; right: 12px; font-size: 0.65rem;">PRE-CONSULTA</span>
+    </button>
 
     <a href="{{ url_for('patient_list') }}" class="bt-action-card">
         <div class="bt-action-icon blue">
@@ -683,6 +694,98 @@
         </div>
     </div>
 </div>
+
+<!-- Modal: Invitar Paciente -->
+<div class="modal fade" id="invitePatientModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header text-white border-0" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                <h5 class="modal-title">
+                    <i class="fas fa-envelope me-2"></i>
+                    Invitar Paciente
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-4">
+                    Envia un formulario pre-consulta al paciente para que complete sus datos antes de la cita.
+                </p>
+
+                <form id="invitePatientForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-user me-1"></i> Nombre del Paciente
+                        </label>
+                        <input type="text" class="form-control" id="invitePatientName"
+                            placeholder="Ej: Maria Garcia" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-envelope me-1"></i> Email del Paciente *
+                        </label>
+                        <input type="email" class="form-control" id="invitePatientEmail"
+                            placeholder="paciente@email.com" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-phone me-1"></i> Telefono (opcional)
+                        </label>
+                        <input type="tel" class="form-control" id="invitePatientPhone"
+                            placeholder="+56 9 1234 5678">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-sticky-note me-1"></i> Nota personal (opcional)
+                        </label>
+                        <textarea class="form-control" id="invitePatientNote" rows="2"
+                            placeholder="Mensaje opcional para el paciente..."></textarea>
+                    </div>
+
+                    <div class="alert alert-info small mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        El paciente recibira un email con un link para completar el formulario.
+                        Los datos quedaran guardados y podras revisarlos antes de la consulta.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn text-white" onclick="enviarInvitacion()"
+                    style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                    <i class="fas fa-paper-plane me-2"></i>
+                    Enviar Invitacion
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Invitacion Enviada -->
+<div class="modal fade" id="inviteSentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 text-center p-4">
+            <div class="mb-3">
+                <div style="width: 80px; height: 80px; margin: 0 auto; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-check text-white" style="font-size: 2.5rem;"></i>
+                </div>
+            </div>
+            <h5 class="fw-bold">Invitacion Enviada!</h5>
+            <p class="text-muted small mb-3" id="inviteSentMessage">
+                El paciente recibira el formulario en su email.
+            </p>
+            <div class="d-grid">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -693,5 +796,66 @@
     document.getElementById('numIngredients').addEventListener('input', function () {
         document.getElementById('ingredientCount').textContent = this.value;
     });
+
+    // Enviar invitacion de formulario previo
+    async function enviarInvitacion() {
+        const nombre = document.getElementById('invitePatientName').value.trim();
+        const email = document.getElementById('invitePatientEmail').value.trim();
+        const telefono = document.getElementById('invitePatientPhone').value.trim();
+        const nota = document.getElementById('invitePatientNote').value.trim();
+
+        if (!email) {
+            alert('Por favor ingresa el email del paciente');
+            return;
+        }
+
+        // Validar email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            alert('Por favor ingresa un email valido');
+            return;
+        }
+
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/api/patients/invite', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre: nombre || 'Paciente',
+                    email: email,
+                    telefono: telefono,
+                    nota: nota
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Cerrar modal de invitacion
+                bootstrap.Modal.getInstance(document.getElementById('invitePatientModal')).hide();
+
+                // Limpiar formulario
+                document.getElementById('invitePatientForm').reset();
+
+                // Mostrar mensaje de exito
+                document.getElementById('inviteSentMessage').innerHTML =
+                    `El formulario ha sido enviado a <strong>${email}</strong>`;
+                new bootstrap.Modal(document.getElementById('inviteSentModal')).show();
+            } else {
+                throw new Error(result.error || 'Error al enviar invitacion');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error: ' + error.message);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
 </script>
 {% endblock %}

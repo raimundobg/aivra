@@ -381,30 +381,41 @@
     window.calcularMacros = function() {
         const get = parseFloat(document.getElementById('getValue')?.textContent) || 0;
         if (get === 0) return;
-        
+
         const protPct = parseFloat(document.getElementById('proteinas_porcentaje')?.value) || 20;
         const carbsPct = parseFloat(document.getElementById('carbohidratos_porcentaje')?.value) || 50;
-        const grasasPct = parseFloat(document.getElementById('grasas_porcentaje')?.value) || 20;
-        const liquidosPct = parseFloat(document.getElementById('liquidos_porcentaje')?.value) || 10;
-        
-        const total = protPct + carbsPct + grasasPct + liquidosPct;
+        const grasasPct = parseFloat(document.getElementById('grasas_porcentaje')?.value) || 30;
+
+        // 100% = P + C + G (macros solidos). Liquidos se calculan aparte.
+        const total = protPct + carbsPct + grasasPct;
         const totalEl = document.getElementById('totalPorcentaje');
-        
+
         if (totalEl) {
             totalEl.textContent = total + '%';
             totalEl.className = total === 100 ? 'badge bg-success' : 'badge bg-danger';
         }
-        
+
         const protG = Math.round((get * protPct / 100) / 4);
         const carbsG = Math.round((get * carbsPct / 100) / 4);
         const grasasG = Math.round((get * grasasPct / 100) / 9);
         const fibraG = Math.round(14 * (get / 1000));
-        
+
+        // Liquidos: 35 ml/kg peso corporal (calculado aparte del GET)
+        const peso = parseFloat(document.getElementById('peso')?.value) || 0;
+        const liquidosMl = Math.round(peso * 35);
+        const liquidosL = (liquidosMl / 1000).toFixed(1);
+
         document.getElementById('proteinasG').textContent = protG + 'g';
         document.getElementById('carbohidratosG').textContent = carbsG + 'g';
         document.getElementById('grasasG').textContent = grasasG + 'g';
         document.getElementById('fibraG').textContent = fibraG + 'g';
-        
+
+        // Mostrar liquidos recomendados si existe el elemento
+        const liquidosEl = document.getElementById('liquidosRecomendados');
+        if (liquidosEl) {
+            liquidosEl.textContent = liquidosL + ' L';
+        }
+
         markAsChanged();
     };
     
@@ -576,6 +587,53 @@
             if (hiddenInput) {
                 hiddenInput.value = selected.join(',');
             }
+        }
+    };
+
+    // ============================================
+    // ESCALA DE BRISTOL MANAGER
+    // ============================================
+    const BristolManager = {
+        descriptions: {
+            1: 'Tipo 1: Trozos duros separados (constipacion severa)',
+            2: 'Tipo 2: Forma de salchicha con grumos (constipacion leve)',
+            3: 'Tipo 3: Salchicha con grietas en superficie (normal)',
+            4: 'Tipo 4: Lisa, suave como salchicha (ideal)',
+            5: 'Tipo 5: Trozos blandos con bordes definidos (falta fibra)',
+            6: 'Tipo 6: Pedazos blandos, bordes irregulares (diarrea leve)',
+            7: 'Tipo 7: Acuoso, sin solidos (diarrea severa)'
+        },
+
+        init: function() {
+            const buttons = document.querySelectorAll('.bristol-btn');
+            const hiddenInput = document.getElementById('consistencia_heces');
+            const description = document.getElementById('bristolDescription');
+
+            if (buttons.length === 0) return;
+
+            buttons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    // Toggle: si ya esta activo, deseleccionar
+                    if (btn.classList.contains('active')) {
+                        btn.classList.remove('active');
+                        if (hiddenInput) hiddenInput.value = '';
+                        if (description) description.textContent = 'Selecciona un tipo (4 = ideal)';
+                    } else {
+                        // Deseleccionar todos y seleccionar el clickeado
+                        buttons.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        const value = btn.dataset.value;
+                        if (hiddenInput) hiddenInput.value = value;
+                        if (description) description.textContent = this.descriptions[value] || '';
+                    }
+
+                    markAsChanged();
+                });
+            });
+
+            console.log('BristolManager inicializado');
         }
     };
 
@@ -847,7 +905,15 @@
                 data[field] = Array.from(element.selectedOptions).map(opt => opt.value);
             }
         });
-        
+
+        // Restricciones alimentarias - convertir string a array
+        const restriccionesStr = data['restricciones_alimentarias'];
+        if (restriccionesStr && typeof restriccionesStr === 'string') {
+            data['restricciones_alimentarias'] = restriccionesStr.split(',').filter(r => r.trim() !== '');
+        } else {
+            data['restricciones_alimentarias'] = [];
+        }
+
         // Registro 24h
         data.registro_24h = collect24hData();
         
@@ -1174,6 +1240,7 @@
         ConditionalFields.init();
         FrequencyManager.init();
         RestriccionesManager.init();
+        BristolManager.init();
         
         // Listeners de formulario
         if (elements.form) {
@@ -1521,6 +1588,66 @@ styles.textContent = `
         background: #fff5f5;
         border-radius: 0.375rem;
         border-left: 3px solid #dc3545;
+    }
+
+    /* Escala de Bristol */
+    .bristol-scale {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .bristol-btn {
+        min-width: 50px;
+        padding: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .bristol-btn .bristol-icon {
+        font-size: 1rem;
+        line-height: 1;
+    }
+
+    .bristol-btn small {
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .bristol-btn.active {
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .bristol-btn[data-value="1"].active,
+    .bristol-btn[data-value="2"].active {
+        background: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+
+    .bristol-btn[data-value="3"].active,
+    .bristol-btn[data-value="4"].active {
+        background: #198754;
+        border-color: #198754;
+        color: white;
+    }
+
+    .bristol-btn[data-value="5"].active {
+        background: #ffc107;
+        border-color: #ffc107;
+        color: #212529;
+    }
+
+    .bristol-btn[data-value="6"].active,
+    .bristol-btn[data-value="7"].active {
+        background: #fd7e14;
+        border-color: #fd7e14;
+        color: white;
     }
 `;
 document.head.appendChild(styles);

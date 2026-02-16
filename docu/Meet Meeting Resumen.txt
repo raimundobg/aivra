@@ -1,0 +1,41 @@
+Meet Meeting
+mar, 20 ene 2026
+
+Resumen:
+
+En la conversación, Lola Salineros y Raimundo Burchardt discuten la mejora de la plataforma de consulta mediante la implementación de un formulario prellenado para pacientes, lo que podría optimizar el tiempo de consulta y permitir una atención más personalizada. También consideran la integración de inteligencia artificial para generar alertas y resúmenes que ayuden a los profesionales a identificar áreas de mejora en la salud del paciente. Lola sugiere evaluar y clasificar los elementos de la interfaz de la plataforma, mientras que Raimundo expresa dudas sobre el uso de Figma para el diseño de interfaces, aunque ambos coinciden en la importancia de un diseño funcional y la conexión entre el front y el backend. Además, conversan sobre un proyecto conjunto, destacando su disposición a colaborar y la necesidad de mantener una comunicación fluida, con la posibilidad de reunirse en la oficina para avanzar en sus iniciativas.
+
+
+Capítulos y Temas:
+
+Propuestas de Mejora en la Plataforma de Consulta
+Lola Salineros y Raimundo Burchardt analizan la posibilidad de que los pacientes completen un formulario previo a la consulta, lo que permitiría una atención más eficiente. Se sugiere que la información recopilada se utilice para generar alertas mediante inteligencia artificial, facilitando así la planificación de la dieta y el seguimiento del paciente. Ambos coinciden en la importancia de que la plataforma ofrezca un valor agregado a los usuarios.
+* Implementación de inteligencia artificial en el proceso de consulta.
+* Automatización del formulario previo para pacientes.
+* Revisión y modificación del contenido del formulario actual.
+* Mejora de la experiencia del paciente en la plataforma.
+
+Interfaces y diseño de plataforma
+Lola Salineros planteó la clasificación de las interfaces en tres categorías, destacando la necesidad de revisar el formulario previo y los elementos que ya están en la plataforma. Raimundo Burchardt comentó sobre el uso de Figma para el diseño de interfaces, aunque expresó incertidumbre sobre su funcionalidad actual.
+
+Colaboración y Proyectos Futuros
+Raimundo Burchardt y Lola Salineros intercambian ideas sobre un proyecto en el que están trabajando, expresando confianza en su éxito. Lola comparte que ha estado ocupada con su familia, pero está abierta a coordinar esfuerzos y avanzar en el trabajo. Ambos muestran entusiasmo por colaborar y explorar nuevas oportunidades.
+
+
+Puntos de Acción:
+
+* Lola Salineros se reunirá con Alice para discutir las partes del formulario que se deben modificar o eliminar.
+* Raimundo Burchardt automatizará el envío de un formulario previo que los pacientes deben llenar antes de la consulta.
+* Raimundo Burchardt revisará las preguntas que deben ser enviadas a los pacientes para el formulario previo.
+* Lola Salineros enviará un resumen de la conversación con Alice y el flujograma que se discutió.
+
+
+Preguntas clave:
+
+* ¿Cuál era la idea inicial sobre el formulario previo que los pacientes deben llenar?
+* ¿Es posible que el formulario venga prellenado con la información del paciente?
+
+
+Bloc de notas:
+
+* No hay notas

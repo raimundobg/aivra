@@ -1,168 +1,162 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Cliente - MadLab</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/modern-style.css">
-    
-    <!-- 🎨 CSS DEDICADO PARA CLIENT DASHBOARD -->
-    <link rel="stylesheet" href="/css/client-dashboard.css">
-</head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar-client">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center">
-                <a href="/">
-                    <img src="/images/logo.png" alt="MadLab" class="logo-img">
-                </a>
-                <div class="d-flex gap-3 align-items-center">
-                    <span class="user-info">
-                        <i class="fas fa-user me-1"></i>
-                        {{ current_user.get_full_name() }}
-                    </span>
-                    <a href="/auth/logout" class="btn btn-sm btn-outline-light btn-logout">
-                        <i class="fas fa-sign-out-alt me-2"></i>Salir
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
-    
-    <div class="dashboard-wrapper">
-        <!-- Header -->
-        <div class="dashboard-header">
-            <div class="container">
-                <h1>
-                    <i class="fas fa-flask me-2"></i>
-                    Bienvenido/a, {{ current_user.get_full_name() }}
-                </h1>
-                <p>¡Comienza a crear tus batidos optimizados con IA!</p>
-            </div>
-        </div>
-        
-        <div class="container">
-            <!-- Upgrade Banner -->
-            <div class="upgrade-banner">
-                <div class="row align-items-center">
-                    <div class="col-lg-8">
-                        <h3>
-                            <i class="fas fa-star me-2"></i>
-                            Plan Gratuito
-                        </h3>
-                        <p>
-                            Tienes <strong>{{ recipes_remaining }}</strong> recetas disponibles este mes.
-                            Upgrade a Pro para recetas ilimitadas y acceso completo.
-                        </p>
-                    </div>
-                    <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                        <a href="/#precios" class="btn btn-light btn-lg">
-                            <i class="fas fa-rocket me-2"></i>
-                            Ver Planes
-                        </a>
-                    </div>
-                </div>
-            </div>
+{% extends "base_layout.html" %}
 
-            <!-- Stats -->
-            <div class="stats-grid animate-in">
-                <div class="stat-card">
-                    <span class="stat-number green">{{ total_recipes }}</span>
-                    <p class="stat-label">Recetas Creadas</p>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number blue">{{ recipes_remaining }}</span>
-                    <p class="stat-label">Disponibles</p>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number orange">5</span>
-                    <p class="stat-label">Límite Mensual</p>
-                </div>
-            </div>
+{% block title %}Dashboard Cliente - BiteTrack{% endblock %}
 
-            <!-- Features -->
-            <div class="features-grid animate-in">
-                <div class="feature-card">
-                    <div class="feature-icon bg-primary-gradient">
-                        <i class="fas fa-flask"></i>
-                    </div>
-                    <h4>Crear Batido</h4>
-                    <p>Genera tu receta personalizada con IA</p>
-                    <button class="btn-modern w-100" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
-                        <i class="fas fa-plus me-2"></i>
-                        Nueva Receta
-                    </button>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon bg-secondary-gradient">
-                        <i class="fas fa-history"></i>
-                    </div>
-                    <h4>Mis Recetas</h4>
-                    <p>Revisa tus batidos guardados</p>
-                    <a href="#mis-recetas" class="btn btn-outline-primary w-100">
-                        <i class="fas fa-list me-2"></i>
-                        Ver Historial
-                    </a>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon bg-warning-gradient">
-                        <i class="fas fa-crown"></i>
-                    </div>
-                    <h4>Upgrade a Pro</h4>
-                    <p>Recetas ilimitadas + features premium</p>
-                    <a href="/#precios" class="btn btn-outline-warning w-100">
-                        <i class="fas fa-star me-2"></i>
-                        Ver Planes
-                    </a>
-                </div>
-            </div>
+{% block sidebar_nav %}
+<div class="bt-nav-section-label">Principal</div>
+<a href="{{ url_for('client_dashboard') }}" class="bt-nav-item active">
+    <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+    <span class="nav-label">Dashboard</span>
+</a>
 
-            <!-- Recent Recipes -->
-            <div class="content-card" id="mis-recetas">
-                <h4>
-                    <i class="fas fa-history me-2"></i>
-                    Mis Recetas Recientes
-                </h4>
-                
-                {% if recipes %}
-                    {% for recipe in recipes %}
-                    <div class="recipe-item">
-                        <h5>
-                            <i class="fas fa-blender me-2" style="color: #10b981;"></i>
-                            {{ recipe.recipe_name }}
-                        </h5>
-                        <small>
-                            <i class="far fa-calendar me-1"></i>
-                            {{ recipe.created_at.strftime('%d/%m/%Y %H:%M') }}
-                        </small>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="empty-state">
-                        <i class="fas fa-flask"></i>
-                        <h5>Aún no tienes recetas</h5>
-                        <p>¡Crea tu primera receta optimizada con IA!</p>
-                        <button class="btn-modern" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
-                            <i class="fas fa-plus me-2"></i>
-                            Crear Primera Receta
-                        </button>
-                    </div>
-                {% endif %}
-            </div>
+<div class="bt-nav-section-label">Herramientas</div>
+<button class="bt-nav-item" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
+    <span class="nav-icon"><i class="fas fa-flask"></i></span>
+    <span class="nav-label">Crear Batido</span>
+    <span class="nav-badge">IA</span>
+</button>
+<a href="#mis-recetas" class="bt-nav-item">
+    <span class="nav-icon"><i class="fas fa-history"></i></span>
+    <span class="nav-label">Mis Recetas</span>
+</a>
+
+<div class="bt-nav-section-label">Cuenta</div>
+<a href="/#precios" class="bt-nav-item">
+    <span class="nav-icon"><i class="fas fa-crown"></i></span>
+    <span class="nav-label">Upgrade a Pro</span>
+    <span class="nav-badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">★</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="bt-page-header">
+    <div>
+        <h1 class="bt-page-title">
+            <i class="fas fa-flask" style="color: var(--bt-brand-primary);"></i>
+            Bienvenido/a, {{ current_user.get_full_name() }}
+        </h1>
+        <p class="bt-page-subtitle">¡Comienza a crear tus batidos optimizados con IA!</p>
+    </div>
+</div>
+
+<!-- Upgrade Banner -->
+<div class="bt-accent-card bt-mb-4">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+        <div>
+            <h3 style="margin-bottom:0.5rem;">
+                <i class="fas fa-star me-2"></i>
+                Plan Gratuito
+            </h3>
+            <p style="margin-bottom:0;">
+                Tienes <strong>{{ recipes_remaining }}</strong> recetas disponibles este mes.
+                Upgrade a Pro para recetas ilimitadas y acceso completo.
+            </p>
         </div>
+        <a href="/#precios" class="bt-btn" style="background:white;color:var(--bt-emerald-700);white-space:nowrap;">
+            <i class="fas fa-rocket"></i>
+            Ver Planes
+        </a>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="bt-metrics-grid">
+    <div class="bt-metric-card">
+        <div class="bt-metric-header">
+            <span class="bt-metric-icon emerald"><i class="fas fa-flask"></i></span>
+            <span class="bt-metric-label">Recetas Creadas</span>
+        </div>
+        <p class="bt-metric-value" style="color: var(--bt-emerald-500);">{{ total_recipes }}</p>
     </div>
 
-    <!-- Modal del Generador -->
-    {% include 'partials/recipe_generator_modal.html' %}
+    <div class="bt-metric-card">
+        <div class="bt-metric-header">
+            <span class="bt-metric-icon blue"><i class="fas fa-inbox"></i></span>
+            <span class="bt-metric-label">Disponibles</span>
+        </div>
+        <p class="bt-metric-value" style="color: #3b82f6;">{{ recipes_remaining }}</p>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/modern-recipe-generator.js"></script>
-</body>
-</html>
+    <div class="bt-metric-card">
+        <div class="bt-metric-header">
+            <span class="bt-metric-icon amber"><i class="fas fa-calendar-check"></i></span>
+            <span class="bt-metric-label">Límite Mensual</span>
+        </div>
+        <p class="bt-metric-value" style="color: var(--bt-amber-500);">5</p>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="bt-actions-grid">
+    <div class="bt-action-card" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
+        <div class="bt-action-icon emerald">
+            <i class="fas fa-flask"></i>
+        </div>
+        <h3 class="bt-action-title">Crear Batido</h3>
+        <p class="bt-action-desc">Genera tu receta personalizada con IA</p>
+    </div>
+
+    <a href="#mis-recetas" class="bt-action-card">
+        <div class="bt-action-icon blue">
+            <i class="fas fa-history"></i>
+        </div>
+        <h3 class="bt-action-title">Mis Recetas</h3>
+        <p class="bt-action-desc">Revisa tus batidos guardados</p>
+    </a>
+
+    <a href="/#precios" class="bt-action-card">
+        <div class="bt-action-icon amber">
+            <i class="fas fa-crown"></i>
+        </div>
+        <h3 class="bt-action-title">Upgrade a Pro</h3>
+        <p class="bt-action-desc">Recetas ilimitadas + features premium</p>
+    </a>
+</div>
+
+<!-- Recent Recipes Section -->
+<div class="bt-glass-panel bt-p-4 bt-mt-3" id="mis-recetas">
+    <div class="bt-section-header">
+        <h2 class="bt-section-title">
+            <span class="title-icon"><i class="fas fa-history"></i></span>
+            Mis Recetas Recientes
+        </h2>
+    </div>
+
+    {% if recipes %}
+    {% for recipe in recipes %}
+    <div class="bt-list-item">
+        <div>
+            <h4 class="bt-list-item-title">
+                <i class="fas fa-blender" style="color: var(--bt-brand-primary);"></i>
+                {{ recipe.recipe_name }}
+            </h4>
+            <span class="bt-list-item-meta">
+                <i class="far fa-calendar"></i>
+                {{ recipe.created_at.strftime('%d/%m/%Y %H:%M') }}
+            </span>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="bt-empty-state">
+        <div class="bt-empty-icon"><i class="fas fa-flask"></i></div>
+        <h4 class="bt-empty-title">Aún no tienes recetas</h4>
+        <p class="bt-empty-desc">¡Crea tu primera receta optimizada con IA!</p>
+        <button class="bt-btn bt-btn-primary" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
+            <i class="fas fa-plus"></i>
+            Crear Primera Receta
+        </button>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Modal del Generador -->
+{% include 'partials/recipe_generator_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="/js/modern-recipe-generator.js"></script>
+{% endblock %}

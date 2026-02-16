@@ -923,6 +923,8 @@ class PatientFile(db.Model):
 
             # Sintomas GI
             'frecuencia_evacuacion': self.frecuencia_evacuacion,
+            'consistencia_heces': self.consistencia_heces,  # Escala Bristol
+            'sintomas_gi': self.sintomas_gi,
             'reflujo': self.reflujo,
             'reflujo_alimento': self.reflujo_alimento,
             'hinchazon': self.hinchazon,
