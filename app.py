@@ -19,8 +19,8 @@ if sys.platform == 'win32':
 # Cargar variables de entorno desde .env
 try:
     from dotenv import load_dotenv
-    load_dotenv()
-    print("[OK] Variables de entorno cargadas desde .env")
+    load_dotenv(override=False)
+    print("[OK] Variables de entorno cargadas desde .env (sin sobreescribir)")
 except ImportError:
     pass  # dotenv no instalado, usar variables de entorno del sistema
 
