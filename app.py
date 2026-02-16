@@ -1209,108 +1209,94 @@ def submit_public_intake(token):
         data = request.get_json()
         log_debug(f"[SUBMIT-INTAKE] patient_id={patient.id}, data keys: {list(data.keys()) if data else 'None'}")
 
-        # Actualizar datos personales basicos
-        if data.get('nombre'):
-            patient.nombre = data.get('nombre')
-        if data.get('fecha_nacimiento'):
-            patient.fecha_nacimiento = data.get('fecha_nacimiento')
-        if data.get('sexo'):
-            patient.sexo = data.get('sexo')
-        if data.get('ocupacion'):
-            patient.ocupacion = data.get('ocupacion')
-        if data.get('direccion'):
-            patient.direccion = data.get('direccion')
+        # --- Datos personales basicos ---
+        campos_texto = [
+            'nombre', 'fecha_nacimiento', 'sexo', 'ocupacion', 'direccion',
+            'motivo_consulta', 'medicamentos', 'suplementos', 'cirugias',
+            'alergias', 'intolerancias',
+            'horas_sueno', 'tipo_ejercicio', 'frecuencia_ejercicio',
+            'actividad_fisica', 'consumo_alcohol', 'tabaco',
+            'horario_desayuno', 'horario_almuerzo', 'horario_cena',
+            'consistencia_heces'
+        ]
+        for campo in campos_texto:
+            if campo in data and data[campo]:
+                setattr(patient, campo, data[campo])
 
-        # Medidas antropometricas
+        # --- Campos numericos float ---
         if data.get('peso'):
             try:
-                patient.peso_kg = float(data.get('peso'))
-            except:
+                patient.peso_kg = float(data['peso'])
+            except (ValueError, TypeError):
                 pass
         if data.get('talla'):
             try:
-                patient.talla_m = float(data.get('talla'))
-            except:
+                patient.talla_m = float(data['talla'])
+            except (ValueError, TypeError):
                 pass
 
         # Calcular IMC automaticamente si hay peso y talla
         if patient.peso_kg and patient.talla_m and patient.talla_m > 0:
             patient.imc = round(patient.peso_kg / (patient.talla_m ** 2), 1)
 
-        # Motivo de consulta y objetivos
-        if data.get('motivo_consulta'):
-            patient.motivo_consulta = data.get('motivo_consulta')
-        if data.get('objetivos'):
-            patient.objetivos = json.dumps(data.get('objetivos')) if isinstance(data.get('objetivos'), list) else data.get('objetivos')
+        # --- Campos numericos int ---
+        campos_int = ['calidad_sueno', 'nivel_estres', 'cigarrillos_dia']
+        for campo in campos_int:
+            if campo in data and data[campo] is not None:
+                try:
+                    setattr(patient, campo, int(data[campo]))
+                except (ValueError, TypeError):
+                    pass
 
-        # Antecedentes medicos
-        if data.get('diagnosticos'):
-            patient.diagnosticos = json.dumps(data.get('diagnosticos')) if isinstance(data.get('diagnosticos'), list) else data.get('diagnosticos')
-        if data.get('medicamentos'):
-            patient.medicamentos = data.get('medicamentos')
-        if data.get('suplementos'):
-            patient.suplementos = data.get('suplementos')
-        if data.get('cirugias'):
-            patient.cirugias = data.get('cirugias')
-        if data.get('antecedentes_familiares'):
-            patient.antecedentes_familiares = json.dumps(data.get('antecedentes_familiares')) if isinstance(data.get('antecedentes_familiares'), list) else data.get('antecedentes_familiares')
+        # --- Campos booleanos ---
+        for campo_bool in ['fuma', 'pica_entre_comidas', 'come_frente_tv', 'come_rapido']:
+            if campo_bool in data:
+                val = data[campo_bool]
+                if isinstance(val, bool):
+                    setattr(patient, campo_bool, val)
+                elif isinstance(val, str):
+                    setattr(patient, campo_bool, val.lower() in ('true', '1', 'on', 'si'))
+                else:
+                    setattr(patient, campo_bool, bool(val))
 
-        # Alergias e intolerancias
-        if data.get('alergias'):
-            patient.alergias = data.get('alergias')
-        if data.get('intolerancias'):
-            patient.intolerancias = data.get('intolerancias')
-        if data.get('restricciones_alimentarias'):
-            patient.restricciones_alimentarias = data.get('restricciones_alimentarias')
+        # --- Campos JSON array (checkbox groups) ---
+        # Usar 'in data' en vez de 'if data.get()' para que [] tambien se guarde
+        campos_json_array = [
+            'diagnosticos', 'antecedentes_familiares', 'objetivos', 'sintomas_gi'
+        ]
+        for campo in campos_json_array:
+            if campo in data:
+                val = data[campo]
+                if isinstance(val, list):
+                    setattr(patient, campo, json.dumps(val) if val else None)
+                elif val:
+                    setattr(patient, campo, val)
+                log_debug(f"[SUBMIT-INTAKE] {campo} = {val}")
 
-        # Estilo de vida
-        if data.get('horas_sueno'):
-            patient.horas_sueno = data.get('horas_sueno')
-        if data.get('calidad_sueno'):
-            try:
-                patient.calidad_sueno = int(data.get('calidad_sueno'))
-            except:
-                pass
-        if data.get('nivel_estres'):
-            try:
-                patient.nivel_estres = int(data.get('nivel_estres'))
-            except:
-                pass
+        # --- Restricciones alimentarias (JSON nativo) ---
+        if 'restricciones_alimentarias' in data:
+            patient.restricciones_alimentarias = data['restricciones_alimentarias']
 
-        # Actividad fisica
-        if data.get('actividad_fisica'):
-            patient.actividad_fisica = data.get('actividad_fisica')
-        if data.get('tipo_ejercicio'):
-            patient.tipo_ejercicio = data.get('tipo_ejercicio')
-        if data.get('frecuencia_ejercicio'):
-            patient.frecuencia_ejercicio = data.get('frecuencia_ejercicio')
+        # --- Registro 24h (JSON nativo) ---
+        if 'registro_24h' in data and data['registro_24h']:
+            patient.registro_24h = data['registro_24h']
+            log_debug(f"[SUBMIT-INTAKE] registro_24h saved with {len(data['registro_24h'])} meals")
 
-        # Habitos
-        if data.get('consumo_alcohol'):
-            patient.consumo_alcohol = data.get('consumo_alcohol')
-        if data.get('tabaco'):
-            patient.tabaco = data.get('tabaco')
-        if data.get('fuma') is not None:
-            patient.fuma = data.get('fuma') in [True, 'true', 'True', 1, '1']
-
-        # Sintomas GI
-        if data.get('sintomas_gi'):
-            patient.sintomas_gi = json.dumps(data.get('sintomas_gi')) if isinstance(data.get('sintomas_gi'), list) else data.get('sintomas_gi')
-
-        # Bristol Scale (consistencia de heces)
-        if data.get('consistencia_heces'):
-            patient.consistencia_heces = data.get('consistencia_heces')
-
-        # Frecuencia de Consumo (EFC)
-        if data.get('frecuencia_consumo'):
-            patient.frecuencia_consumo = json.dumps(data.get('frecuencia_consumo')) if isinstance(data.get('frecuencia_consumo'), dict) else data.get('frecuencia_consumo')
+        # --- Frecuencia de Consumo EFC (JSON) ---
+        if 'frecuencia_consumo' in data and data['frecuencia_consumo']:
+            val = data['frecuencia_consumo']
+            if isinstance(val, dict):
+                patient.frecuencia_consumo = val
+            else:
+                patient.frecuencia_consumo = val
+            log_debug(f"[SUBMIT-INTAKE] frecuencia_consumo saved with {len(val) if isinstance(val, dict) else '?'} items")
 
         # Marcar como completado
         patient.mark_intake_completed()
 
         db.session.commit()
 
-        log_debug(f"Intake completado para paciente: {patient.nombre} (ID: {patient.id})")
+        log_debug(f"[SUBMIT-INTAKE] OK - Intake completado para paciente: {patient.nombre} (ID: {patient.id})")
 
         return jsonify({
             'success': True,
