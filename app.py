@@ -53,9 +53,13 @@ if 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']:
         'pool_recycle': 3600,
     }
 else:
+    # PostgreSQL settings for Railway
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        'pool_size': 10,
-        'pool_recycle': 3600,
+        'pool_size': 5,
+        'max_overflow': 2,
+        'pool_recycle': 300,
+        'pool_pre_ping': True,  # Test connections before use
+        'pool_timeout': 30,
     }
 
 # ============================================
