@@ -116,9 +116,37 @@
         for (const [key, value] of formData.entries()) {
             data[key] = value;
         }
-        
+
         // Convertir checkboxes y booleans
         data.fuma = document.getElementById('fuma').value === 'true';
+
+        // Incluir datos JSON de registro 24h y frecuencia de consumo
+        // Usar funciones globales si están disponibles (de patient-intake.js)
+        if (typeof collect24hData === 'function') {
+            data.registro_24h = collect24hData();
+        } else {
+            const registro24hInput = document.getElementById('registro_24h_data');
+            if (registro24hInput && registro24hInput.value) {
+                try {
+                    data.registro_24h = JSON.parse(registro24hInput.value);
+                } catch (e) {
+                    console.warn('Error parsing registro_24h:', e);
+                }
+            }
+        }
+
+        if (typeof collectFrequencyData === 'function') {
+            data.frecuencia_consumo = collectFrequencyData();
+        } else {
+            const frecuenciaInput = document.getElementById('frecuencia_consumo_data');
+            if (frecuenciaInput && frecuenciaInput.value) {
+                try {
+                    data.frecuencia_consumo = JSON.parse(frecuenciaInput.value);
+                } catch (e) {
+                    console.warn('Error parsing frecuencia_consumo:', e);
+                }
+            }
+        }
         
         showLoading();
         updateSaveStatus('saving');

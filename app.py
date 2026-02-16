@@ -134,7 +134,7 @@ def log_debug(message):
     """Función para agregar logs que se pueden ver en la web."""
     print(message)
     debug_logs.append(message)
-    if len(debug_logs) > 50:
+    if len(debug_logs) > 200:
         debug_logs.pop(0)
 
 # ============================================
@@ -143,8 +143,9 @@ def log_debug(message):
 
 @app.route('/')
 def index():
-    
+
     """Sirve la página principal."""
+    log_debug(f"[INDEX] GET / - User authenticated: {current_user.is_authenticated if AUTH_ENABLED else 'N/A'}")
     return send_from_directory('.', 'index.html')
 
 # ============================================
@@ -156,6 +157,7 @@ def index():
 @login_required
 def dashboard():
     """Redirige al dashboard específico según el rol del usuario"""
+    log_debug(f"[DASHBOARD] Redirect - user_id={current_user.id}, user_type='{current_user.user_type}'")
     # Usar strings directos en lugar de UserType
     if current_user.user_type == 'nutricionista':
         return redirect('/dashboard/nutritionist')
@@ -170,6 +172,7 @@ def dashboard():
 @login_required
 def client_dashboard():
     """Dashboard para clientes (plan FREE)"""
+    log_debug(f"[DASHBOARD-CLIENT] user_id={current_user.id}, email='{current_user.email}'")
     if AUTH_ENABLED:
         try:
             recipes = UserRecipe.query.filter_by(user_id=current_user.id)\
@@ -232,6 +235,7 @@ def nutritionist_dashboard():
 @login_required
 def enterprise_dashboard():
     """Dashboard para empresas con explorador de ingredientes"""
+    log_debug(f"[DASHBOARD-ENTERPRISE] user_id={current_user.id}, user_type='{current_user.user_type}'")
     # Cambiar UserType.EMPRESA por el string directo
     if current_user.user_type != 'empresa':
         flash('No tienes permisos para acceder a esta página', 'danger')
@@ -271,6 +275,7 @@ def enterprise_dashboard():
 @login_required
 def patient_intake_form():
     """Formulario de ingreso de nuevo paciente"""
+    log_debug(f"[PATIENT-INTAKE-FORM] user_id={current_user.id}, user_type='{current_user.user_type}'")
     if current_user.user_type != 'nutricionista':
         flash('No tienes permisos para acceder a esta página', 'danger')
         return redirect(url_for('dashboard'))
@@ -292,24 +297,29 @@ Agregar estas rutas a app.py
 @login_required
 def get_patient(patient_id):
     """Obtener datos de un paciente específico"""
+    log_debug(f"[GET-PATIENT] patient_id={patient_id}, user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[GET-PATIENT] DENIED - user_type='{current_user.user_type}' no es nutricionista")
         return jsonify({'error': 'No autorizado'}), 403
-    
+
     try:
         patient = PatientFile.query.filter_by(
-            id=patient_id, 
+            id=patient_id,
             nutricionista_id=current_user.id
         ).first()
-        
+
         if not patient:
+            log_debug(f"[GET-PATIENT] NOT FOUND - patient_id={patient_id} para nutricionista_id={current_user.id}")
             return jsonify({'error': 'Paciente no encontrado'}), 404
-        
+
+        log_debug(f"[GET-PATIENT] OK - '{patient.nombre}' (ID: {patient.id})")
         return jsonify({
             'success': True,
             'patient': patient.to_dict()
         })
-    
+
     except Exception as e:
+        log_debug(f"[GET-PATIENT] ERROR - {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -317,19 +327,23 @@ def get_patient(patient_id):
 @login_required
 def update_patient(patient_id):
     """Actualizar datos de un paciente"""
+    log_debug(f"[UPDATE-PATIENT] START - patient_id={patient_id}, user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[UPDATE-PATIENT] DENIED - user_type='{current_user.user_type}'")
         return jsonify({'error': 'No autorizado'}), 403
-    
+
     try:
         patient = PatientFile.query.filter_by(
-            id=patient_id, 
+            id=patient_id,
             nutricionista_id=current_user.id
         ).first()
-        
+
         if not patient:
+            log_debug(f"[UPDATE-PATIENT] NOT FOUND - patient_id={patient_id}")
             return jsonify({'error': 'Paciente no encontrado'}), 404
-        
+
         data = request.get_json()
+        log_debug(f"[UPDATE-PATIENT] Data keys: {list(data.keys()) if data else 'None'}")
         
         # Actualizar campos básicos
         campos_texto = [
@@ -475,16 +489,19 @@ def update_patient(patient_id):
 @login_required
 def delete_patient(patient_id):
     """Eliminar un paciente (soft delete)"""
+    log_debug(f"[DELETE-PATIENT] START - patient_id={patient_id}, user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[DELETE-PATIENT] DENIED - user_type='{current_user.user_type}'")
         return jsonify({'error': 'No autorizado'}), 403
-    
+
     try:
         patient = PatientFile.query.filter_by(
-            id=patient_id, 
+            id=patient_id,
             nutricionista_id=current_user.id
         ).first()
-        
+
         if not patient:
+            log_debug(f"[DELETE-PATIENT] NOT FOUND - patient_id={patient_id}")
             return jsonify({'error': 'Paciente no encontrado'}), 404
         
         # Soft delete
@@ -507,12 +524,15 @@ def delete_patient(patient_id):
 @login_required
 def delete_patients_bulk():
     """Eliminar múltiples pacientes"""
+    log_debug(f"[BULK-DELETE] START - user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[BULK-DELETE] DENIED - user_type='{current_user.user_type}'")
         return jsonify({'error': 'No autorizado'}), 403
 
     try:
         data = request.get_json()
         patient_ids = data.get('ids', [])
+        log_debug(f"[BULK-DELETE] IDs to delete: {patient_ids}")
 
         if not patient_ids:
             return jsonify({'success': False, 'error': 'No se proporcionaron IDs'}), 400
@@ -543,7 +563,9 @@ def delete_patients_bulk():
 @login_required
 def invite_patient():
     """Crear paciente e invitarlo a llenar formulario previo"""
+    log_debug(f"[INVITE-PATIENT] START - user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[INVITE-PATIENT] DENIED - user_type='{current_user.user_type}'")
         return jsonify({'error': 'No autorizado'}), 403
 
     try:
@@ -552,6 +574,7 @@ def invite_patient():
         email = data.get('email')
         telefono = data.get('telefono', '')
         nota = data.get('nota', '')
+        log_debug(f"[INVITE-PATIENT] nombre='{nombre}', email='{email}'")
 
         if not email:
             return jsonify({'success': False, 'error': 'Email es requerido'}), 400
@@ -565,9 +588,11 @@ def invite_patient():
 
         if existing:
             # Si ya existe, regenerar token y reenviar
+            log_debug(f"[INVITE-PATIENT] Existing patient found id={existing.id}, regenerating token")
             patient = existing
             patient.generate_intake_token()
         else:
+            log_debug(f"[INVITE-PATIENT] Creating new patient")
             # Crear nuevo paciente con datos minimos
             patient = PatientFile(
                 nutricionista_id=current_user.id,
@@ -623,15 +648,18 @@ def invite_patient():
 @login_required
 def list_patients():
     """Listar todos los pacientes del nutricionista"""
+    log_debug(f"[LIST-PATIENTS] START - user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[LIST-PATIENTS] DENIED - user_type='{current_user.user_type}'")
         return jsonify({'error': 'No autorizado'}), 403
-    
+
     try:
         # Parámetros de paginación y filtros
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         search = request.args.get('search', '').strip()
         active_only = request.args.get('active', 'true').lower() == 'true'
+        log_debug(f"[LIST-PATIENTS] page={page}, per_page={per_page}, search='{search}', active_only={active_only}")
         
         # Query base
         query = PatientFile.query.filter_by(nutricionista_id=current_user.id)
@@ -693,6 +721,7 @@ def list_patients():
 @login_required
 def patient_list():
     """Lista de pacientes del nutricionista"""
+    log_debug(f"[PATIENT-LIST-VIEW] user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
         flash('No tienes permisos para acceder a esta página', 'danger')
         return redirect(url_for('dashboard'))
@@ -704,6 +733,7 @@ def patient_list():
 @login_required
 def patient_file_view(patient_id):
     """Ver ficha de paciente"""
+    log_debug(f"[PATIENT-FILE-VIEW] patient_id={patient_id}, user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
         flash('No tienes permisos para acceder a esta página', 'danger')
         return redirect(url_for('dashboard'))
@@ -712,11 +742,13 @@ def patient_file_view(patient_id):
         id=patient_id,
         nutricionista_id=current_user.id
     ).first()
-    
+
     if not patient:
+        log_debug(f"[PATIENT-FILE-VIEW] NOT FOUND - patient_id={patient_id}")
         flash('Paciente no encontrado', 'danger')
         return redirect(url_for('patient_list'))
-    
+
+    log_debug(f"[PATIENT-FILE-VIEW] OK - '{patient.nombre}' (ID: {patient.id})")
     return render_template('patient_file.html', patient=patient)
 
 
@@ -926,7 +958,7 @@ def create_patient():
                     current_user.get_full_name()
                 )
                 if result['success']:
-                    new_patient.mark_intake_url_sent()
+                    new_patient.mark_url_sent()
                     email_sent = True
                     log_debug(f"📧 Email de intake enviado a {new_patient.email}")
                 else:
@@ -1132,18 +1164,22 @@ def save_patient_draft():
 @app.route('/intake/<token>')
 def patient_public_intake(token):
     """Vista publica del formulario de intake para pacientes"""
+    log_debug(f"[PUBLIC-INTAKE] GET /intake/{token[:8]}...")
     patient = PatientFile.get_by_intake_token(token)
 
     if not patient:
+        log_debug(f"[PUBLIC-INTAKE] INVALID TOKEN - {token[:8]}...")
         return render_template('patient_public_intake.html',
                              error="Enlace invalido o expirado",
                              patient=None)
 
     if patient.intake_completed:
+        log_debug(f"[PUBLIC-INTAKE] ALREADY COMPLETED - patient_id={patient.id}, '{patient.nombre}'")
         return render_template('patient_public_intake.html',
                              already_completed=True,
                              patient=patient)
 
+    log_debug(f"[PUBLIC-INTAKE] Rendering form for patient_id={patient.id}, '{patient.nombre}'")
     # Obtener nombre del nutricionista
     nutritionist = User.query.get(patient.nutricionista_id)
     nutritionist_name = nutritionist.get_full_name() if nutritionist else "Tu nutricionista"
@@ -1158,16 +1194,20 @@ def patient_public_intake(token):
 @app.route('/api/intake/<token>', methods=['POST'])
 def submit_public_intake(token):
     """API para guardar datos del formulario publico de intake"""
+    log_debug(f"[SUBMIT-INTAKE] POST /api/intake/{token[:8]}...")
     patient = PatientFile.get_by_intake_token(token)
 
     if not patient:
+        log_debug(f"[SUBMIT-INTAKE] INVALID TOKEN - {token[:8]}...")
         return jsonify({'success': False, 'error': 'Token invalido'}), 404
 
     if patient.intake_completed:
+        log_debug(f"[SUBMIT-INTAKE] ALREADY COMPLETED - patient_id={patient.id}")
         return jsonify({'success': False, 'error': 'Este formulario ya fue completado'}), 400
 
     try:
         data = request.get_json()
+        log_debug(f"[SUBMIT-INTAKE] patient_id={patient.id}, data keys: {list(data.keys()) if data else 'None'}")
 
         # Actualizar datos personales basicos
         if data.get('nombre'):
@@ -1287,7 +1327,9 @@ def submit_public_intake(token):
 @login_required
 def generate_patient_intake_token(patient_id):
     """API para generar/regenerar token de intake para un paciente"""
+    log_debug(f"[GENERATE-TOKEN] START - patient_id={patient_id}, user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[GENERATE-TOKEN] DENIED - user_type='{current_user.user_type}'")
         return jsonify({'error': 'No autorizado'}), 403
 
     try:
@@ -1325,7 +1367,9 @@ def generate_patient_intake_token(patient_id):
 @login_required
 def mark_intake_url_sent(patient_id):
     """API para marcar que el enlace de intake fue enviado al paciente"""
+    log_debug(f"[MARK-INTAKE-SENT] START - patient_id={patient_id}, user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[MARK-INTAKE-SENT] DENIED")
         return jsonify({'error': 'No autorizado'}), 403
 
     try:
@@ -1354,7 +1398,9 @@ def mark_intake_url_sent(patient_id):
 @login_required
 def send_intake_email_endpoint(patient_id):
     """API para enviar/reenviar email de intake al paciente"""
+    log_debug(f"[SEND-INTAKE-EMAIL] START - patient_id={patient_id}, user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[SEND-INTAKE-EMAIL] DENIED")
         return jsonify({'error': 'No autorizado'}), 403
 
     try:
@@ -1364,9 +1410,11 @@ def send_intake_email_endpoint(patient_id):
         ).first()
 
         if not patient:
+            log_debug(f"[SEND-INTAKE-EMAIL] NOT FOUND - patient_id={patient_id}")
             return jsonify({'error': 'Paciente no encontrado'}), 404
 
         if not patient.email:
+            log_debug(f"[SEND-INTAKE-EMAIL] NO EMAIL for patient_id={patient_id}")
             return jsonify({'success': False, 'error': 'El paciente no tiene email registrado'}), 400
 
         if not is_mail_configured():
@@ -1385,7 +1433,7 @@ def send_intake_email_endpoint(patient_id):
         )
 
         if result['success']:
-            patient.mark_intake_url_sent()
+            patient.mark_url_sent()
             db.session.commit()
             return jsonify({
                 'success': True,
@@ -1404,6 +1452,7 @@ def send_intake_email_endpoint(patient_id):
 @login_required
 def my_recipes():
     """Ver todas mis recetas"""
+    log_debug(f"[MY-RECIPES] user_id={current_user.id}")
     if AUTH_ENABLED:
         try:
             recipes = UserRecipe.query.filter_by(user_id=current_user.id)\
@@ -1419,6 +1468,7 @@ def my_recipes():
 @login_required
 def get_superfoods():
     """API para obtener datos de superalimentos desde el CSV"""
+    log_debug(f"[SUPERFOODS] GET /api/superfoods - category={request.args.get('category','all')}, search='{request.args.get('search','')}'")
     try:
         # Leer CSV de superalimentos
         df = pd.read_csv('data/db_maestra_superalimentos_ampliada.csv')
@@ -1478,6 +1528,7 @@ def get_alimentos():
     API para cargar base de alimentos desde Excel
     Organiza por: Grupo > Subgrupo > Lista de alimentos
     """
+    log_debug(f"[ALIMENTOS] GET /api/alimentos")
     try:
         import pandas as pd
 
@@ -1594,6 +1645,7 @@ def search_alimentos():
     API para buscar alimentos por nombre con autocompletado
     Retorna nombre, grupo, subgrupo y datos nutricionales
     """
+    log_debug(f"[SEARCH-ALIMENTOS] q='{request.args.get('q','')}', limit={request.args.get('limit', 15)}")
     try:
         import pandas as pd
 
@@ -1646,6 +1698,7 @@ def search_alimentos():
 @login_required
 def check_recipe_limit():
     """Verifica si el usuario puede generar más recetas"""
+    log_debug(f"[CHECK-RECIPE-LIMIT] user_id={current_user.id}, plan='{current_user.subscription_plan}'")
     can_generate = current_user.can_generate_recipe()
     remaining = current_user.get_recipes_remaining()
     
@@ -1668,6 +1721,7 @@ def check_recipe_limit():
 @login_required
 def recipe_history():
     """Obtiene el historial de recetas generadas del usuario"""
+    log_debug(f"[RECIPE-HISTORY] user_id={current_user.id}")
     try:
         recipes = UserRecipe.query.filter_by(user_id=current_user.id)\
             .order_by(UserRecipe.created_at.desc())\
@@ -1699,6 +1753,7 @@ def recipe_history():
 @login_required
 def profile():
     """Ver perfil de usuario"""
+    log_debug(f"[PROFILE] user_id={current_user.id}, email='{current_user.email}'")
     if AUTH_ENABLED:
         try:
             total_recipes = UserRecipe.query.filter_by(user_id=current_user.id).count()
@@ -1862,6 +1917,7 @@ def submit_feedback():
         """Endpoint para enviar feedback de una receta."""
         try:
             data = request.get_json()
+            log_debug(f"[SUBMIT-FEEDBACK] recipe_id={data.get('recipe_id')}, rating={data.get('rating')}")
             
             recipe_id = data.get('recipe_id')
             user_id = data.get('user_id', 'anonymous')
@@ -1905,6 +1961,7 @@ def submit_feedback():
 @app.route('/get_feedback/<recipe_id>')
 def get_feedback(recipe_id):
     """Endpoint para obtener feedback de una receta."""
+    log_debug(f"[GET-FEEDBACK] recipe_id={recipe_id}")
     try:
         from recipe_generator_v2 import RecipeGeneratorV3
         generator = RecipeGeneratorV3()
@@ -2335,6 +2392,7 @@ def load_alimentos_database():
 @app.route('/api/alimentos/grupo/<grupo>', methods=['GET'])
 @login_required
 def get_alimentos_grupo(grupo):
+    log_debug(f"[ALIMENTOS-GRUPO] grupo='{grupo}'")
     try:
         db = load_alimentos_database()
         grupo = grupo.lower().strip()
@@ -2376,9 +2434,12 @@ def get_alimentos_grupo(grupo):
 @app.route('/api/generar-pauta/<int:patient_id>', methods=['GET', 'POST'])
 @login_required
 def generar_pauta_endpoint(patient_id):
+    log_debug(f"[GENERAR-PAUTA] START - patient_id={patient_id}, method={request.method}, user_id={current_user.id}")
     try:
         patient = PatientFile.query.get_or_404(patient_id)
+        log_debug(f"[GENERAR-PAUTA] Patient: '{patient.nombre}', peso={patient.peso_kg}, talla={patient.talla_m}")
         alimentos_db = load_alimentos_database()
+        log_debug(f"[GENERAR-PAUTA] Alimentos DB loaded: {len(alimentos_db)} grupos")
 
         # Prepare patient data dict - FIX: call calcular_edad()
         edad = patient.calcular_edad()
@@ -2420,25 +2481,32 @@ def generar_pauta_endpoint(patient_id):
         generator = PautaInteligente(patient_data, alimentos_db)
         pauta = generator.generar()
 
+        log_debug(f"[GENERAR-PAUTA] OK - pauta generated for patient_id={patient_id}")
         return jsonify({'success': True, 'pauta': pauta})
     except Exception as e:
-        print(f"Error generating pauta: {e}")
+        log_debug(f"[GENERAR-PAUTA] ERROR - patient_id={patient_id}: {str(e)}")
+        import traceback
+        log_debug(f"[GENERAR-PAUTA] TRACEBACK: {traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/guardar-pauta/<int:patient_id>', methods=['POST'])
 @login_required
 def guardar_pauta_endpoint_post(patient_id):
+    log_debug(f"[GUARDAR-PAUTA] START - patient_id={patient_id}, user_id={current_user.id}")
     try:
         patient = PatientFile.query.get_or_404(patient_id)
         data = request.json
         pauta = data.get('pauta')
-        
+
         if pauta:
             patient.plan_alimentario = json.dumps(pauta)
             db.session.commit()
+            log_debug(f"[GUARDAR-PAUTA] OK - pauta saved for '{patient.nombre}' (ID: {patient.id})")
             return jsonify({'success': True})
+        log_debug(f"[GUARDAR-PAUTA] ERROR - no pauta in request body")
         return jsonify({'success': False, 'error': 'No pauta provided'}), 400
     except Exception as e:
+        log_debug(f"[GUARDAR-PAUTA] ERROR - {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -2466,6 +2534,7 @@ except ImportError:
 @login_required
 def get_patient_alertas(patient_id):
     """Genera alertas IA para un paciente"""
+    log_debug(f"[ALERTAS-IA] START - patient_id={patient_id}, user_id={current_user.id}, ia_disponible={ia_disponible()}")
     try:
         patient = PatientFile.query.get_or_404(patient_id)
 
@@ -2498,13 +2567,14 @@ def get_patient_alertas(patient_id):
 
         alertas = generar_alertas_paciente(patient_data)
 
+        log_debug(f"[ALERTAS-IA] OK - {len(alertas)} alertas generated for patient_id={patient_id}")
         return jsonify({
             'success': True,
             'alertas': alertas,
             'ia_disponible': ia_disponible()
         })
     except Exception as e:
-        print(f"Error generating alertas: {e}")
+        log_debug(f"[ALERTAS-IA] ERROR - patient_id={patient_id}: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -2512,11 +2582,13 @@ def get_patient_alertas(patient_id):
 @login_required
 def chat_endpoint():
     """Endpoint del chatbot asistente"""
+    log_debug(f"[CHAT] START - user_id={current_user.id}")
     try:
         data = request.json
         mensaje = data.get('mensaje', '')
         patient_id = data.get('patient_id')
         historial = data.get('historial', [])
+        log_debug(f"[CHAT] mensaje='{mensaje[:50]}...', patient_id={patient_id}, historial_len={len(historial)}")
 
         if not mensaje:
             return jsonify({'success': False, 'error': 'Mensaje vacio'}), 400
@@ -2540,13 +2612,14 @@ def chat_endpoint():
         respuesta = chat_con_asistente(mensaje, contexto_paciente, historial)
         sugerencias = obtener_sugerencias_chat(contexto_paciente)
 
+        log_debug(f"[CHAT] OK - respuesta_len={len(respuesta)}, sugerencias={len(sugerencias)}")
         return jsonify({
             'success': True,
             'respuesta': respuesta,
             'sugerencias': sugerencias
         })
     except Exception as e:
-        print(f"Error in chat: {e}")
+        log_debug(f"[CHAT] ERROR - {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -2554,6 +2627,7 @@ def chat_endpoint():
 @login_required
 def ia_status():
     """Verifica el estado del servicio de IA"""
+    log_debug(f"[IA-STATUS] disponible={ia_disponible()}")
     return jsonify({
         'disponible': ia_disponible(),
         'mensaje': 'Gemini AI activo' if ia_disponible() else 'Configure GEMINI_API_KEY para habilitar IA'
@@ -2567,12 +2641,14 @@ def ia_status():
 @app.route('/booking')
 def booking_page():
     """Public booking wizard page"""
+    log_debug(f"[BOOKING-PAGE] GET /booking")
     return render_template('booking.html')
 
 @app.route('/dashboard/nutritionist/schedule')
 @login_required
 def nutritionist_schedule_page():
     """Schedule management page for nutritionists"""
+    log_debug(f"[SCHEDULE-PAGE] user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
         return redirect('/dashboard')
     return render_template('nutritionist_schedule.html')
@@ -2581,6 +2657,7 @@ def nutritionist_schedule_page():
 @login_required
 def nutritionist_bookings_page():
     """Bookings list page for nutritionists"""
+    log_debug(f"[BOOKINGS-PAGE] user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
         return redirect('/dashboard')
     return render_template('nutritionist_bookings.html')
@@ -2589,6 +2666,7 @@ def nutritionist_bookings_page():
 @login_required
 def nutritionist_profile_page():
     """Public profile editor for nutritionists"""
+    log_debug(f"[NUTRI-PROFILE-PAGE] user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
         return redirect('/dashboard')
     return render_template('nutritionist_profile.html')
@@ -2600,6 +2678,7 @@ def nutritionist_profile_page():
 @app.route('/api/public/specialties')
 def api_public_specialties():
     """Return the list of nutritionist specialties with 'Ver todos' option first"""
+    log_debug(f"[PUBLIC-SPECIALTIES] GET /api/public/specialties")
     specialties_list = [{'key': 'todos', 'label': 'Ver todos los nutricionistas'}]
     specialties_list.extend([{'key': k, 'label': l} for k, l in NUTRITIONIST_SPECIALTIES])
     return jsonify({'success': True, 'specialties': specialties_list})
@@ -2608,6 +2687,7 @@ def api_public_specialties():
 def api_public_nutritionists():
     """List nutritionists, optionally filtered by specialty. Shows all by default."""
     specialty = request.args.get('specialty', '')
+    log_debug(f"[PUBLIC-NUTRITIONISTS] specialty='{specialty}'")
     query = User.query.filter_by(user_type='nutricionista', is_active=True)
 
     nutritionists = query.all()
@@ -2633,6 +2713,7 @@ def api_public_nutritionists():
         })
 
     results.sort(key=lambda x: x['avg_rating'], reverse=True)
+    log_debug(f"[PUBLIC-NUTRITIONISTS] OK - {len(results)} nutritionists returned")
     return jsonify({'success': True, 'nutritionists': results})
 
 @app.route('/api/public/nutritionist/<int:nutri_id>/slots')
@@ -2640,6 +2721,7 @@ def api_public_slots(nutri_id):
     """Get available time slots for a nutritionist on a given date"""
     from datetime import datetime as dt
     date_str = request.args.get('date', '')
+    log_debug(f"[PUBLIC-SLOTS] nutri_id={nutri_id}, date='{date_str}'")
     if not date_str:
         return jsonify({'success': False, 'error': 'Parametro date requerido'}), 400
 
@@ -2667,6 +2749,7 @@ def api_public_slots(nutri_id):
     booked_times = {b.booking_time for b in existing}
     available = [s for s in all_slots if s not in booked_times]
 
+    log_debug(f"[PUBLIC-SLOTS] OK - {len(available)} available slots (total={len(all_slots)}, booked={len(booked_times)})")
     return jsonify({'success': True, 'slots': available, 'date': date_str})
 
 @app.route('/api/public/book', methods=['POST'])
@@ -2674,6 +2757,7 @@ def api_public_book():
     """Create a new booking (public, no auth required)"""
     from datetime import datetime as dt
     data = request.get_json()
+    log_debug(f"[PUBLIC-BOOK] START - data keys: {list(data.keys()) if data else 'None'}")
     if not data:
         return jsonify({'success': False, 'error': 'JSON requerido'}), 400
 
@@ -2683,8 +2767,10 @@ def api_public_book():
             return jsonify({'success': False, 'error': f'Campo {field} requerido'}), 400
 
     try:
+        log_debug(f"[PUBLIC-BOOK] client='{data.get('client_name')}', email='{data.get('client_email')}', nutri_id={data.get('nutritionist_id')}, date={data.get('booking_date')}, time={data.get('booking_time')}")
         nutri = User.query.get(data['nutritionist_id'])
         if not nutri or nutri.user_type != 'nutricionista':
+            log_debug(f"[PUBLIC-BOOK] NUTRI NOT FOUND - id={data['nutritionist_id']}")
             return jsonify({'success': False, 'error': 'Nutricionista no encontrado'}), 404
 
         booking_date = dt.strptime(data['booking_date'], '%Y-%m-%d').date()
@@ -2697,6 +2783,7 @@ def api_public_book():
         ).filter(Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED])).first()
 
         if existing:
+            log_debug(f"[PUBLIC-BOOK] SLOT TAKEN - date={data['booking_date']}, time={data['booking_time']}")
             return jsonify({'success': False, 'error': 'Este horario ya no esta disponible'}), 409
 
         # Create PatientFile for this client
@@ -2738,6 +2825,7 @@ def api_public_book():
                 db.session.commit()
                 email_sent = True
 
+        log_debug(f"[PUBLIC-BOOK] OK - booking_id={booking.id}, patient_id={patient.id}, email_sent={email_sent}")
         return jsonify({
             'success': True,
             'booking_id': booking.id,
@@ -2748,7 +2836,7 @@ def api_public_book():
 
     except Exception as e:
         db.session.rollback()
-        print(f"Error creating booking: {e}")
+        log_debug(f"[PUBLIC-BOOK] ERROR - {str(e)}")
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -2760,13 +2848,16 @@ def api_public_book():
 @login_required
 def api_nutri_schedule_get():
     """Get current nutritionist's weekly schedule"""
+    log_debug(f"[SCHEDULE-GET] user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[SCHEDULE-GET] DENIED")
         return jsonify({'success': False, 'error': 'No autorizado'}), 403
 
     schedules = NutritionistSchedule.query.filter_by(
         nutritionist_id=current_user.id
     ).order_by(NutritionistSchedule.day_of_week).all()
 
+    log_debug(f"[SCHEDULE-GET] OK - {len(schedules)} schedule entries")
     return jsonify({'success': True, 'schedule': [{
         'id': s.id,
         'day_of_week': s.day_of_week,
@@ -2780,10 +2871,13 @@ def api_nutri_schedule_get():
 @login_required
 def api_nutri_schedule_save():
     """Save weekly schedule (replaces all days)"""
+    log_debug(f"[SCHEDULE-SAVE] START - user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[SCHEDULE-SAVE] DENIED")
         return jsonify({'success': False, 'error': 'No autorizado'}), 403
 
     data = request.get_json()
+    log_debug(f"[SCHEDULE-SAVE] days count: {len(data.get('days', [])) if data else 0}")
     if not data or 'days' not in data:
         return jsonify({'success': False, 'error': 'JSON con campo days requerido'}), 400
 
@@ -2804,21 +2898,26 @@ def api_nutri_schedule_save():
                 db.session.add(sched)
 
         db.session.commit()
+        log_debug(f"[SCHEDULE-SAVE] OK - schedule saved")
         return jsonify({'success': True, 'message': 'Horario guardado'})
     except Exception as e:
         db.session.rollback()
+        log_debug(f"[SCHEDULE-SAVE] ERROR - {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/nutritionist/bookings')
 @login_required
 def api_nutri_bookings():
     """List bookings for current nutritionist"""
+    log_debug(f"[NUTRI-BOOKINGS] user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[NUTRI-BOOKINGS] DENIED")
         return jsonify({'success': False, 'error': 'No autorizado'}), 403
 
     bookings = Booking.query.filter_by(nutritionist_id=current_user.id)\
         .order_by(Booking.booking_date.desc(), Booking.booking_time.desc()).all()
 
+    log_debug(f"[NUTRI-BOOKINGS] OK - {len(bookings)} bookings")
     return jsonify({'success': True, 'bookings': [{
         'id': b.id,
         'client_name': b.client_name,
@@ -2838,11 +2937,14 @@ def api_nutri_bookings():
 @login_required
 def api_nutri_booking_status(booking_id):
     """Update booking status"""
+    log_debug(f"[BOOKING-STATUS] START - booking_id={booking_id}, user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[BOOKING-STATUS] DENIED")
         return jsonify({'success': False, 'error': 'No autorizado'}), 403
 
     booking = Booking.query.get_or_404(booking_id)
     if booking.nutritionist_id != current_user.id:
+        log_debug(f"[BOOKING-STATUS] DENIED - booking belongs to nutri_id={booking.nutritionist_id}")
         return jsonify({'success': False, 'error': 'No autorizado'}), 403
 
     data = request.get_json()
@@ -2853,13 +2955,16 @@ def api_nutri_booking_status(booking_id):
 
     booking.status = new_status
     db.session.commit()
+    log_debug(f"[BOOKING-STATUS] OK - booking_id={booking_id} -> {new_status}")
     return jsonify({'success': True, 'status': booking.status})
 
 @app.route('/api/nutritionist/profile', methods=['GET'])
 @login_required
 def api_nutri_profile_get():
     """Get nutritionist public profile data"""
+    log_debug(f"[NUTRI-PROFILE-GET] user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[NUTRI-PROFILE-GET] DENIED")
         return jsonify({'success': False, 'error': 'No autorizado'}), 403
 
     banco = {}
@@ -2881,10 +2986,13 @@ def api_nutri_profile_get():
 @login_required
 def api_nutri_profile_save():
     """Update nutritionist public profile"""
+    log_debug(f"[NUTRI-PROFILE-SAVE] START - user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
+        log_debug(f"[NUTRI-PROFILE-SAVE] DENIED")
         return jsonify({'success': False, 'error': 'No autorizado'}), 403
 
     data = request.get_json()
+    log_debug(f"[NUTRI-PROFILE-SAVE] Data keys: {list(data.keys()) if data else 'None'}")
     if not data:
         return jsonify({'success': False, 'error': 'JSON requerido'}), 400
 
@@ -2899,9 +3007,11 @@ def api_nutri_profile_save():
             current_user.banco_info = json.dumps(data['banco_info'])
 
         db.session.commit()
+        log_debug(f"[NUTRI-PROFILE-SAVE] OK - profile updated")
         return jsonify({'success': True, 'message': 'Perfil actualizado'})
     except Exception as e:
         db.session.rollback()
+        log_debug(f"[NUTRI-PROFILE-SAVE] ERROR - {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # ============================================
