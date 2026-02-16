@@ -950,8 +950,10 @@ def create_patient():
         if new_patient.email:
             new_patient.generate_intake_token()
             intake_url = new_patient.get_intake_url(request.host_url.rstrip('/'))
+            log_debug(f"[EMAIL] Token generado, intake_url={intake_url}")
 
             if is_mail_configured():
+                log_debug(f"[EMAIL] Intentando enviar email a {new_patient.email}...")
                 result = send_intake_email(
                     new_patient,
                     intake_url,
@@ -960,13 +962,14 @@ def create_patient():
                 if result['success']:
                     new_patient.mark_url_sent()
                     email_sent = True
-                    log_debug(f"📧 Email de intake enviado a {new_patient.email}")
+                    log_debug(f"[EMAIL] OK - Email de intake enviado a {new_patient.email}")
                 else:
-                    log_debug(f"[WARN] No se pudo enviar email: {result.get('error')}")
+                    log_debug(f"[EMAIL] FAIL - No se pudo enviar email: {result.get('error')}")
             else:
-                log_debug(f"[WARN] Email no configurado. Token generado: {intake_url}")
+                log_debug(f"[EMAIL] No configurado. Token generado: {intake_url}")
 
             db.session.commit()
+            log_debug(f"[EMAIL] Commit final OK")
 
         return jsonify({
             'success': True,

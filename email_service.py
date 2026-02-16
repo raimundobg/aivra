@@ -4,6 +4,7 @@ email_service.py - Servicio de envio de emails para BiteTrack
 from flask_mail import Mail, Message
 from flask import render_template, current_app
 import os
+import threading
 
 mail = Mail()
 
@@ -20,8 +21,31 @@ def init_mail(app):
         'MAIL_DEFAULT_SENDER',
         os.environ.get('MAIL_USERNAME', 'noreply@bitetrack.cl')
     )
+    # SMTP timeout to prevent worker hangs (10 seconds connect, 15 seconds total)
+    app.config['MAIL_TIMEOUT'] = 10
     mail.init_app(app)
     return mail
+
+
+def _send_mail_with_timeout(msg, timeout=15):
+    """Send email with a hard timeout to prevent worker hangs."""
+    result = {'success': False, 'error': 'Timeout'}
+
+    def _send():
+        try:
+            mail.send(msg)
+            result['success'] = True
+            result['error'] = None
+        except Exception as e:
+            result['error'] = str(e)
+
+    t = threading.Thread(target=_send)
+    t.start()
+    t.join(timeout=timeout)
+
+    if t.is_alive():
+        result['error'] = f'SMTP timeout after {timeout}s'
+    return result
 
 
 def send_intake_email(patient, intake_url, nutritionist_name):
@@ -58,8 +82,7 @@ def send_intake_email(patient, intake_url, nutritionist_name):
             f"Saludos,\nEquipo BiteTrack"
         )
 
-        mail.send(msg)
-        return {'success': True}
+        return _send_mail_with_timeout(msg, timeout=15)
 
     except Exception as e:
         current_app.logger.error(f"Error enviando email a {patient.email}: {str(e)}")
@@ -112,8 +135,7 @@ def send_booking_confirmation(booking, nutritionist, intake_url):
             f"Saludos,\nEquipo BiteTrack"
         )
 
-        mail.send(msg)
-        return {'success': True}
+        return _send_mail_with_timeout(msg, timeout=15)
 
     except Exception as e:
         current_app.logger.error(f"Error enviando confirmacion a {booking.client_email}: {str(e)}")
