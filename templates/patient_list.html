@@ -886,16 +886,27 @@
     function formatViewPorcion(cantidad, medidaCasera) {
         if (!medidaCasera) return cantidad + ' porción';
         const medida = medidaCasera.trim();
-        const match = medida.match(/^1\s+(.+)$/);
-        if (match && cantidad !== 1) {
-            let unidad = match[1];
+
+        // Handle "1 taza" → "4 tazas" (remove leading 1, pluralize)
+        const match1 = medida.match(/^1\s+(.+)$/);
+        if (match1 && cantidad !== 1) {
+            let unidad = match1[1];
             if (!unidad.endsWith('s') && cantidad > 1) {
                 if (unidad.endsWith('z')) unidad = unidad.slice(0, -1) + 'ces';
+                else if (unidad.endsWith('ón')) unidad = unidad.slice(0, -2) + 'ones';
                 else unidad += 's';
             }
             return cantidad + ' ' + unidad;
         }
+
+        // Handle medida that already starts with a number (e.g. "2 tazas", "3 cdas")
+        // In this case the medida_casera IS the portion description, just use it directly
+        const matchNum = medida.match(/^\d+(\.\d+)?\s+/);
+        if (matchNum) return medida;
+
+        // Fractions like "½ taza" → "4 × ½ taza"
         if (cantidad > 1 && /^[½¼¾⅓⅔]/.test(medida)) return cantidad + ' × ' + medida;
+
         if (cantidad === 1) return medida;
         return cantidad + ' ' + medida;
     }

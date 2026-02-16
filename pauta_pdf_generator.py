@@ -131,6 +131,39 @@ class PautaPDFGenerator:
         self.styles = get_custom_styles()
         self.buffer = BytesIO()
         
+    @staticmethod
+    def _format_porcion(cantidad, medida_casera):
+        """Format portion display: handles '1 taza'→'4 tazas', fractions, and numeric medidas."""
+        import re
+        if not medida_casera:
+            return f"{cantidad} porción"
+        medida = medida_casera.strip()
+
+        # "1 taza" with cantidad=4 → "4 tazas"
+        m = re.match(r'^1\s+(.+)$', medida)
+        if m and cantidad != 1:
+            unidad = m.group(1)
+            if not unidad.endswith('s') and cantidad > 1:
+                if unidad.endswith('z'):
+                    unidad = unidad[:-1] + 'ces'
+                elif unidad.endswith('ón'):
+                    unidad = unidad[:-2] + 'ones'
+                else:
+                    unidad += 's'
+            return f"{cantidad} {unidad}"
+
+        # Medida already starts with a number (e.g. "2 tazas") → use as-is
+        if re.match(r'^\d+(\.\d+)?\s+', medida):
+            return medida
+
+        # Fractions like "½ taza" → "4 × ½ taza"
+        if cantidad > 1 and re.match(r'^[½¼¾⅓⅔]', medida):
+            return f"{cantidad} × {medida}"
+
+        if cantidad == 1:
+            return medida
+        return f"{cantidad} {medida}"
+
     def generate(self) -> BytesIO:
         """Genera el PDF y retorna el buffer"""
         
@@ -397,7 +430,7 @@ class PautaPDFGenerator:
             
             for alimento in alimentos:
                 nombre_al = alimento.get('nombre', '')
-                cantidad = f"{alimento.get('cantidad', 1)} {alimento.get('medida_casera', 'porción')}"
+                cantidad = self._format_porcion(alimento.get('cantidad', 1), alimento.get('medida_casera', 'porción'))
                 kcal = str(int(alimento.get('kcal', 0)))
                 prot = f"{round(alimento.get('proteinas', 0), 1)}g"
                 carbs = f"{round(alimento.get('carbohidratos', 0), 1)}g"

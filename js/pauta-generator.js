@@ -67,6 +67,10 @@ console.log('📦 pauta-generator.js v3.0 SEMANAL cargado');
             return `${cantidad} × ${medida}`;
         }
 
+        // Handle medida that already starts with a number (e.g. "2 tazas", "3 cdas")
+        const matchNum = medida.match(/^\d+(\.\d+)?\s+/);
+        if (matchNum) return medida;
+
         // Default: just combine
         if (cantidad === 1) return medida;
         return `${cantidad} ${medida}`;
