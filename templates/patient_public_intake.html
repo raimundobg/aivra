@@ -1381,6 +1381,15 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     {% if not error and not already_completed %}
+    <!-- Floating Dummy Data Button (for testing) -->
+    <button id="btnDummyData" onclick="fillDummyData()" title="Rellenar con datos de prueba"
+        style="position:fixed;bottom:20px;right:20px;z-index:9998;width:52px;height:52px;border-radius:50%;
+        background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;font-size:1.25rem;
+        box-shadow:0 4px 16px rgba(245,158,11,0.4);cursor:pointer;display:flex;align-items:center;
+        justify-content:center;transition:all .2s;">
+        <i class="fas fa-magic"></i>
+    </button>
+
     <script>
         let currentStep = 1;
         const totalSteps = 6;
@@ -1715,6 +1724,186 @@
                 console.error('Error:', error);
             }
         });
+
+        // ============================================
+        // DUMMY DATA FILL (for testing)
+        // ============================================
+        function fillDummyData() {
+            const setField = (name, value) => {
+                const el = document.querySelector(`[name="${name}"]`);
+                if (el) { el.value = value; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }
+            };
+            const checkPill = (name, value) => {
+                const cb = document.querySelector(`input[name="${name}"][value="${value}"]`);
+                if (cb && !cb.checked) {
+                    cb.checked = true;
+                    const pill = cb.closest('.checkbox-pill');
+                    if (pill) pill.classList.add('selected');
+                }
+            };
+
+            // --- Step 1: Datos Personales ---
+            setField('nombre', 'Camila Andrea Rojas Munoz');
+            setField('fecha_nacimiento', '1992-08-23');
+            setField('sexo', 'Femenino');
+            setField('ocupacion', 'Disenadora grafica');
+            setField('peso', '68.5');
+            setField('talla', '1.62');
+            setField('direccion', 'Providencia, Santiago');
+
+            // --- Step 2: Antecedentes de Salud ---
+            checkPill('diagnosticos', 'hipotiroidismo');
+            checkPill('diagnosticos', 'gastritis');
+            setField('medicamentos', 'Levotiroxina 50mcg (en ayunas)');
+            setField('suplementos', 'Vitamina D 1000 UI, Magnesio 400mg');
+            setField('cirugias', 'Apendicectomia (2015)');
+            checkPill('antecedentes_familiares', 'diabetes');
+            checkPill('antecedentes_familiares', 'hipertension');
+            setField('alergias', 'Ninguna conocida');
+            setField('intolerancias', 'Lactosa (parcial) - le produce hinchazon');
+
+            // --- Step 3: Estilo de Vida ---
+            setField('horas_sueno', '6-7');
+            setField('calidad_sueno', '6');
+            document.getElementById('suenoValue').innerText = '6';
+            setField('nivel_estres', '7');
+            document.getElementById('estresValue').innerText = '7';
+            setField('actividad_fisica', 'ligero');
+            setField('tipo_ejercicio', 'Yoga 2 veces/semana, caminatas 30 min');
+            setField('consumo_alcohol', 'ocasional');
+            setField('fuma', 'false');
+            setField('horario_desayuno', '08:00');
+            setField('horario_almuerzo', '13:30');
+            setField('horario_cena', '20:00');
+            checkPill('pica_entre_comidas', 'true');
+            checkPill('come_frente_tv', 'true');
+            checkPill('restricciones_alimentarias', 'sin_lactosa');
+
+            // --- Step 4: Motivo y Objetivos ---
+            setField('motivo_consulta', 'Quiero bajar de peso de manera saludable. He intentado varias dietas pero no logro mantener los resultados. Tambien me siento hinchada frecuentemente despues de comer y quiero mejorar mi energia durante el dia.');
+            checkPill('objetivos', 'bajar_peso');
+            checkPill('objetivos', 'mejorar_salud');
+            checkPill('objetivos', 'energia');
+            checkPill('objetivos', 'digestion');
+            checkPill('objetivos', 'habitos');
+            checkPill('sintomas_gi', 'hinchazon');
+            checkPill('sintomas_gi', 'gases');
+            checkPill('sintomas_gi', 'reflujo');
+            // Bristol type 4 (normal)
+            const bristol4 = document.querySelector('input[name="consistencia_heces"][value="4"]');
+            if (bristol4) {
+                const card = bristol4.closest('.bristol-card');
+                selectBristol(card);
+            }
+
+            // --- Step 5: Registro 24h (fill after DB loads) ---
+            fillDummy24hRecord();
+
+            // --- Step 6: EFC ---
+            const efcDummyData = [
+                '2-4_sem',  // Frutas
+                '5-6_sem',  // Verduras
+                '1_sem',    // Leche/yogur
+                '1-3_mes',  // Queso
+                '2-4_sem',  // Carnes rojas
+                '2-4_sem',  // Pollo/pavo
+                '1_sem',    // Pescados
+                '5-6_sem',  // Huevos
+                '1_sem',    // Legumbres
+                'diario',   // Pan
+                '5-6_sem',  // Arroz/pasta
+                '2-4_sem',  // Cereales/avena
+                '2-4_sem',  // Papas
+                '1-3_mes',  // Frutos secos
+                '2-4_sem',  // Aceite oliva/palta
+                '1-3_mes',  // Mantequilla
+                '1-3_mes',  // Embutidos
+                '1_sem',    // Snacks/galletas
+                '1_sem',    // Dulces/chocolate
+                '1-3_mes',  // Bebidas azucaradas
+                'diario',   // Cafe/te
+                '1-3_mes',  // Comida rapida
+            ];
+            efcDummyData.forEach((freq, idx) => {
+                const radio = document.querySelector(`input[name="efc_${idx}"][value="${freq}"]`);
+                if (radio) {
+                    radio.checked = true;
+                    const label = radio.closest('.efc-radio');
+                    if (label) {
+                        label.closest('tr').querySelectorAll('.efc-radio').forEach(r => r.classList.remove('selected'));
+                        label.classList.add('selected');
+                    }
+                }
+            });
+
+            // Show notification
+            const notif = document.createElement('div');
+            notif.innerHTML = '<i class="fas fa-check-circle me-2"></i>Datos de prueba cargados!';
+            notif.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,#10b981,#14b8a6);color:white;padding:12px 24px;border-radius:50px;font-weight:600;font-size:0.9375rem;box-shadow:0 4px 16px rgba(16,185,129,0.4);';
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        function fillDummy24hRecord() {
+            // Wait for DB to load
+            if (!publicAlimentosDB || Object.keys(publicAlimentosDB).length === 0) {
+                setTimeout(fillDummy24hRecord, 500);
+                return;
+            }
+
+            // Helper: pick food from a specific group/subgroup
+            function pickFood(meal, groupKey, subgroupKey, alimentoIdx, cantidad) {
+                const tbody = document.querySelector(`tbody[data-meal="${meal}"]`);
+                if (!tbody) return;
+                const rows = tbody.querySelectorAll('tr.meal-row');
+                let targetRow = null;
+
+                // Find empty row or create new one
+                for (const row of rows) {
+                    if (!row.querySelector('.grupo-select').value) { targetRow = row; break; }
+                }
+                if (!targetRow) {
+                    addPublicRow(meal);
+                    const updatedRows = tbody.querySelectorAll('tr.meal-row');
+                    targetRow = updatedRows[updatedRows.length - 1];
+                }
+
+                const grupoSel = targetRow.querySelector('.grupo-select');
+                const alimSel = targetRow.querySelector('.alimento-select');
+                const porcSel = targetRow.querySelector('.porcion-select');
+
+                // Set group
+                grupoSel.value = groupKey;
+                onPublicGrupoChange(grupoSel);
+
+                // Set alimento
+                setTimeout(() => {
+                    alimSel.value = `${subgroupKey}|${alimentoIdx}`;
+                    onPublicAlimentoChange(alimSel);
+                    setTimeout(() => { porcSel.value = String(cantidad); }, 50);
+                }, 50);
+            }
+
+            // Desayuno: pan, leche, fruta
+            pickFood('desayuno', 'panes_y_cereales', 'pan, cereales desayuno, barras o galletas', 0, 2);
+            setTimeout(() => pickFood('desayuno', 'lacteos', 'leche', 0, 1), 200);
+            setTimeout(() => pickFood('desayuno', 'frutas', 'frutas', 0, 1), 400);
+
+            // Colacion AM: fruta
+            setTimeout(() => pickFood('colacion1', 'frutas', 'frutas', 1, 1), 600);
+
+            // Almuerzo: arroz, carne, verdura
+            setTimeout(() => pickFood('almuerzo', 'panes_y_cereales', 'pan, cereales desayuno, barras o galletas', 0, 1), 800);
+            setTimeout(() => pickFood('almuerzo', 'carnes', 'carnes', 0, 1), 1000);
+            setTimeout(() => pickFood('almuerzo', 'verduras', 'verduras', 0, 2), 1200);
+
+            // Colacion PM: frutos secos
+            setTimeout(() => pickFood('colacion2', 'frutas', 'frutas', 2, 1), 1400);
+
+            // Cena: huevos, pan
+            setTimeout(() => pickFood('cena', 'huevos', 'huevos', 0, 2), 1600);
+            setTimeout(() => pickFood('cena', 'panes_y_cereales', 'pan, cereales desayuno, barras o galletas', 0, 2), 1800);
+        }
 
         // Initialize
         buildEFCTable();
