@@ -614,7 +614,9 @@ def invite_patient():
 
         # Intentar enviar email
         email_sent = False
-        if is_mail_configured():
+        mail_configured = is_mail_configured()
+        log_debug(f"[INVITE-PATIENT] Mail configured: {mail_configured}")
+        if mail_configured:
             try:
                 result = send_intake_email(
                     patient,
@@ -622,11 +624,14 @@ def invite_patient():
                     current_user.get_full_name() if hasattr(current_user, 'get_full_name') else current_user.first_name
                 )
                 email_sent = result.get('success', False)
+                log_debug(f"[INVITE-PATIENT] Email send result: {result}")
                 patient.intake_url_sent = email_sent
                 if email_sent:
                     patient.intake_url_sent_at = datetime.utcnow()
             except Exception as e:
                 log_debug(f"[WARNING] Error enviando email: {e}")
+        else:
+            log_debug(f"[INVITE-PATIENT] MAIL NOT CONFIGURED - MAIL_USERNAME or MAIL_PASSWORD missing")
 
         db.session.commit()
 

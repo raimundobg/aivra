@@ -565,6 +565,23 @@
         }
     };
 
+    function formatPautaPorcion(cantidad, medidaCasera) {
+        if (!medidaCasera) return cantidad + ' porción';
+        const medida = medidaCasera.trim();
+        const match = medida.match(/^1\s+(.+)$/);
+        if (match && cantidad !== 1) {
+            let unidad = match[1];
+            if (!unidad.endsWith('s') && cantidad > 1) {
+                if (unidad.endsWith('z')) unidad = unidad.slice(0, -1) + 'ces';
+                else unidad += 's';
+            }
+            return cantidad + ' ' + unidad;
+        }
+        if (cantidad > 1 && /^[½¼¾⅓⅔]/.test(medida)) return cantidad + ' × ' + medida;
+        if (cantidad === 1) return medida;
+        return cantidad + ' ' + medida;
+    }
+
     function showPautaModal(pauta) {
         // Create modal to show pauta
         const config = pauta.configuracion_dieta || {};
@@ -582,12 +599,18 @@
             dietaInfo += config.restricciones.map(r => `<span class="badge bg-warning text-dark me-1">${r}</span>`).join('');
         }
 
+        const TIEMPO_DISPLAY = {
+            desayuno: 'Desayuno', colacion_am: 'Colación AM', almuerzo: 'Almuerzo',
+            colacion_pm: 'Colación PM', cena: 'Cena'
+        };
+        const formatTiempo = t => TIEMPO_DISPLAY[t] || t;
+
         let tiemposInfo = '';
         if (tiempos.activos) {
-            tiemposInfo = `<small class="text-muted">Tiempos activos: ${tiempos.activos.join(', ')}</small>`;
+            tiemposInfo = `<small class="text-muted">Tiempos activos: ${tiempos.activos.map(formatTiempo).join(', ')}</small>`;
         }
         if (tiempos.excluidos && tiempos.excluidos.length > 0) {
-            tiemposInfo += `<br><small class="text-warning">Excluidos: ${tiempos.excluidos.join(', ')}</small>`;
+            tiemposInfo += `<br><small class="text-warning">Excluidos: ${tiempos.excluidos.map(formatTiempo).join(', ')}</small>`;
         }
 
         const modalHtml = `
@@ -647,14 +670,16 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            ${(tiempoData.alimentos || []).map(a => `
+                                                            ${(tiempoData.alimentos || []).map(a => {
+                                                                const porcion = formatPautaPorcion(a.cantidad, a.medida_casera);
+                                                                return `
                                                                 <tr ${a.es_preferido ? 'class="table-success"' : ''}>
                                                                     <td>${a.nombre} ${a.es_preferido ? '<i class="fas fa-star text-warning" title="Preferido del paciente"></i>' : ''}</td>
-                                                                    <td>${a.cantidad} ${a.medida_casera}</td>
+                                                                    <td>${porcion}</td>
                                                                     <td class="text-end">${Math.round(a.kcal)}</td>
                                                                     <td class="text-end">${a.proteinas?.toFixed(1) || 0}g</td>
-                                                                </tr>
-                                                            `).join('')}
+                                                                </tr>`;
+                                                            }).join('')}
                                                         </tbody>
                                                     </table>
                                                 </div>

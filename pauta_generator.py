@@ -1005,18 +1005,32 @@ class PautaInteligente:
         if not candidatos:
             print(f"      ⚠️ NO hay candidatos para {grupo_requerido}")
             return None
-        
+
+        # Penalizar alimentos ya usados mucho esta semana (variedad semanal)
+        MAX_WEEKLY_REPEATS = 3  # Un alimento no debería aparecer más de 3 veces por semana
+        for c in candidatos:
+            weekly_count = self.usados_semana.get(c['id'], 0)
+            if weekly_count >= MAX_WEEKLY_REPEATS:
+                c['score'] -= 80  # Fuerte penalización para evitar repetición excesiva
+            elif weekly_count >= 2:
+                c['score'] -= 30  # Penalización moderada
+            elif weekly_count >= 1:
+                c['score'] -= 10  # Penalización leve para fomentar variedad
+
         candidatos.sort(key=lambda x: x['score'], reverse=True)
-        
+
         # Debug
         if candidatos[0]['score'] > 1 or grupo_requerido == 'proteina':
             print(f"      🔍 Top para {grupo_requerido}: {candidatos[0]['alimento'].nombre} (score: {candidatos[0]['score']}, grupo_norm: {candidatos[0]['alimento'].grupo_normalizado})")
-        
-        # Seleccionar con preferencia por los de mayor score
+
+        # Seleccionar con variedad: entre los top candidatos con scores similares
         if candidatos[0]['score'] >= 50:
-            seleccionado = candidatos[0]
+            # Agrupar candidatos con scores cercanos al mejor (dentro de 20 puntos)
+            best_score = candidatos[0]['score']
+            similar = [c for c in candidatos if c['score'] >= best_score - 20]
+            seleccionado = random.choice(similar[:min(5, len(similar))])
         else:
-            top = candidatos[:min(3, len(candidatos))]
+            top = candidatos[:min(5, len(candidatos))]
             seleccionado = random.choice(top)
         
         self.usados_dia.add(seleccionado['id'])

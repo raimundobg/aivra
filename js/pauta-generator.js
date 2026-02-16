@@ -37,6 +37,41 @@ console.log('📦 pauta-generator.js v3.0 SEMANAL cargado');
         cena: { icon: 'fa-moon', color: '#3b82f6', bg: '#dbeafe' }
     };
     
+    // Formatear porción: "4 1 taza" → "4 tazas"
+    function formatPorcion(cantidad, medidaCasera) {
+        if (!medidaCasera) return `${cantidad} porción`;
+
+        // Remove leading "1 " from medida_casera if cantidad > 1
+        // e.g. cantidad=4, medida="1 taza" → "4 tazas"
+        const medida = medidaCasera.trim();
+        const match = medida.match(/^1\s+(.+)$/);
+
+        if (match && cantidad !== 1) {
+            const unidad = match[1];
+            // Simple Spanish pluralization
+            let unidadPlural = unidad;
+            if (!unidad.endsWith('s') && cantidad > 1) {
+                if (unidad.endsWith('z')) {
+                    unidadPlural = unidad.slice(0, -1) + 'ces';
+                } else if (unidad.endsWith('ón')) {
+                    unidadPlural = unidad.slice(0, -2) + 'ones';
+                } else {
+                    unidadPlural = unidad + 's';
+                }
+            }
+            return `${cantidad} ${unidadPlural}`;
+        }
+
+        // For fractions like "½ taza", show as "cantidad × ½ taza"
+        if (cantidad > 1 && /^[½¼¾⅓⅔]/.test(medida)) {
+            return `${cantidad} × ${medida}`;
+        }
+
+        // Default: just combine
+        if (cantidad === 1) return medida;
+        return `${cantidad} ${medida}`;
+    }
+
     // Inicialización
     function init() {
         console.log('🍽️ Inicializando Generador de Pauta Semanal...');
@@ -497,13 +532,12 @@ console.log('📦 pauta-generator.js v3.0 SEMANAL cargado');
                             </thead>
                             <tbody>
                                 ${(tiempo.alimentos || []).map(a => `
-                                    <tr>
+                                    <tr${a.es_preferido ? ' style="background: rgba(16, 185, 129, 0.06);"' : ''}>
                                         <td>
-                                            <span class="alimento-nombre">${a.nombre}</span>
-                                            <small class="text-muted d-block">${a.grupo}</small>
+                                            <span class="alimento-nombre">${a.nombre}${a.es_preferido ? ' ⭐' : ''}</span>
                                         </td>
-                                        <td>${a.cantidad} ${a.medida_casera}</td>
-                                        <td><strong>${a.kcal}</strong></td>
+                                        <td>${formatPorcion(a.cantidad, a.medida_casera)}</td>
+                                        <td><strong>${Math.round(a.kcal)}</strong></td>
                                         <td>${a.proteinas}g</td>
                                     </tr>
                                 `).join('')}

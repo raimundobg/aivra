@@ -741,31 +741,186 @@
     }
 
     function formatPautaContent(content) {
-        // Convertir el contenido de la pauta a HTML formateado
         if (!content) return '';
 
-        // Escapar HTML básico
-        let html = content
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
+        // Try to parse as JSON (pauta v4.x format)
+        let pauta;
+        try {
+            pauta = JSON.parse(content);
+        } catch (e) {
+            // Not JSON - legacy text format, render as escaped text
+            let html = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            html = html
+                .replace(/^(#{1,3})\s*(.+)$/gm, (m, h, t) => `<div style="font-size: ${1.25 - (h.length - 1) * 0.1}rem; font-weight: 700; color: #10b981; margin: 1rem 0 0.5rem;">${t}</div>`)
+                .replace(/^\*\*(.+?)\*\*/gm, '<strong>$1</strong>')
+                .replace(/^- (.+)$/gm, '<div style="margin-left: 1rem; padding: 0.25rem 0;"><i class="fas fa-check-circle" style="color: #10b981; margin-right: 0.5rem;"></i>$1</div>');
+            return html;
+        }
 
-        // Formatear títulos y secciones
-        html = html
-            .replace(/^(#{1,3})\s*(.+)$/gm, (match, hashes, text) => {
-                const level = hashes.length;
-                const style = level === 1
-                    ? 'font-size: 1.25rem; font-weight: 700; color: #10b981; margin: 1.5rem 0 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid #d1fae5;'
-                    : level === 2
-                    ? 'font-size: 1.1rem; font-weight: 600; color: #059669; margin: 1.25rem 0 0.5rem;'
-                    : 'font-size: 1rem; font-weight: 600; color: #047857; margin: 1rem 0 0.5rem;';
-                return `<div style="${style}">${text}</div>`;
-            })
-            .replace(/^\*\*(.+?)\*\*/gm, '<strong>$1</strong>')
-            .replace(/^- (.+)$/gm, '<div style="margin-left: 1rem; padding: 0.25rem 0;"><i class="fas fa-check-circle" style="color: #10b981; margin-right: 0.5rem;"></i>$1</div>');
+        // Render structured pauta JSON
+        const TIEMPO_NAMES = {
+            desayuno: { nombre: 'Desayuno', icon: 'fa-sun', color: '#f59e0b' },
+            colacion_am: { nombre: 'Colación AM', icon: 'fa-apple-alt', color: '#10b981' },
+            almuerzo: { nombre: 'Almuerzo', icon: 'fa-utensils', color: '#ef4444' },
+            colacion_pm: { nombre: 'Colación PM', icon: 'fa-cookie', color: '#8b5cf6' },
+            cena: { nombre: 'Cena', icon: 'fa-moon', color: '#3b82f6' }
+        };
+
+        const DIA_NAMES = {
+            lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles',
+            jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo'
+        };
+
+        // Configuration header
+        let html = '';
+        if (pauta.requerimientos) {
+            const req = pauta.requerimientos;
+            html += `
+                <div style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem; border: 1px solid #a7f3d0;">
+                    <div style="font-weight: 700; color: #065f46; margin-bottom: 0.5rem;">
+                        <i class="fas fa-cog me-1"></i> Configuración:
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; font-size: 0.9rem;">
+                        <div><strong>GET:</strong> ${req.get_kcal} kcal</div>
+                        <div><strong>Proteínas:</strong> ${req.proteinas_g}g</div>
+                        <div><strong>Carbohidratos:</strong> ${req.carbohidratos_g}g</div>
+                        <div><strong>Grasas:</strong> ${req.grasas_g}g</div>
+                    </div>
+                    ${pauta.tiempos_comida ? `
+                        <div style="font-size: 0.8rem; color: #047857; margin-top: 0.5rem;">
+                            Tiempos activos: ${(pauta.tiempos_comida.activos || []).map(t => TIEMPO_NAMES[t]?.nombre || t).join(', ')}
+                        </div>
+                        ${pauta.tiempos_comida.excluidos?.length ? `
+                            <div style="font-size: 0.8rem; color: #dc2626; margin-top: 0.25rem;">
+                                Excluidos: ${pauta.tiempos_comida.excluidos.map(t => TIEMPO_NAMES[t]?.nombre || t).join(', ')}
+                            </div>
+                        ` : ''}
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Day tabs
+        if (pauta.dias) {
+            const dias = Object.keys(pauta.dias);
+            html += `<div id="viewPautaDays" style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem; margin-bottom: 1rem;">`;
+            dias.forEach((dia, i) => {
+                const diaData = pauta.dias[dia];
+                html += `
+                    <button onclick="showViewPautaDay('${dia}')" id="viewDayTab_${dia}"
+                        style="padding: 0.5rem 0.75rem; border-radius: 10px; border: 1px solid ${i === 0 ? '#10b981' : '#e2e8f0'};
+                        background: ${i === 0 ? 'linear-gradient(135deg, #10b981, #059669)' : '#f8fafc'};
+                        color: ${i === 0 ? 'white' : '#334155'}; cursor: pointer; min-width: 80px; text-align: center; font-family: inherit; font-size: 0.8rem;">
+                        <div style="font-weight: 700;">${DIA_NAMES[dia] || dia}</div>
+                        <div style="font-size: 0.7rem; opacity: 0.8;">${diaData?.totales?.kcal || 0} kcal</div>
+                    </button>
+                `;
+            });
+            html += `</div>`;
+
+            // Day content containers
+            dias.forEach((dia, i) => {
+                const diaData = pauta.dias[dia];
+                html += `<div id="viewDayContent_${dia}" style="display: ${i === 0 ? 'block' : 'none'};">`;
+
+                // Meal times for this day
+                const tiemposOrder = ['desayuno', 'colacion_am', 'almuerzo', 'colacion_pm', 'cena'];
+                tiemposOrder.forEach(tiempoKey => {
+                    const tiempo = diaData?.tiempos?.[tiempoKey];
+                    if (!tiempo) return;
+
+                    const tc = TIEMPO_NAMES[tiempoKey] || { nombre: tiempoKey, icon: 'fa-utensils', color: '#6b7280' };
+
+                    html += `
+                        <div style="border: 1px solid #e5e7eb; border-radius: 0.75rem; margin-bottom: 1rem; overflow: hidden;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: ${tc.color}10; border-bottom: 1px solid #e5e7eb;">
+                                <div style="font-weight: 700; font-size: 0.9rem;">
+                                    <i class="fas ${tc.icon}" style="color: ${tc.color}; margin-right: 0.5rem;"></i>${tiempo.nombre || tc.nombre}
+                                </div>
+                                <span style="background: ${tc.color}; color: white; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
+                                    ${tiempo.totales?.kcal || 0} kcal
+                                </span>
+                            </div>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                                <thead>
+                                    <tr style="background: #f8fafc;">
+                                        <th style="padding: 0.5rem 0.75rem; text-align: left; font-size: 0.75rem; color: #64748b; font-weight: 600;">Alimento</th>
+                                        <th style="padding: 0.5rem 0.75rem; text-align: left; font-size: 0.75rem; color: #64748b; font-weight: 600;">Porción</th>
+                                        <th style="padding: 0.5rem 0.75rem; text-align: right; font-size: 0.75rem; color: #64748b; font-weight: 600;">Kcal</th>
+                                        <th style="padding: 0.5rem 0.75rem; text-align: right; font-size: 0.75rem; color: #64748b; font-weight: 600;">Prot</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${(tiempo.alimentos || []).map(a => `
+                                        <tr style="border-top: 1px solid #f1f5f9;${a.es_preferido ? ' background: rgba(16,185,129,0.05);' : ''}">
+                                            <td style="padding: 0.5rem 0.75rem;">${a.nombre}${a.es_preferido ? ' ⭐' : ''}</td>
+                                            <td style="padding: 0.5rem 0.75rem; color: #64748b;">${formatViewPorcion(a.cantidad, a.medida_casera)}</td>
+                                            <td style="padding: 0.5rem 0.75rem; text-align: right; font-weight: 600;">${Math.round(a.kcal)}</td>
+                                            <td style="padding: 0.5rem 0.75rem; text-align: right;">${a.proteinas}g</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                });
+
+                // Day totals
+                if (diaData?.totales) {
+                    const t = diaData.totales;
+                    html += `
+                        <div style="background: #f1f5f9; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.85rem;">
+                            <strong>Total del día:</strong> ${t.kcal} kcal | ${t.proteinas}g prot | ${t.carbohidratos}g carbs | ${t.lipidos}g lip
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+            });
+        }
 
         return html;
     }
+
+    // Helper for portion formatting in view modal
+    function formatViewPorcion(cantidad, medidaCasera) {
+        if (!medidaCasera) return cantidad + ' porción';
+        const medida = medidaCasera.trim();
+        const match = medida.match(/^1\s+(.+)$/);
+        if (match && cantidad !== 1) {
+            let unidad = match[1];
+            if (!unidad.endsWith('s') && cantidad > 1) {
+                if (unidad.endsWith('z')) unidad = unidad.slice(0, -1) + 'ces';
+                else unidad += 's';
+            }
+            return cantidad + ' ' + unidad;
+        }
+        if (cantidad > 1 && /^[½¼¾⅓⅔]/.test(medida)) return cantidad + ' × ' + medida;
+        if (cantidad === 1) return medida;
+        return cantidad + ' ' + medida;
+    }
+
+    // Switch visible day in view pauta modal
+    window.showViewPautaDay = function(dia) {
+        // Hide all day contents
+        document.querySelectorAll('[id^="viewDayContent_"]').forEach(el => el.style.display = 'none');
+        // Show selected
+        const target = document.getElementById('viewDayContent_' + dia);
+        if (target) target.style.display = 'block';
+
+        // Update tab styles
+        document.querySelectorAll('[id^="viewDayTab_"]').forEach(btn => {
+            btn.style.background = '#f8fafc';
+            btn.style.color = '#334155';
+            btn.style.borderColor = '#e2e8f0';
+        });
+        const activeTab = document.getElementById('viewDayTab_' + dia);
+        if (activeTab) {
+            activeTab.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            activeTab.style.color = 'white';
+            activeTab.style.borderColor = '#10b981';
+        }
+    };
 
     function goToPatientAndGeneratePauta() {
         if (currentPautaPatientId) {

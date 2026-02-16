@@ -31,13 +31,18 @@ def _send_mail_with_timeout(msg, timeout=15):
     """Send email with a hard timeout to prevent worker hangs."""
     result = {'success': False, 'error': 'Timeout'}
 
+    # Capture Flask app context for the thread
+    app = current_app._get_current_object()
+
     def _send():
         try:
-            mail.send(msg)
+            with app.app_context():
+                mail.send(msg)
             result['success'] = True
             result['error'] = None
         except Exception as e:
             result['error'] = str(e)
+            app.logger.error(f"[EMAIL-THREAD] Error: {str(e)}")
 
     t = threading.Thread(target=_send)
     t.start()
@@ -45,6 +50,9 @@ def _send_mail_with_timeout(msg, timeout=15):
 
     if t.is_alive():
         result['error'] = f'SMTP timeout after {timeout}s'
+        app.logger.warning(f"[EMAIL-THREAD] SMTP timeout after {timeout}s")
+
+    app.logger.info(f"[EMAIL-THREAD] Result: success={result['success']}, error={result.get('error')}")
     return result
 
 
