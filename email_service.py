@@ -108,24 +108,28 @@ def _send_email(to, subject, html, text):
 
     # Try Resend first (HTTP-based, works on Railway)
     resend_key = os.environ.get('RESEND_API_KEY', '')
+    resend_from = os.environ.get('RESEND_FROM', '')
+    print(f"[EMAIL] RESEND_API_KEY set: {bool(resend_key)}, key starts with: {resend_key[:10]}..." if resend_key else "[EMAIL] RESEND_API_KEY: NOT SET")
+    print(f"[EMAIL] RESEND_FROM: {resend_from or 'NOT SET'}")
+
     if resend_key:
-        app.logger.info(f"[EMAIL] Sending via Resend to {to}")
+        print(f"[EMAIL] Sending via Resend to {to}")
         result = _send_via_resend(to, subject, html, text)
-        app.logger.info(f"[EMAIL] Resend result: {result}")
+        print(f"[EMAIL] Resend result: {result}")
         if result['success']:
             return result
-        app.logger.warning(f"[EMAIL] Resend failed, trying SMTP fallback: {result['error']}")
+        print(f"[EMAIL] Resend failed, trying SMTP fallback: {result['error']}")
 
     # Fallback to SMTP
     smtp_user = os.environ.get('MAIL_USERNAME', '')
     smtp_pass = os.environ.get('MAIL_PASSWORD', '')
     if smtp_user and smtp_pass:
-        app.logger.info(f"[EMAIL] Sending via SMTP to {to}")
+        print(f"[EMAIL] Sending via SMTP to {to}")
         msg = Message(subject=subject, recipients=[to] if isinstance(to, str) else to)
         msg.html = html
         msg.body = text
         result = _send_via_smtp(msg, timeout=15)
-        app.logger.info(f"[EMAIL] SMTP result: {result}")
+        print(f"[EMAIL] SMTP result: {result}")
         return result
 
     return {'success': False, 'error': 'No email backend configured (set RESEND_API_KEY or MAIL_USERNAME/MAIL_PASSWORD)'}
