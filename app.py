@@ -2070,6 +2070,16 @@ def debug_auth():
 
     return jsonify(results)
 
+@app.route('/api/test-auth', methods=['GET'])
+@login_required
+def test_auth_only():
+    """Test just the @login_required decorator"""
+    return jsonify({
+        'success': True,
+        'user_id': current_user.id,
+        'user_email': current_user.email
+    })
+
 @app.route('/api/test-write', methods=['POST', 'GET'])
 def test_write_noauth():
     """Test database write WITHOUT auth"""
