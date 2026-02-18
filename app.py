@@ -2432,6 +2432,7 @@ def migrate_database():
                 ('reminder_24h_sent', 'BOOLEAN DEFAULT FALSE'),
                 ('reminder_1h_sent', 'BOOLEAN DEFAULT FALSE'),
                 ('reminder_nutri_24h_sent', 'BOOLEAN DEFAULT FALSE'),
+                ('reschedule_token', 'VARCHAR(64)'),
             ]
         }
 
@@ -3084,6 +3085,102 @@ def booking_page():
     log_debug(f"[BOOKING-PAGE] GET /booking")
     return render_template('booking.html')
 
+@app.route('/booking/reschedule/<token>')
+def reschedule_page(token):
+    """Public reschedule page - accessed via email link"""
+    booking = Booking.query.filter_by(reschedule_token=token).first()
+    if not booking:
+        return render_template('reschedule.html', error='Enlace de reagendamiento no válido o expirado.'), 404
+    if booking.status not in [BookingStatus.PENDING, BookingStatus.CONFIRMED]:
+        return render_template('reschedule.html', error='Esta cita ya fue cancelada o completada.')
+    nutri = User.query.get(booking.nutritionist_id)
+    return render_template('reschedule.html',
+        booking=booking,
+        nutritionist=nutri,
+        token=token
+    )
+
+@app.route('/api/public/reschedule', methods=['POST'])
+def api_reschedule_booking():
+    """API: reschedule a booking via token"""
+    from datetime import datetime as dt
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'error': 'JSON requerido'}), 400
+
+    token = data.get('token', '')
+    new_date_str = data.get('new_date', '')
+    new_time = data.get('new_time', '')
+
+    if not all([token, new_date_str, new_time]):
+        return jsonify({'success': False, 'error': 'Faltan campos requeridos'}), 400
+
+    booking = Booking.query.filter_by(reschedule_token=token).first()
+    if not booking:
+        return jsonify({'success': False, 'error': 'Token inválido'}), 404
+
+    if booking.status not in [BookingStatus.PENDING, BookingStatus.CONFIRMED]:
+        return jsonify({'success': False, 'error': 'Esta cita no se puede reagendar'}), 400
+
+    try:
+        new_date = dt.strptime(new_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'success': False, 'error': 'Formato de fecha inválido'}), 400
+
+    # Check new slot is available
+    existing = Booking.query.filter_by(
+        nutritionist_id=booking.nutritionist_id,
+        booking_date=new_date,
+        booking_time=new_time
+    ).filter(
+        Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED]),
+        Booking.id != booking.id
+    ).first()
+
+    if existing:
+        return jsonify({'success': False, 'error': 'Este horario ya no está disponible'}), 409
+
+    old_date = booking.booking_date.strftime('%d/%m/%Y')
+    old_time = booking.booking_time
+
+    # Update booking
+    booking.booking_date = new_date
+    booking.booking_time = new_time
+    # Reset reminders so they fire again for the new date
+    booking.reminder_24h_sent = False
+    booking.reminder_1h_sent = False
+    booking.reminder_nutri_24h_sent = False
+    # Generate new reschedule token (one-time use)
+    booking.generate_reschedule_token()
+
+    db.session.commit()
+
+    # Notify nutritionist about reschedule
+    nutri = User.query.get(booking.nutritionist_id)
+    if nutri and is_mail_configured():
+        try:
+            subject = f'Cita reagendada - {booking.client_name}'
+            html = f'''
+            <div style="font-family:Arial;padding:20px;background:#0f1923;color:#e2e8f0;">
+                <h2 style="color:#10b981;">Cita Reagendada</h2>
+                <p>El paciente <strong>{booking.client_name}</strong> ha reagendado su cita.</p>
+                <p><strong>Antes:</strong> {old_date} a las {old_time}</p>
+                <p><strong>Ahora:</strong> {new_date.strftime("%d/%m/%Y")} a las {new_time}</p>
+            </div>
+            '''
+            text = f'Cita reagendada: {booking.client_name} - {old_date} {old_time} → {new_date.strftime("%d/%m/%Y")} {new_time}'
+            from email_service import _send_email
+            _send_email(nutri.email, subject, html, text)
+        except Exception:
+            pass  # Non-critical
+
+    return jsonify({
+        'success': True,
+        'message': f'Cita reagendada para el {new_date.strftime("%d/%m/%Y")} a las {new_time}',
+        'new_date': new_date_str,
+        'new_time': new_time
+    })
+
 @app.route('/dashboard/nutritionist/schedule')
 @login_required
 def nutritionist_schedule_page():
@@ -3256,6 +3353,7 @@ def api_public_book():
             booking_time=data['booking_time'],
             notes=data.get('notes', '')
         )
+        booking.generate_reschedule_token()
         db.session.add(booking)
         db.session.commit()
 

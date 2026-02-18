@@ -284,13 +284,17 @@ def send_booking_reminder(booking, nutritionist, is_patient=True, time_label='en
         return {'success': False, 'error': 'No email address'}
 
     # Check if intake form is pending
+    base_url = os.environ.get('RAILWAY_STATIC_URL', 'https://web-production-3a113.up.railway.app')
     intake_pending = False
     intake_url = ''
     if is_patient and booking.patient_file:
         pf = booking.patient_file
         if not pf.intake_completed and pf.intake_token:
             intake_pending = True
-            intake_url = pf.get_intake_url(os.environ.get('RAILWAY_STATIC_URL', 'https://web-production-3a113.up.railway.app'))
+            intake_url = pf.get_intake_url(base_url)
+
+    # Generate reschedule URL
+    reschedule_url = booking.get_reschedule_url(base_url)
 
     try:
         subject = f'Recordatorio: Cita {time_label} - BiteTrack'
@@ -306,7 +310,8 @@ def send_booking_reminder(booking, nutritionist, is_patient=True, time_label='en
             time_label=time_label,
             is_patient=is_patient,
             intake_pending=intake_pending,
-            intake_url=intake_url
+            intake_url=intake_url,
+            reschedule_url=reschedule_url
         )
 
         text = (

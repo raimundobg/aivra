@@ -353,7 +353,20 @@ class Booking(db.Model):
     reminder_1h_sent = db.Column(db.Boolean, default=False)
     reminder_nutri_24h_sent = db.Column(db.Boolean, default=False)
 
+    # Reschedule token (for email-based rescheduling without login)
+    reschedule_token = db.Column(db.String(64), unique=True, index=True)
+
     patient_file = db.relationship('PatientFile', backref='booking')
+
+    def generate_reschedule_token(self):
+        """Generate a unique token for rescheduling via email link"""
+        self.reschedule_token = secrets.token_urlsafe(32)
+        return self.reschedule_token
+
+    def get_reschedule_url(self, base_url=''):
+        if not self.reschedule_token:
+            self.generate_reschedule_token()
+        return f"{base_url}/booking/reschedule/{self.reschedule_token}"
 
     def get_specialty_label(self):
         return SPECIALTIES_DICT.get(self.specialty, self.specialty or '')
