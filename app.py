@@ -2434,35 +2434,32 @@ def migrate_database():
 
 @app.route('/api/reset-all-data', methods=['GET', 'POST'])
 def reset_all_data():
-    """Endpoint para borrar toda la data de pacientes y bookings (para testing)."""
+    """NUCLEAR RESET: borra TODA la data de la app (para testing)."""
     try:
+        from sqlalchemy import text
         deleted = {}
 
-        # Borrar recetas vinculadas a pacientes primero (FK constraint)
-        try:
-            from sqlalchemy import text
-            result = db.session.execute(text("DELETE FROM user_recipes WHERE patient_id IS NOT NULL"))
-            deleted['patient_recipes'] = result.rowcount
-        except Exception:
-            pass
+        # Orden: tablas hijas primero, padres después
+        tables = [
+            ('user_recipes', 'DELETE FROM user_recipes'),
+            ('bookings', 'DELETE FROM bookings'),
+            ('patient_files', 'DELETE FROM patient_files'),
+            ('nutritionist_schedules', 'DELETE FROM nutritionist_schedules'),
+            ('users', 'DELETE FROM users'),
+        ]
 
-        # Borrar bookings primero (FK a patient_files)
-        count = Booking.query.delete()
-        deleted['bookings'] = count
-
-        # Borrar pacientes (PatientFile)
-        count = PatientFile.query.delete()
-        deleted['patient_files'] = count
-
-        # Borrar usuarios tipo paciente
-        count = User.query.filter_by(user_type='paciente').delete()
-        deleted['patient_users'] = count
+        for name, sql in tables:
+            try:
+                result = db.session.execute(text(sql))
+                deleted[name] = result.rowcount
+            except Exception as e:
+                deleted[name] = f'error: {str(e)}'
 
         db.session.commit()
 
         return jsonify({
             'success': True,
-            'message': 'All data deleted',
+            'message': 'ALL data deleted (users, patients, bookings, recipes, schedules)',
             'deleted': deleted
         })
 
