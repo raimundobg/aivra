@@ -2438,22 +2438,36 @@ def reset_all_data():
     try:
         from sqlalchemy import text
 
-        # TRUNCATE CASCADE ignora todas las FK constraints
-        db.session.execute(text(
-            "TRUNCATE TABLE user_recipes, bookings, patient_files, nutritionist_schedules, users RESTART IDENTITY CASCADE"
+        # Dynamically find ALL tables in the public schema
+        result = db.session.execute(text(
+            "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
         ))
-        db.session.commit()
+        all_tables = [row[0] for row in result]
+
+        # Skip migration tracking tables
+        skip = {'alembic_version'}
+        tables_to_truncate = [t for t in all_tables if t not in skip]
+
+        if tables_to_truncate:
+            table_list = ', '.join(tables_to_truncate)
+            db.session.execute(text(
+                f"TRUNCATE TABLE {table_list} RESTART IDENTITY CASCADE"
+            ))
+            db.session.commit()
 
         return jsonify({
             'success': True,
-            'message': 'ALL tables truncated: users, patients, bookings, recipes, schedules'
+            'message': f'Truncated {len(tables_to_truncate)} tables',
+            'tables': tables_to_truncate
         })
 
     except Exception as e:
         db.session.rollback()
+        import traceback
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': str(e),
+            'traceback': traceback.format_exc()
         }), 500
 
 
