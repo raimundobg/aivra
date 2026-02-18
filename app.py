@@ -2265,7 +2265,7 @@ def migrate_database():
             'error': str(e)
         }), 500
 
-@app.route('/api/reset-all-data', methods=['POST'])
+@app.route('/api/reset-all-data', methods=['GET', 'POST'])
 def reset_all_data():
     """Endpoint para borrar toda la data de pacientes y bookings (para testing)."""
     try:
