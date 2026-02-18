@@ -2499,15 +2499,18 @@ def cron_send_reminders():
         return jsonify({'error': 'Unauthorized'}), 401
 
     from datetime import timedelta
-    now = datetime.utcnow()
-    results = {'sent': [], 'errors': [], 'checked': 0}
+    # Chile time = UTC-3 (CLT). Bookings are stored in Chilean local time.
+    CHILE_OFFSET_HOURS = -3
+    now_utc = datetime.utcnow()
+    now_chile = now_utc + timedelta(hours=CHILE_OFFSET_HOURS)
+    results = {'sent': [], 'errors': [], 'checked': 0, 'now_chile': now_chile.isoformat()}
 
     try:
         # Get all upcoming bookings (next 28 hours) that are pending or confirmed
         upcoming = Booking.query.filter(
             Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED]),
-            Booking.booking_date >= now.date(),
-            Booking.booking_date <= (now + timedelta(hours=28)).date()
+            Booking.booking_date >= now_chile.date(),
+            Booking.booking_date <= (now_chile + timedelta(hours=28)).date()
         ).all()
 
         results['checked'] = len(upcoming)
@@ -2517,7 +2520,8 @@ def cron_send_reminders():
             if not booking_dt:
                 continue
 
-            hours_until = (booking_dt - now).total_seconds() / 3600
+            # Compare in Chilean local time
+            hours_until = (booking_dt - now_chile).total_seconds() / 3600
 
             # Skip past bookings
             if hours_until < 0:
