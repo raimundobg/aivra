@@ -391,6 +391,8 @@ class PatientFile(db.Model):
     intolerancias = db.Column(db.Text) # Intolerancias
     cirugias = db.Column(db.Text)      # Cirugías previas
     antecedentes_familiares = db.Column(db.Text)
+    otros_diagnosticos = db.Column(db.Text)  # Diagnosticos adicionales (campo libre)
+    comidas_al_dia = db.Column(db.String(20))  # Cuantas comidas al dia
     # Conducta y Entorno
     profesion = db.Column(db.String(100))
     teletrabajo = db.Column(db.String(20))

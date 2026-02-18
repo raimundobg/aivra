@@ -710,10 +710,6 @@
             </div>
             <div class="progress-step" data-step="5">
                 <div class="step-circle">5</div>
-                <div class="step-label">Registro 24h</div>
-            </div>
-            <div class="progress-step" data-step="6">
-                <div class="step-circle">6</div>
                 <div class="step-label">Frecuencia</div>
             </div>
         </div>
@@ -771,17 +767,8 @@
                             placeholder="Ej: Ingeniero, Estudiante, etc.">
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label">Peso (kg) <span class="required">*</span></label>
-                        <input type="number" class="form-control" name="peso" step="0.1"
-                            value="{{ patient.peso_kg or '' }}" required placeholder="Ej: 70.5">
-                    </div>
+                    <!-- Peso y estatura removidos del formulario publico - se toman en consulta -->
 
-                    <div class="col-md-6">
-                        <label class="form-label">Estatura (m) <span class="required">*</span></label>
-                        <input type="number" class="form-control" name="talla" step="0.01"
-                            value="{{ patient.talla_m or '' }}" required placeholder="Ej: 1.75">
-                    </div>
 
                     <div class="col-12">
                         <label class="form-label">Direccion (opcional)</label>
@@ -814,34 +801,76 @@
                                 <i class="fas fa-tint"></i> Diabetes
                             </label>
                             <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="resistencia_insulina">
+                                <i class="fas fa-tint"></i> Resistencia a la insulina
+                            </label>
+                            <label class="checkbox-pill">
                                 <input type="checkbox" name="diagnosticos" value="hipertension">
                                 <i class="fas fa-heart"></i> Hipertension
                             </label>
                             <label class="checkbox-pill">
                                 <input type="checkbox" name="diagnosticos" value="dislipidemia">
-                                <i class="fas fa-chart-line"></i> Colesterol alto
+                                <i class="fas fa-chart-line"></i> Colesterol/Trigliceridos altos
                             </label>
                             <label class="checkbox-pill">
                                 <input type="checkbox" name="diagnosticos" value="hipotiroidismo">
-                                <i class="fas fa-shield-alt"></i> Tiroides
+                                <i class="fas fa-shield-alt"></i> Hipotiroidismo
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="hipertiroidismo">
+                                <i class="fas fa-shield-alt"></i> Hipertiroidismo
                             </label>
                             <label class="checkbox-pill">
                                 <input type="checkbox" name="diagnosticos" value="gastritis">
-                                <i class="fas fa-stomach"></i> Gastritis/Reflujo
+                                <i class="fas fa-fire"></i> Gastritis/Reflujo
                             </label>
                             <label class="checkbox-pill">
                                 <input type="checkbox" name="diagnosticos" value="colon_irritable">
                                 <i class="fas fa-bacteria"></i> Colon irritable
                             </label>
                             <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="enfermedad_celiaca">
+                                <i class="fas fa-bread-slice"></i> Enfermedad celiaca
+                            </label>
+                            <label class="checkbox-pill">
                                 <input type="checkbox" name="diagnosticos" value="anemia">
                                 <i class="fas fa-tint"></i> Anemia
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="obesidad">
+                                <i class="fas fa-weight"></i> Obesidad
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="sop">
+                                <i class="fas fa-venus"></i> SOP (Sindrome ovario poliquistico)
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="higado_graso">
+                                <i class="fas fa-liver"></i> Higado graso
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="enfermedad_renal">
+                                <i class="fas fa-kidneys"></i> Enfermedad renal
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="depresion_ansiedad">
+                                <i class="fas fa-brain"></i> Depresion/Ansiedad
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="diagnosticos" value="tca">
+                                <i class="fas fa-utensils"></i> Trastorno conducta alimentaria
                             </label>
                             <label class="checkbox-pill">
                                 <input type="checkbox" name="diagnosticos" value="ninguno">
                                 <i class="fas fa-check"></i> Ninguno
                             </label>
                         </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Otro diagnostico no listado</label>
+                        <input type="text" class="form-control" name="otros_diagnosticos"
+                            placeholder="Escribe aqui si tienes algun diagnostico que no aparece arriba">
                     </div>
 
                     <div class="col-12">
@@ -874,6 +903,10 @@
                                 Hipertension
                             </label>
                             <label class="checkbox-pill">
+                                <input type="checkbox" name="antecedentes_familiares" value="dislipidemia">
+                                Colesterol/Trigliceridos
+                            </label>
+                            <label class="checkbox-pill">
                                 <input type="checkbox" name="antecedentes_familiares" value="cancer">
                                 Cancer
                             </label>
@@ -884,6 +917,14 @@
                             <label class="checkbox-pill">
                                 <input type="checkbox" name="antecedentes_familiares" value="cardiopatia">
                                 Enf. del corazon
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="antecedentes_familiares" value="tiroides">
+                                Tiroides
+                            </label>
+                            <label class="checkbox-pill">
+                                <input type="checkbox" name="antecedentes_familiares" value="enfermedad_renal">
+                                Enf. renal
                             </label>
                         </div>
                     </div>
@@ -999,25 +1040,18 @@
                         <input type="number" class="form-control" name="cigarrillos_dia" value="0" min="0">
                     </div>
 
-                    <div class="col-12 mt-3 p-3 bg-light rounded-4">
-                        <label class="form-label d-block"><i class="fas fa-clock me-2 text-primary"></i>Tus horarios
-                            habituales de comida</label>
-                        <div class="row g-2">
-                            <div class="col-4">
-                                <label class="small text-muted">Desayuno</label>
-                                <input type="time" class="form-control" name="horario_desayuno">
-                            </div>
-                            <div class="col-4">
-                                <label class="small text-muted">Almuerzo</label>
-                                <input type="time" class="form-control" name="horario_almuerzo">
-                            </div>
-                            <div class="col-4">
-                                <label class="small text-muted">Cena</label>
-                                <input type="time" class="form-control" name="horario_cena">
-                            </div>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><i class="fas fa-utensils me-2 text-primary"></i>Cuantas comidas haces al dia?</label>
+                        <select class="form-select" name="comidas_al_dia">
+                            <option value="">Seleccionar...</option>
+                            <option value="1-2">1-2 comidas</option>
+                            <option value="3">3 comidas (desayuno, almuerzo, cena)</option>
+                            <option value="3-4">3-4 comidas (incluye colacion)</option>
+                            <option value="5+">5 o mas (comidas + colaciones)</option>
+                        </select>
                     </div>
 
+                    <!-- Habitos al comer - comentado, se evalua en consulta presencial
                     <div class="col-12">
                         <label class="form-label">Habitos al comer</label>
                         <div class="checkbox-pills">
@@ -1035,6 +1069,7 @@
                             </label>
                         </div>
                     </div>
+                    -->
 
                     <div class="col-12">
                         <label class="form-label">Restricciones alimentarias</label>
@@ -1233,7 +1268,7 @@
                 </div>
             </div>
 
-            <!-- Step 5: Registro Alimentario 24 Horas -->
+            <!-- Step 5: Registro Alimentario 24 Horas - COMENTADO, se realiza en consulta presencial
             <div class="form-section" data-step="5">
                 <div class="section-title">
                     <i class="fas fa-history"></i>
@@ -1245,67 +1280,19 @@
 
                 <div id="registro24hContainer">
                     <ul class="nav nav-pills mb-3" id="mealTabs" role="tablist">
-                        {% for meal in ['desayuno', 'colacion1', 'almuerzo', 'colacion2', 'cena'] %}
+                        { % for meal in ['desayuno', 'colacion1', 'almuerzo', 'colacion2', 'cena'] % }
                         <li class="nav-item">
-                            <button class="nav-link {% if loop.first %}active{% endif %} rounded-pill"
-                                id="{{ meal }}-tab" data-bs-toggle="pill" data-bs-target="#{{ meal }}" type="button"
+                            <button class="nav-link { % if loop.first % }active{ % endif % } rounded-pill"
+                                id="{ { meal } }-tab" data-bs-toggle="pill" data-bs-target="#{ { meal } }" type="button"
                                 role="tab">
-                                {{ meal|replace('colacion1', 'Col. AM')|replace('colacion2', 'Col. PM')|capitalize }}
+                                { { meal|replace('colacion1', 'Col. AM')|replace('colacion2', 'Col. PM')|capitalize } }
                             </button>
                         </li>
-                        {% endfor %}
+                        { % endfor % }
                     </ul>
 
                     <div class="tab-content" id="mealTabContent">
-                        {% for meal in ['desayuno', 'colacion1', 'almuerzo', 'colacion2', 'cena'] %}
-                        <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="{{ meal }}"
-                            role="tabpanel">
-                            <div class="table-responsive">
-                                <table class="table table-sm table-registro" id="{{ meal }}Table">
-                                    <thead>
-                                        <tr>
-                                            <th>Grupo</th>
-                                            <th>Alimento</th>
-                                            <th>Cantidad</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody data-meal="{{ meal }}">
-                                        <!-- JS will add rows here -->
-                                        <tr class="meal-row">
-                                            <td>
-                                                <select class="form-select form-select-sm grupo-select"
-                                                    onchange="onPublicGrupoChange(this)">
-                                                    <option value="">Grupo...</option>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <select class="form-select form-select-sm alimento-select" disabled
-                                                    onchange="onPublicAlimentoChange(this)">
-                                                    <option value="">Selecciona...</option>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <select class="form-select form-select-sm porcion-select" disabled>
-                                                    <option value="">Cant...</option>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <button type="button" class="btn btn-sm text-danger"
-                                                    onclick="removePublicRow(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-primary"
-                                onclick="addPublicRow('{{ meal }}')">
-                                <i class="fas fa-plus me-1"></i> Agregar alimento
-                            </button>
-                        </div>
-                        {% endfor %}
+                        ...R24 content preserved but hidden...
                     </div>
                 </div>
 
@@ -1318,9 +1305,10 @@
                     </button>
                 </div>
             </div>
+            FIN Step 5 comentado -->
 
-            <!-- Step 6: Encuesta de Frecuencia de Consumo (EFC) -->
-            <div class="form-section" data-step="6">
+            <!-- Step 5: Encuesta de Frecuencia de Consumo (EFC) -->
+            <div class="form-section" data-step="5">
                 <div class="section-title">
                     <i class="fas fa-utensils"></i>
                     <span>Frecuencia de Consumo</span>
@@ -1394,7 +1382,7 @@
 
     <script>
         let currentStep = 1;
-        const totalSteps = 6;
+        const totalSteps = 5;
         const token = '{{ patient.intake_token }}';
 
         // EFC food items
@@ -1749,8 +1737,6 @@
             setField('fecha_nacimiento', '1992-08-23');
             setField('sexo', 'Femenino');
             setField('ocupacion', 'Disenadora grafica');
-            setField('peso', '68.5');
-            setField('talla', '1.62');
             setField('direccion', 'Providencia, Santiago');
 
             // --- Step 2: Antecedentes de Salud ---
@@ -1774,11 +1760,7 @@
             setField('tipo_ejercicio', 'Yoga 2 veces/semana, caminatas 30 min');
             setField('consumo_alcohol', 'ocasional');
             setField('fuma', 'false');
-            setField('horario_desayuno', '08:00');
-            setField('horario_almuerzo', '13:30');
-            setField('horario_cena', '20:00');
-            checkPill('pica_entre_comidas', 'true');
-            checkPill('come_frente_tv', 'true');
+            setField('comidas_al_dia', '3-4');
             checkPill('restricciones_alimentarias', 'sin_lactosa');
 
             // --- Step 4: Motivo y Objetivos ---
@@ -1798,8 +1780,8 @@
                 selectBristol(card);
             }
 
-            // --- Step 5: Registro 24h (fill after DB loads) ---
-            fillDummy24hRecord();
+            // --- Step 5: Registro 24h - COMENTADO (se hace en consulta) ---
+            // fillDummy24hRecord();
 
             // --- Step 6: EFC ---
             const efcDummyData = [

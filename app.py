@@ -1205,11 +1205,11 @@ def submit_public_intake(token):
         campos_texto = [
             'nombre', 'fecha_nacimiento', 'sexo', 'ocupacion', 'direccion',
             'motivo_consulta', 'medicamentos', 'suplementos', 'cirugias',
-            'alergias', 'intolerancias',
+            'alergias', 'intolerancias', 'otros_diagnosticos',
             'horas_sueno', 'tipo_ejercicio', 'frecuencia_ejercicio',
             'actividad_fisica', 'consumo_alcohol', 'tabaco',
             'horario_desayuno', 'horario_almuerzo', 'horario_cena',
-            'consistencia_heces'
+            'comidas_al_dia', 'consistencia_heces'
         ]
         for campo in campos_texto:
             if campo in data and data[campo]:
@@ -2232,6 +2232,8 @@ def migrate_database():
                 ('restricciones_alimentarias', 'JSON'),
                 ('delivery_restaurante', 'INTEGER'),
                 ('percepcion_esfuerzo', 'INTEGER'),
+                ('otros_diagnosticos', 'TEXT'),
+                ('comidas_al_dia', 'VARCHAR(20)'),
             ]
         }
 
