@@ -1535,17 +1535,12 @@
             card.querySelector('input').checked = true;
         }
 
-        // Initialize checkbox pills
+        // Initialize checkbox pills - use change event to avoid double-toggle with <label>
         document.querySelectorAll('.checkbox-pill').forEach(pill => {
-            pill.addEventListener('click', function (e) {
-                if (e.target.tagName !== 'INPUT') {
-                    const checkbox = this.querySelector('input[type="checkbox"]');
-                    checkbox.checked = !checkbox.checked;
-                }
-                this.classList.toggle('selected', this.querySelector('input').checked);
-            });
-
             const checkbox = pill.querySelector('input[type="checkbox"]');
+            checkbox.addEventListener('change', function () {
+                pill.classList.toggle('selected', this.checked);
+            });
             if (checkbox.checked) {
                 pill.classList.add('selected');
             }
