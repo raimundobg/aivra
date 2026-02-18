@@ -2565,7 +2565,7 @@ def cron_send_reminders():
             'checked': results['checked'],
             'sent': results['sent'],
             'errors': results['errors'],
-            'timestamp': now.isoformat()
+            'timestamp': now_chile.isoformat()
         })
 
     except Exception as e:
