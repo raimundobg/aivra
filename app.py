@@ -2251,6 +2251,20 @@ def migrate_database():
                         except Exception as e:
                             results.append(f"Skip {col_name}: {str(e)[:50]}")
 
+        # Resize columns that are too small
+        resize_columns = {
+            'bookings': [('specialty', 'VARCHAR(500)')],
+        }
+        for table_name, columns in resize_columns.items():
+            if table_name in inspector.get_table_names():
+                for col_name, col_type in columns:
+                    try:
+                        sql = f'ALTER TABLE {table_name} ALTER COLUMN {col_name} TYPE {col_type}'
+                        db.session.execute(text(sql))
+                        results.append(f"Resized: {table_name}.{col_name} -> {col_type}")
+                    except Exception as e:
+                        results.append(f"Skip resize {col_name}: {str(e)[:50]}")
+
         db.session.commit()
 
         return jsonify({

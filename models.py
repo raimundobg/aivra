@@ -332,7 +332,7 @@ class Booking(db.Model):
     client_name = db.Column(db.String(100), nullable=False)
     client_email = db.Column(db.String(120), nullable=False)
     client_phone = db.Column(db.String(20))
-    specialty = db.Column(db.String(50))
+    specialty = db.Column(db.String(500))
     booking_date = db.Column(db.Date, nullable=False)
     booking_time = db.Column(db.String(5), nullable=False)  # "HH:MM"
     status = db.Column(db.String(20), default=BookingStatus.PENDING)
