@@ -2436,16 +2436,27 @@ def migrate_database():
 def reset_all_data():
     """Endpoint para borrar toda la data de pacientes y bookings (para testing)."""
     try:
-        from sqlalchemy import text
         deleted = {}
 
-        # Borrar pacientes
+        # Borrar recetas vinculadas a pacientes primero (FK constraint)
+        try:
+            from sqlalchemy import text
+            result = db.session.execute(text("DELETE FROM user_recipes WHERE patient_id IS NOT NULL"))
+            deleted['patient_recipes'] = result.rowcount
+        except Exception:
+            pass
+
+        # Borrar pacientes (PatientFile)
         count = PatientFile.query.delete()
         deleted['patient_files'] = count
 
         # Borrar bookings
         count = Booking.query.delete()
         deleted['bookings'] = count
+
+        # Borrar usuarios tipo paciente
+        count = User.query.filter_by(user_type='paciente').delete()
+        deleted['patient_users'] = count
 
         db.session.commit()
 
