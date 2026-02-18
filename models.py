@@ -18,11 +18,13 @@ class UserType:
     CLIENTE = 'cliente'
     NUTRICIONISTA = 'nutricionista'
     EMPRESA = 'empresa'
+    PACIENTE = 'paciente'
 
 class SubscriptionPlan:
     FREE = 'free'  # Cliente - 2 recetas/mes
     PROFESSIONAL = 'professional'  # Nutricionista - ilimitado
     ENTERPRISE = 'enterprise'  # Empresa - ilimitado
+    PATIENT = 'patient'  # Paciente - ilimitado (cubierto por nutricionista)
 
 # Especialidades de nutricionistas (key, label)
 NUTRITIONIST_SPECIALTIES = [
@@ -125,7 +127,8 @@ class User(UserMixin, db.Model):
     reviews = db.relationship('Review', backref='user', lazy='dynamic',
                             cascade='all, delete-orphan')
     patient_files = db.relationship('PatientFile', backref='nutritionist',
-                                   lazy='dynamic', cascade='all, delete-orphan')
+                                   lazy='dynamic', cascade='all, delete-orphan',
+                                   foreign_keys='PatientFile.nutricionista_id')
     schedules = db.relationship('NutritionistSchedule', backref='nutritionist',
                                lazy='dynamic', cascade='all, delete-orphan')
     bookings_as_nutri = db.relationship('Booking', backref='nutritionist',
@@ -133,6 +136,12 @@ class User(UserMixin, db.Model):
     nutri_reviews = db.relationship('NutritionistReview', backref='nutritionist',
                                     lazy='dynamic', cascade='all, delete-orphan')
     
+    def get_patient_file(self):
+        """Para usuarios paciente: retorna su PatientFile vinculada"""
+        if self.user_type != UserType.PACIENTE:
+            return None
+        return PatientFile.query.filter_by(patient_user_id=self.id, is_active=True).first()
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
     
@@ -358,7 +367,8 @@ class PatientFile(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     nutricionista_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
+    patient_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)  # Cuenta de usuario del paciente
+
     # ===== NUMERO DE FICHA (auto-generado por nutricionista) =====
     ficha_numero = db.Column(db.Integer)  # Ficha #1, #2, etc. por nutricionista
 

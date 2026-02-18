@@ -1,0 +1,533 @@
+{% extends "base_layout.html" %}
+
+{% block title %}Mi Ficha Clínica - BiteTrack{% endblock %}
+
+{% block sidebar_nav %}
+<div class="bt-nav-section-label">Principal</div>
+<a href="{{ url_for('patient_dashboard') }}" class="bt-nav-item">
+    <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+    <span class="nav-label">Dashboard</span>
+</a>
+<a href="{{ url_for('patient_ficha_view') }}" class="bt-nav-item active">
+    <span class="nav-icon"><i class="fas fa-file-medical"></i></span>
+    <span class="nav-label">Mi Ficha</span>
+</a>
+
+<div class="bt-nav-section-label">Herramientas</div>
+<button class="bt-nav-item" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
+    <span class="nav-icon"><i class="fas fa-flask"></i></span>
+    <span class="nav-label">Crear Batido</span>
+    <span class="nav-badge">IA</span>
+</button>
+<a href="{{ url_for('patient_dashboard') }}#mis-recetas" class="bt-nav-item">
+    <span class="nav-icon"><i class="fas fa-history"></i></span>
+    <span class="nav-label">Mis Recetas</span>
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ficha-section {
+        background: var(--bt-bg-card, #fff);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 20px;
+        border: 1px solid var(--bt-border, rgba(0,0,0,0.06));
+    }
+    .ficha-section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--bt-fg);
+        margin: 0 0 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .ficha-section-title i {
+        color: var(--bt-brand-primary, #10b981);
+        font-size: 1.1rem;
+    }
+    .ficha-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 14px;
+    }
+    .ficha-field {
+        background: var(--bt-bg-offset, #f9fafb);
+        border-radius: 10px;
+        padding: 12px 14px;
+    }
+    .ficha-field-label {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--bt-fg-muted, #6b7280);
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    .ficha-field-value {
+        font-size: 0.95rem;
+        color: var(--bt-fg, #1f2937);
+        font-weight: 500;
+        word-break: break-word;
+    }
+    .ficha-tag {
+        display: inline-block;
+        background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.1));
+        color: var(--bt-emerald-700, #047857);
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 0.82rem;
+        font-weight: 500;
+        margin: 3px 4px 3px 0;
+    }
+    .ficha-text-block {
+        background: var(--bt-bg-offset, #f9fafb);
+        border-radius: 10px;
+        padding: 14px 16px;
+        color: var(--bt-fg);
+        line-height: 1.6;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="bt-page-header">
+    <div>
+        <h1 class="bt-page-title">
+            <i class="fas fa-file-medical" style="color: var(--bt-brand-primary);"></i>
+            Mi Ficha Clínica
+        </h1>
+        <p class="bt-page-subtitle">Información registrada por tu nutricionista</p>
+    </div>
+    <a href="{{ url_for('patient_dashboard') }}" class="bt-btn" style="background: var(--bt-bg-offset); color: var(--bt-fg);">
+        <i class="fas fa-arrow-left"></i> Volver
+    </a>
+</div>
+
+{% set pf = patient_file %}
+
+<!-- 1. Datos Personales -->
+<div class="ficha-section">
+    <h3 class="ficha-section-title"><i class="fas fa-user"></i> Datos Personales</h3>
+    <div class="ficha-grid">
+        {% if pf.nombre %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Nombre</div>
+            <div class="ficha-field-value">{{ pf.nombre }}</div>
+        </div>
+        {% endif %}
+        {% if pf.fecha_nacimiento %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Fecha de Nacimiento</div>
+            <div class="ficha-field-value">{{ pf.fecha_nacimiento }}</div>
+        </div>
+        {% endif %}
+        {% if pf.sexo %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Sexo</div>
+            <div class="ficha-field-value">{{ pf.sexo | capitalize }}</div>
+        </div>
+        {% endif %}
+        {% if pf.email %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Email</div>
+            <div class="ficha-field-value">{{ pf.email }}</div>
+        </div>
+        {% endif %}
+        {% if pf.telefono %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Teléfono</div>
+            <div class="ficha-field-value">{{ pf.telefono }}</div>
+        </div>
+        {% endif %}
+        {% if pf.ocupacion or pf.profesion %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Ocupación</div>
+            <div class="ficha-field-value">{{ pf.ocupacion or pf.profesion }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 2. Motivo y Objetivos -->
+{% if pf.motivo_consulta or pf.objetivos %}
+<div class="ficha-section">
+    <h3 class="ficha-section-title"><i class="fas fa-bullseye"></i> Motivo de Consulta y Objetivos</h3>
+
+    {% if pf.motivo_consulta %}
+    <div class="ficha-text-block" style="margin-bottom: 14px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Motivo de Consulta</strong>
+        <p style="margin: 6px 0 0;">{{ pf.motivo_consulta }}</p>
+    </div>
+    {% endif %}
+
+    {% if pf.objetivos %}
+    <div>
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted); display: block; margin-bottom: 8px;">Objetivos</strong>
+        <div>{{ pf.objetivos }}</div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- 3. Antropometría -->
+{% if pf.peso_kg or pf.talla_m or pf.imc %}
+<div class="ficha-section">
+    <h3 class="ficha-section-title"><i class="fas fa-ruler-combined"></i> Antropometría</h3>
+    <div class="ficha-grid">
+        {% if pf.talla_m %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Talla</div>
+            <div class="ficha-field-value">{{ "%.2f"|format(pf.talla_m) }} m</div>
+        </div>
+        {% endif %}
+        {% if pf.peso_kg %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Peso</div>
+            <div class="ficha-field-value">{{ "%.1f"|format(pf.peso_kg) }} kg</div>
+        </div>
+        {% endif %}
+        {% if pf.peso_ideal %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Peso Ideal</div>
+            <div class="ficha-field-value">{{ "%.1f"|format(pf.peso_ideal) }} kg</div>
+        </div>
+        {% endif %}
+        {% if pf.imc %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">IMC</div>
+            <div class="ficha-field-value">{{ "%.1f"|format(pf.imc) }} <small style="color: var(--bt-fg-muted);">{{ pf.imc_categoria or '' }}</small></div>
+        </div>
+        {% endif %}
+        {% if pf.porcentaje_grasa %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">% Grasa Corporal</div>
+            <div class="ficha-field-value">{{ "%.1f"|format(pf.porcentaje_grasa) }}%</div>
+        </div>
+        {% endif %}
+        {% if pf.masa_grasa_kg %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Masa Grasa</div>
+            <div class="ficha-field-value">{{ "%.1f"|format(pf.masa_grasa_kg) }} kg</div>
+        </div>
+        {% endif %}
+        {% if pf.masa_libre_grasa_kg %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Masa Libre de Grasa</div>
+            <div class="ficha-field-value">{{ "%.1f"|format(pf.masa_libre_grasa_kg) }} kg</div>
+        </div>
+        {% endif %}
+        {% if pf.indice_cintura_cadera %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Índice Cintura-Cadera</div>
+            <div class="ficha-field-value">{{ "%.2f"|format(pf.indice_cintura_cadera) }} <small style="color: var(--bt-fg-muted);">{{ pf.riesgo_cardiovascular or '' }}</small></div>
+        </div>
+        {% endif %}
+        {% if pf.perimetro_cintura %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Perímetro Cintura</div>
+            <div class="ficha-field-value">{{ "%.1f"|format(pf.perimetro_cintura) }} cm</div>
+        </div>
+        {% endif %}
+        {% if pf.perimetro_cadera %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Perímetro Cadera</div>
+            <div class="ficha-field-value">{{ "%.1f"|format(pf.perimetro_cadera) }} cm</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- 4. Requerimientos Nutricionales -->
+{% if pf.get_kcal or pf.proteinas_g %}
+<div class="ficha-section">
+    <h3 class="ficha-section-title"><i class="fas fa-fire"></i> Requerimientos Nutricionales</h3>
+    <div class="ficha-grid">
+        {% if pf.geb_kcal %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Gasto Energético Basal</div>
+            <div class="ficha-field-value">{{ "%.0f"|format(pf.geb_kcal) }} kcal</div>
+        </div>
+        {% endif %}
+        {% if pf.get_kcal %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Gasto Energético Total</div>
+            <div class="ficha-field-value">{{ "%.0f"|format(pf.get_kcal) }} kcal</div>
+        </div>
+        {% endif %}
+        {% if pf.proteinas_g %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Proteínas</div>
+            <div class="ficha-field-value">{{ "%.0f"|format(pf.proteinas_g) }}g{% if pf.proteinas_porcentaje %} ({{ "%.0f"|format(pf.proteinas_porcentaje) }}%){% endif %}</div>
+        </div>
+        {% endif %}
+        {% if pf.carbohidratos_g %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Carbohidratos</div>
+            <div class="ficha-field-value">{{ "%.0f"|format(pf.carbohidratos_g) }}g{% if pf.carbohidratos_porcentaje %} ({{ "%.0f"|format(pf.carbohidratos_porcentaje) }}%){% endif %}</div>
+        </div>
+        {% endif %}
+        {% if pf.grasas_g %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Grasas</div>
+            <div class="ficha-field-value">{{ "%.0f"|format(pf.grasas_g) }}g{% if pf.grasas_porcentaje %} ({{ "%.0f"|format(pf.grasas_porcentaje) }}%){% endif %}</div>
+        </div>
+        {% endif %}
+        {% if pf.fibra_g %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Fibra</div>
+            <div class="ficha-field-value">{{ "%.0f"|format(pf.fibra_g) }}g</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- 5. Historial Médico -->
+{% if pf.diagnosticos or pf.medicamentos or pf.alergias or pf.intolerancias %}
+<div class="ficha-section">
+    <h3 class="ficha-section-title"><i class="fas fa-notes-medical"></i> Historial Médico</h3>
+
+    {% if pf.diagnosticos %}
+    <div class="ficha-text-block" style="margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Diagnósticos</strong>
+        <p style="margin: 6px 0 0;">{{ pf.diagnosticos }}</p>
+    </div>
+    {% endif %}
+
+    {% if pf.medicamentos %}
+    <div class="ficha-text-block" style="margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Medicamentos</strong>
+        <p style="margin: 6px 0 0;">{{ pf.medicamentos }}</p>
+    </div>
+    {% endif %}
+
+    {% if pf.suplementos %}
+    <div class="ficha-text-block" style="margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Suplementos</strong>
+        <p style="margin: 6px 0 0;">{{ pf.suplementos }}</p>
+    </div>
+    {% endif %}
+
+    {% if pf.alergias %}
+    <div class="ficha-text-block" style="margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Alergias Alimentarias</strong>
+        <p style="margin: 6px 0 0;">{{ pf.alergias }}</p>
+    </div>
+    {% endif %}
+
+    {% if pf.intolerancias %}
+    <div class="ficha-text-block" style="margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Intolerancias</strong>
+        <p style="margin: 6px 0 0;">{{ pf.intolerancias }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- 6. Restricciones Alimentarias -->
+{% if pf.restricciones_alimentarias %}
+<div class="ficha-section">
+    <h3 class="ficha-section-title"><i class="fas fa-ban"></i> Restricciones Alimentarias</h3>
+    <div>
+        {% if pf.restricciones_alimentarias is iterable and pf.restricciones_alimentarias is not string %}
+            {% for r in pf.restricciones_alimentarias %}
+            <span class="ficha-tag">{{ r }}</span>
+            {% endfor %}
+        {% else %}
+            <span class="ficha-tag">{{ pf.restricciones_alimentarias }}</span>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- 7. Estilo de Vida -->
+{% if pf.horas_sueno or pf.calidad_sueno or pf.nivel_estres or pf.tipo_ejercicio %}
+<div class="ficha-section">
+    <h3 class="ficha-section-title"><i class="fas fa-running"></i> Estilo de Vida</h3>
+    <div class="ficha-grid">
+        {% if pf.horas_sueno %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Horas de Sueño</div>
+            <div class="ficha-field-value">{{ pf.horas_sueno }}h</div>
+        </div>
+        {% endif %}
+        {% if pf.calidad_sueno %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Calidad de Sueño</div>
+            <div class="ficha-field-value">{{ pf.calidad_sueno }}/10</div>
+        </div>
+        {% endif %}
+        {% if pf.nivel_estres %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Nivel de Estrés</div>
+            <div class="ficha-field-value">{{ pf.nivel_estres }}/10</div>
+        </div>
+        {% endif %}
+        {% if pf.tipo_ejercicio %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Tipo de Ejercicio</div>
+            <div class="ficha-field-value">{{ pf.tipo_ejercicio }}</div>
+        </div>
+        {% endif %}
+        {% if pf.frecuencia_ejercicio %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Frecuencia Ejercicio</div>
+            <div class="ficha-field-value">{{ pf.frecuencia_ejercicio }}</div>
+        </div>
+        {% endif %}
+        {% if pf.consumo_agua_litros %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Agua Diaria</div>
+            <div class="ficha-field-value">{{ pf.consumo_agua_litros }}L</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- 8. Diagnóstico y Plan -->
+{% if pf.diagnostico_nutricional or pf.indicaciones or pf.metas_corto_plazo %}
+<div class="ficha-section">
+    <h3 class="ficha-section-title"><i class="fas fa-clipboard-check"></i> Diagnóstico y Plan</h3>
+
+    {% if pf.diagnostico_nutricional %}
+    <div class="ficha-text-block" style="margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Diagnóstico Nutricional</strong>
+        <p style="margin: 6px 0 0;">{{ pf.diagnostico_nutricional }}</p>
+    </div>
+    {% endif %}
+
+    {% if pf.indicaciones %}
+    <div class="ficha-text-block" style="margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Indicaciones</strong>
+        <p style="margin: 6px 0 0;">{{ pf.indicaciones }}</p>
+    </div>
+    {% endif %}
+
+    {% if pf.metas_corto_plazo %}
+    <div class="ficha-text-block" style="margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Metas a Corto Plazo</strong>
+        <p style="margin: 6px 0 0;">{{ pf.metas_corto_plazo }}</p>
+    </div>
+    {% endif %}
+
+    {% if pf.metas_mediano_plazo %}
+    <div class="ficha-text-block" style="margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Metas a Mediano Plazo</strong>
+        <p style="margin: 6px 0 0;">{{ pf.metas_mediano_plazo }}</p>
+    </div>
+    {% endif %}
+
+    {% if pf.metas_largo_plazo %}
+    <div class="ficha-text-block" style="margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Metas a Largo Plazo</strong>
+        <p style="margin: 6px 0 0;">{{ pf.metas_largo_plazo }}</p>
+    </div>
+    {% endif %}
+
+    {% if pf.fecha_proxima_cita %}
+    <div class="ficha-field" style="max-width: 250px; margin-top: 12px;">
+        <div class="ficha-field-label">Próxima Cita</div>
+        <div class="ficha-field-value">{{ pf.fecha_proxima_cita.strftime('%d/%m/%Y') }}</div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- 9. Exámenes Bioquímicos -->
+{% if pf.glucosa_ayunas or pf.colesterol_total or pf.hemoglobina %}
+<div class="ficha-section">
+    <h3 class="ficha-section-title"><i class="fas fa-vial"></i> Exámenes Bioquímicos</h3>
+    {% if pf.fecha_examenes %}
+    <p style="color: var(--bt-fg-muted); font-size: 0.82rem; margin-bottom: 14px;">Fecha de exámenes: {{ pf.fecha_examenes }}</p>
+    {% endif %}
+    <div class="ficha-grid">
+        {% if pf.glucosa_ayunas %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Glucosa en Ayunas</div>
+            <div class="ficha-field-value">{{ pf.glucosa_ayunas }} mg/dL</div>
+        </div>
+        {% endif %}
+        {% if pf.hemoglobina_glicada %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Hemoglobina Glicada</div>
+            <div class="ficha-field-value">{{ pf.hemoglobina_glicada }}%</div>
+        </div>
+        {% endif %}
+        {% if pf.colesterol_total %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Colesterol Total</div>
+            <div class="ficha-field-value">{{ pf.colesterol_total }} mg/dL</div>
+        </div>
+        {% endif %}
+        {% if pf.colesterol_hdl %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">HDL</div>
+            <div class="ficha-field-value">{{ pf.colesterol_hdl }} mg/dL</div>
+        </div>
+        {% endif %}
+        {% if pf.colesterol_ldl %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">LDL</div>
+            <div class="ficha-field-value">{{ pf.colesterol_ldl }} mg/dL</div>
+        </div>
+        {% endif %}
+        {% if pf.trigliceridos %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Triglicéridos</div>
+            <div class="ficha-field-value">{{ pf.trigliceridos }} mg/dL</div>
+        </div>
+        {% endif %}
+        {% if pf.hemoglobina %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Hemoglobina</div>
+            <div class="ficha-field-value">{{ pf.hemoglobina }} g/dL</div>
+        </div>
+        {% endif %}
+        {% if pf.ferritina %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Ferritina</div>
+            <div class="ficha-field-value">{{ pf.ferritina }} ng/mL</div>
+        </div>
+        {% endif %}
+        {% if pf.vitamina_d %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Vitamina D</div>
+            <div class="ficha-field-value">{{ pf.vitamina_d }} ng/mL</div>
+        </div>
+        {% endif %}
+        {% if pf.vitamina_b12 %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Vitamina B12</div>
+            <div class="ficha-field-value">{{ pf.vitamina_b12 }} pg/mL</div>
+        </div>
+        {% endif %}
+        {% if pf.tsh %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">TSH</div>
+            <div class="ficha-field-value">{{ pf.tsh }} mUI/L</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Footer note -->
+<div style="text-align: center; padding: 20px; color: var(--bt-fg-muted); font-size: 0.8rem;">
+    <i class="fas fa-info-circle"></i>
+    Esta ficha es de solo lectura. Para actualizaciones, consulta con tu nutricionista.
+</div>
+{% endblock %}
+
+{% block modals %}
+{% include 'partials/recipe_generator_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="/js/modern-recipe-generator.js"></script>
+{% endblock %}

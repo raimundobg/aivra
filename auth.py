@@ -207,6 +207,8 @@ def login():
                 return redirect('/dashboard/nutritionist')
             elif user.user_type == 'empresa':
                 return redirect('/dashboard/enterprise')
+            elif user.user_type == 'paciente':
+                return redirect('/dashboard/patient')
             elif user.user_type == 'cliente':
                 return redirect('/dashboard/client')
             

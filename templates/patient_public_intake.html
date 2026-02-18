@@ -1369,7 +1369,34 @@
                 <i class="fas fa-check-circle"></i>
                 <h2>Datos enviados correctamente!</h2>
                 <p>Gracias por completar el formulario.</p>
-                <p class="mt-2">Tu nutricionista revisara tu informacion antes de la consulta.</p>
+                <p class="mt-2">Tu nutricionista revisará tu información antes de la consulta.</p>
+            </div>
+
+            <!-- Credentials Box (shown only when account is created) -->
+            <div id="credentialsBox" style="display: none; margin-top: 24px;">
+                <div style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 2px solid #10b981; border-radius: 16px; padding: 28px 24px; text-align: center;">
+                    <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                        <i class="fas fa-user-check" style="color: #fff; font-size: 24px;"></i>
+                    </div>
+                    <h3 style="margin: 0 0 8px; color: #065f46; font-size: 18px; font-weight: 700;">Tu cuenta ha sido creada</h3>
+                    <p style="margin: 0 0 20px; color: #047857; font-size: 14px;">Ahora puedes ingresar a tu portal de paciente con estas credenciales:</p>
+
+                    <div style="background: #fff; border-radius: 12px; padding: 16px 20px; text-align: left; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                        <div style="margin-bottom: 10px;">
+                            <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Email</span>
+                            <div id="credEmail" style="color: #1f2937; font-size: 15px; font-weight: 600; margin-top: 2px;"></div>
+                        </div>
+                        <div>
+                            <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Clave</span>
+                            <div id="credPassword" style="color: #1f2937; font-size: 15px; font-weight: 600; font-family: monospace; margin-top: 2px; letter-spacing: 1px;"></div>
+                        </div>
+                    </div>
+
+                    <a href="/auth/login" style="display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: #fff; text-decoration: none; padding: 12px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; transition: transform 0.2s;">
+                        <i class="fas fa-sign-in-alt" style="margin-right: 6px;"></i> Ingresar a mi portal
+                    </a>
+                    <p style="margin: 16px 0 0; color: #6b7280; font-size: 12px;">También te enviamos estas credenciales a tu email.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -1699,6 +1726,14 @@
                     document.getElementById('intakeForm').style.display = 'none';
                     document.querySelector('.progress-wrapper').style.display = 'none';
                     document.getElementById('successMessage').style.display = 'block';
+
+                    // Show credentials if account was created
+                    if (result.credentials) {
+                        document.getElementById('credEmail').textContent = result.credentials.email;
+                        document.getElementById('credPassword').textContent = result.credentials.password;
+                        document.getElementById('credentialsBox').style.display = 'block';
+                    }
+
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 } else {
                     alert(result.error || 'Error al guardar los datos. Por favor intenta nuevamente.');

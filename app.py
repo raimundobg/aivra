@@ -163,6 +163,8 @@ def dashboard():
         return redirect('/dashboard/nutritionist')
     elif current_user.user_type == 'empresa':
         return redirect('/dashboard/enterprise')
+    elif current_user.user_type == 'paciente':
+        return redirect('/dashboard/patient')
     elif current_user.user_type == 'cliente':
         return redirect('/dashboard/client')
     else:
@@ -196,6 +198,89 @@ def client_dashboard():
                          recipes=recipes,
                          recipes_remaining=recipes_remaining,
                          total_recipes=total_recipes)
+
+@app.route('/dashboard/patient')
+@login_required
+def patient_dashboard():
+    """Dashboard para pacientes"""
+    if current_user.user_type != 'paciente':
+        flash('No tienes permisos para acceder a esta página', 'danger')
+        return redirect(url_for('dashboard'))
+
+    patient_file = current_user.get_patient_file()
+
+    # Get recipes created by this patient
+    try:
+        recipes = UserRecipe.query.filter_by(user_id=current_user.id)\
+                                  .order_by(UserRecipe.created_at.desc())\
+                                  .limit(10).all()
+        total_recipes = UserRecipe.query.filter_by(user_id=current_user.id).count()
+    except Exception:
+        recipes = []
+        total_recipes = 0
+
+    return render_template('patient_dashboard.html',
+                         patient_file=patient_file,
+                         recipes=recipes,
+                         total_recipes=total_recipes)
+
+
+@app.route('/dashboard/patient/ficha')
+@login_required
+def patient_ficha_view():
+    """Vista read-only de la ficha del paciente"""
+    if current_user.user_type != 'paciente':
+        flash('No tienes permisos para acceder a esta página', 'danger')
+        return redirect(url_for('dashboard'))
+
+    patient_file = current_user.get_patient_file()
+    if not patient_file:
+        flash('No se encontró tu ficha clínica', 'warning')
+        return redirect(url_for('patient_dashboard'))
+
+    return render_template('patient_ficha_view.html', patient_file=patient_file)
+
+
+@app.route('/api/patient/recipe-defaults')
+@login_required
+def patient_recipe_defaults():
+    """API: Returns dietary data from patient file for recipe generator pre-fill"""
+    if current_user.user_type != 'paciente':
+        return jsonify({'error': 'No autorizado'}), 403
+
+    pf = current_user.get_patient_file()
+    if not pf:
+        return jsonify({'error': 'Sin ficha clínica'}), 404
+
+    # Parse restrictions
+    restricciones = []
+    if pf.restricciones_alimentarias:
+        if isinstance(pf.restricciones_alimentarias, list):
+            restricciones = pf.restricciones_alimentarias
+        elif isinstance(pf.restricciones_alimentarias, str):
+            try:
+                restricciones = json.loads(pf.restricciones_alimentarias)
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+    # Parse alergias
+    alergias_list = []
+    if pf.alergias:
+        alergias_list = [a.strip() for a in pf.alergias.split(',') if a.strip()]
+
+    return jsonify({
+        'calorias_objetivo': pf.get_kcal,
+        'proteinas_g': pf.proteinas_g,
+        'carbohidratos_g': pf.carbohidratos_g,
+        'grasas_g': pf.grasas_g,
+        'restricciones': restricciones,
+        'alergias': alergias_list,
+        'objetivos': pf.objetivos,
+        'peso_kg': pf.peso_kg,
+        'talla_m': pf.talla_m,
+        'imc': pf.imc,
+    })
+
 
 @app.route('/dashboard/nutritionist')
 @login_required
@@ -1286,14 +1371,81 @@ def submit_public_intake(token):
         # Marcar como completado
         patient.mark_intake_completed()
 
+        # === AUTO-CREAR CUENTA DE PACIENTE ===
+        import string
+        import secrets as sec
+
+        patient_email = patient.email
+        patient_password = None
+        patient_user_created = False
+
+        if patient_email:
+            patient_email_clean = patient_email.strip().lower()
+            existing_user = User.query.filter_by(email=patient_email_clean).first()
+
+            if existing_user:
+                patient.patient_user_id = existing_user.id
+                log_debug(f"[SUBMIT-INTAKE] Linked existing user {existing_user.id} to patient {patient.id}")
+            else:
+                alphabet = string.ascii_letters + string.digits
+                patient_password = ''.join(sec.choice(alphabet) for _ in range(8))
+
+                name_parts = (patient.nombre or 'Paciente').strip().split()
+                first_name = name_parts[0] if name_parts else 'Paciente'
+                last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else '-'
+
+                try:
+                    birth_date = datetime.strptime(str(patient.fecha_nacimiento), '%Y-%m-%d').date()
+                except (ValueError, TypeError):
+                    birth_date = date(2000, 1, 1)
+
+                new_user = User(
+                    email=patient_email_clean,
+                    first_name=first_name,
+                    last_name=last_name,
+                    birth_date=birth_date,
+                    country='Chile',
+                    user_type=UserType.PACIENTE,
+                    subscription_plan=SubscriptionPlan.PATIENT,
+                    is_active=True
+                )
+                new_user.set_password(patient_password)
+                db.session.add(new_user)
+                db.session.flush()
+
+                patient.patient_user_id = new_user.id
+                patient_user_created = True
+                log_debug(f"[SUBMIT-INTAKE] Created user {new_user.id} for patient {patient.nombre}")
+
         db.session.commit()
 
         log_debug(f"[SUBMIT-INTAKE] OK - Intake completado para paciente: {patient.nombre} (ID: {patient.id})")
 
-        return jsonify({
+        # Enviar email de bienvenida (fuera del commit para no bloquear)
+        if patient_user_created and patient_password:
+            try:
+                from email_service import send_patient_welcome_email
+                send_patient_welcome_email(patient_email_clean, patient.nombre, patient_password)
+                log_debug(f"[SUBMIT-INTAKE] Welcome email sent to {patient_email_clean}")
+            except Exception as email_err:
+                log_debug(f"[SUBMIT-INTAKE] Welcome email failed: {email_err}")
+
+        response_data = {
             'success': True,
             'message': 'Tus datos han sido guardados exitosamente. Tu nutricionista los revisara antes de tu consulta.'
-        })
+        }
+
+        if patient_user_created and patient_password:
+            response_data['credentials'] = {
+                'email': patient_email_clean,
+                'password': patient_password,
+            }
+            response_data['message'] = (
+                'Tus datos han sido guardados exitosamente. '
+                'Hemos creado tu cuenta de paciente para que puedas ver tu ficha y generar recetas.'
+            )
+
+        return jsonify(response_data)
 
     except Exception as e:
         db.session.rollback()
@@ -2234,6 +2386,7 @@ def migrate_database():
                 ('percepcion_esfuerzo', 'INTEGER'),
                 ('otros_diagnosticos', 'TEXT'),
                 ('comidas_al_dia', 'VARCHAR(20)'),
+                ('patient_user_id', 'INTEGER'),
             ]
         }
 

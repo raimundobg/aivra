@@ -107,6 +107,8 @@
                             Nutricionista
                             {% elif current_user.user_type == 'empresa' %}
                             Empresa
+                            {% elif current_user.user_type == 'paciente' %}
+                            Paciente
                             {% else %}
                             Cliente
                             {% endif %}

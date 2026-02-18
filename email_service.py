@@ -224,6 +224,41 @@ def send_booking_confirmation(booking, nutritionist, intake_url):
         return {'success': False, 'error': str(e)}
 
 
+def send_patient_welcome_email(patient_email, patient_name, password):
+    """
+    Send welcome email with login credentials to newly created patient account.
+    """
+    if not patient_email:
+        return {'success': False, 'error': 'No patient email'}
+
+    try:
+        subject = 'Tu cuenta de paciente en BiteTrack'
+
+        html = render_template(
+            'email/patient_welcome.html',
+            patient_name=patient_name,
+            patient_email=patient_email,
+            password=password
+        )
+
+        text = (
+            f"Hola {patient_name},\n\n"
+            f"Hemos creado tu cuenta de paciente en BiteTrack.\n\n"
+            f"Tus datos de acceso:\n"
+            f"Email: {patient_email}\n"
+            f"Clave: {password}\n\n"
+            f"Una vez dentro podras ver tu ficha clinica, tus KPIs nutricionales "
+            f"y generar recetas personalizadas.\n\n"
+            f"Saludos,\nEquipo BiteTrack"
+        )
+
+        return _send_email(patient_email, subject, html, text)
+
+    except Exception as e:
+        current_app.logger.error(f"Error enviando welcome email a {patient_email}: {str(e)}")
+        return {'success': False, 'error': str(e)}
+
+
 def is_mail_configured():
     """Check if any email backend is configured."""
     resend_key = os.environ.get('RESEND_API_KEY', '')

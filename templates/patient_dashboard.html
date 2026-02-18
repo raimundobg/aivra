@@ -1,0 +1,285 @@
+{% extends "base_layout.html" %}
+
+{% block title %}Mi Portal - BiteTrack{% endblock %}
+
+{% block sidebar_nav %}
+<div class="bt-nav-section-label">Principal</div>
+<a href="{{ url_for('patient_dashboard') }}" class="bt-nav-item active">
+    <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+    <span class="nav-label">Dashboard</span>
+</a>
+
+{% if patient_file %}
+<a href="{{ url_for('patient_ficha_view') }}" class="bt-nav-item">
+    <span class="nav-icon"><i class="fas fa-file-medical"></i></span>
+    <span class="nav-label">Mi Ficha</span>
+</a>
+{% endif %}
+
+<div class="bt-nav-section-label">Herramientas</div>
+<button class="bt-nav-item" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
+    <span class="nav-icon"><i class="fas fa-flask"></i></span>
+    <span class="nav-label">Crear Batido</span>
+    <span class="nav-badge">IA</span>
+</button>
+<a href="#mis-recetas" class="bt-nav-item">
+    <span class="nav-icon"><i class="fas fa-history"></i></span>
+    <span class="nav-label">Mis Recetas</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="bt-page-header">
+    <div>
+        <h1 class="bt-page-title">
+            <i class="fas fa-heartbeat" style="color: var(--bt-brand-primary);"></i>
+            Hola, {{ current_user.first_name }}
+        </h1>
+        <p class="bt-page-subtitle">Tu portal de salud nutricional</p>
+    </div>
+</div>
+
+{% if patient_file %}
+<!-- KPI Cards -->
+<div class="bt-metrics-grid">
+    {% if patient_file.peso_kg %}
+    <div class="bt-metric-card">
+        <div class="bt-metric-header">
+            <span class="bt-metric-icon emerald"><i class="fas fa-weight"></i></span>
+            <span class="bt-metric-label">Peso</span>
+        </div>
+        <p class="bt-metric-value" style="color: var(--bt-emerald-500);">{{ "%.1f"|format(patient_file.peso_kg) }}</p>
+        <span class="bt-metric-unit">kg</span>
+    </div>
+    {% endif %}
+
+    {% if patient_file.imc %}
+    <div class="bt-metric-card">
+        <div class="bt-metric-header">
+            <span class="bt-metric-icon {% if patient_file.imc >= 18.5 and patient_file.imc < 25 %}emerald{% elif patient_file.imc >= 25 and patient_file.imc < 30 %}amber{% else %}red{% endif %}">
+                <i class="fas fa-calculator"></i>
+            </span>
+            <span class="bt-metric-label">IMC</span>
+        </div>
+        <p class="bt-metric-value" style="color: {% if patient_file.imc >= 18.5 and patient_file.imc < 25 %}var(--bt-emerald-500){% elif patient_file.imc >= 25 and patient_file.imc < 30 %}var(--bt-amber-500){% else %}#ef4444{% endif %};">{{ "%.1f"|format(patient_file.imc) }}</p>
+        <span class="bt-metric-unit">{{ patient_file.imc_categoria or '' }}</span>
+    </div>
+    {% endif %}
+
+    {% if patient_file.get_kcal %}
+    <div class="bt-metric-card">
+        <div class="bt-metric-header">
+            <span class="bt-metric-icon blue"><i class="fas fa-fire"></i></span>
+            <span class="bt-metric-label">Calorías Diarias</span>
+        </div>
+        <p class="bt-metric-value" style="color: #3b82f6;">{{ "%.0f"|format(patient_file.get_kcal) }}</p>
+        <span class="bt-metric-unit">kcal/día</span>
+    </div>
+    {% endif %}
+
+    {% if patient_file.proteinas_g %}
+    <div class="bt-metric-card">
+        <div class="bt-metric-header">
+            <span class="bt-metric-icon" style="background: rgba(168,85,247,0.12); color: #a855f7;"><i class="fas fa-drumstick-bite"></i></span>
+            <span class="bt-metric-label">Proteínas</span>
+        </div>
+        <p class="bt-metric-value" style="color: #a855f7;">{{ "%.0f"|format(patient_file.proteinas_g) }}</p>
+        <span class="bt-metric-unit">g/día{% if patient_file.proteinas_porcentaje %} ({{ "%.0f"|format(patient_file.proteinas_porcentaje) }}%){% endif %}</span>
+    </div>
+    {% endif %}
+
+    {% if patient_file.carbohidratos_g %}
+    <div class="bt-metric-card">
+        <div class="bt-metric-header">
+            <span class="bt-metric-icon amber"><i class="fas fa-bread-slice"></i></span>
+            <span class="bt-metric-label">Carbohidratos</span>
+        </div>
+        <p class="bt-metric-value" style="color: var(--bt-amber-500);">{{ "%.0f"|format(patient_file.carbohidratos_g) }}</p>
+        <span class="bt-metric-unit">g/día{% if patient_file.carbohidratos_porcentaje %} ({{ "%.0f"|format(patient_file.carbohidratos_porcentaje) }}%){% endif %}</span>
+    </div>
+    {% endif %}
+
+    {% if patient_file.grasas_g %}
+    <div class="bt-metric-card">
+        <div class="bt-metric-header">
+            <span class="bt-metric-icon" style="background: rgba(236,72,153,0.12); color: #ec4899;"><i class="fas fa-oil-can"></i></span>
+            <span class="bt-metric-label">Grasas</span>
+        </div>
+        <p class="bt-metric-value" style="color: #ec4899;">{{ "%.0f"|format(patient_file.grasas_g) }}</p>
+        <span class="bt-metric-unit">g/día{% if patient_file.grasas_porcentaje %} ({{ "%.0f"|format(patient_file.grasas_porcentaje) }}%){% endif %}</span>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Objectives / Goals Section -->
+{% if patient_file.objetivos or patient_file.metas_corto_plazo or patient_file.diagnostico_nutricional %}
+<div class="bt-glass-panel bt-p-4 bt-mt-3">
+    <div class="bt-section-header">
+        <h2 class="bt-section-title">
+            <span class="title-icon"><i class="fas fa-bullseye"></i></span>
+            Mis Objetivos
+        </h2>
+    </div>
+
+    {% if patient_file.diagnostico_nutricional %}
+    <div style="background: var(--bt-bg-offset); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+        <h4 style="margin: 0 0 8px; font-size: 0.85rem; color: var(--bt-fg-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+            <i class="fas fa-stethoscope" style="margin-right: 6px;"></i>Diagnóstico Nutricional
+        </h4>
+        <p style="margin: 0; color: var(--bt-fg); line-height: 1.6;">{{ patient_file.diagnostico_nutricional }}</p>
+    </div>
+    {% endif %}
+
+    {% if patient_file.objetivos %}
+    <div style="background: var(--bt-bg-offset); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+        <h4 style="margin: 0 0 8px; font-size: 0.85rem; color: var(--bt-fg-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+            <i class="fas fa-flag" style="margin-right: 6px;"></i>Objetivos
+        </h4>
+        {% set obj_list = patient_file.objetivos %}
+        {% if obj_list is string %}
+            {% set obj_parsed = [] %}
+            {% if obj_list.startswith('[') %}
+                {% set obj_parsed = obj_list | tojson | default([], true) %}
+            {% endif %}
+            {% if obj_parsed is iterable and obj_parsed | length > 0 %}
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                {% for obj in obj_parsed %}
+                    <span style="background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.1)); color: var(--bt-emerald-700, #047857); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">{{ obj }}</span>
+                {% endfor %}
+                </div>
+            {% else %}
+                <p style="margin: 0; color: var(--bt-fg); line-height: 1.6;">{{ patient_file.objetivos }}</p>
+            {% endif %}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if patient_file.metas_corto_plazo %}
+    <div style="background: var(--bt-bg-offset); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+        <h4 style="margin: 0 0 8px; font-size: 0.85rem; color: var(--bt-fg-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+            <i class="fas fa-clock" style="margin-right: 6px;"></i>Metas a Corto Plazo
+        </h4>
+        <p style="margin: 0; color: var(--bt-fg); line-height: 1.6;">{{ patient_file.metas_corto_plazo }}</p>
+    </div>
+    {% endif %}
+
+    {% if patient_file.metas_mediano_plazo %}
+    <div style="background: var(--bt-bg-offset); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+        <h4 style="margin: 0 0 8px; font-size: 0.85rem; color: var(--bt-fg-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+            <i class="fas fa-calendar-alt" style="margin-right: 6px;"></i>Metas a Mediano Plazo
+        </h4>
+        <p style="margin: 0; color: var(--bt-fg); line-height: 1.6;">{{ patient_file.metas_mediano_plazo }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="bt-actions-grid">
+    <a href="{{ url_for('patient_ficha_view') }}" class="bt-action-card">
+        <div class="bt-action-icon emerald">
+            <i class="fas fa-file-medical"></i>
+        </div>
+        <h3 class="bt-action-title">Mi Ficha</h3>
+        <p class="bt-action-desc">Ver mi ficha clínica completa</p>
+    </a>
+
+    <div class="bt-action-card" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
+        <div class="bt-action-icon blue">
+            <i class="fas fa-flask"></i>
+        </div>
+        <h3 class="bt-action-title">Crear Batido</h3>
+        <p class="bt-action-desc">Genera un batido personalizado con IA</p>
+    </div>
+
+    <a href="#mis-recetas" class="bt-action-card">
+        <div class="bt-action-icon" style="background: rgba(168,85,247,0.12); color: #a855f7;">
+            <i class="fas fa-history"></i>
+        </div>
+        <h3 class="bt-action-title">Mis Recetas</h3>
+        <p class="bt-action-desc">Revisa tus batidos guardados</p>
+    </a>
+</div>
+
+{% else %}
+<!-- No patient file linked yet -->
+<div class="bt-glass-panel bt-p-4 bt-mt-3">
+    <div class="bt-empty-state">
+        <div class="bt-empty-icon"><i class="fas fa-file-medical"></i></div>
+        <h4 class="bt-empty-title">Ficha clínica no disponible</h4>
+        <p class="bt-empty-desc">Tu nutricionista aún no ha vinculado tu ficha clínica. Una vez completada tu consulta, podrás ver aquí tus KPIs y métricas de salud.</p>
+    </div>
+</div>
+
+<!-- Still show recipe generator -->
+<div class="bt-actions-grid">
+    <div class="bt-action-card" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
+        <div class="bt-action-icon blue">
+            <i class="fas fa-flask"></i>
+        </div>
+        <h3 class="bt-action-title">Crear Batido</h3>
+        <p class="bt-action-desc">Genera un batido personalizado con IA</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Recipes Section -->
+<div class="bt-glass-panel bt-p-4 bt-mt-3" id="mis-recetas">
+    <div class="bt-section-header">
+        <h2 class="bt-section-title">
+            <span class="title-icon"><i class="fas fa-history"></i></span>
+            Mis Recetas Recientes
+        </h2>
+    </div>
+
+    {% if recipes %}
+    {% for recipe in recipes %}
+    <div class="bt-list-item">
+        <div>
+            <h4 class="bt-list-item-title">
+                <i class="fas fa-blender" style="color: var(--bt-brand-primary);"></i>
+                {{ recipe.recipe_name }}
+            </h4>
+            <span class="bt-list-item-meta">
+                <i class="far fa-calendar"></i>
+                {{ recipe.created_at.strftime('%d/%m/%Y %H:%M') }}
+            </span>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="bt-empty-state">
+        <div class="bt-empty-icon"><i class="fas fa-flask"></i></div>
+        <h4 class="bt-empty-title">Aún no tienes recetas</h4>
+        <p class="bt-empty-desc">Crea tu primera receta optimizada con IA</p>
+        <button class="bt-btn bt-btn-primary" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
+            <i class="fas fa-plus"></i>
+            Crear Primera Receta
+        </button>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block modals %}
+{% include 'partials/recipe_generator_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="/js/modern-recipe-generator.js"></script>
+{% if patient_file %}
+<script>
+    // Pre-load patient dietary data for recipe generator
+    window.patientDefaults = null;
+    fetch('/api/patient/recipe-defaults')
+        .then(r => r.json())
+        .then(data => {
+            if (!data.error) {
+                window.patientDefaults = data;
+            }
+        })
+        .catch(() => {});
+</script>
+{% endif %}
+{% endblock %}
