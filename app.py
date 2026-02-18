@@ -219,10 +219,47 @@ def patient_dashboard():
         recipes = []
         total_recipes = 0
 
+    # Parse JSON fields for template
+    objetivos_list = []
+    pauta_data = None
+    if patient_file:
+        # Parse objetivos from JSON string
+        if patient_file.objetivos:
+            try:
+                parsed = json.loads(patient_file.objetivos) if isinstance(patient_file.objetivos, str) else patient_file.objetivos
+                if isinstance(parsed, list):
+                    objetivos_list = parsed
+            except (json.JSONDecodeError, TypeError):
+                objetivos_list = [patient_file.objetivos]
+
+        # Parse plan_alimentario (pauta semanal)
+        if patient_file.plan_alimentario:
+            try:
+                pauta_data = json.loads(patient_file.plan_alimentario) if isinstance(patient_file.plan_alimentario, str) else patient_file.plan_alimentario
+            except (json.JSONDecodeError, TypeError):
+                pauta_data = None
+
+    # Human-readable labels for objetivos keys
+    obj_labels = {
+        'bajar_peso': 'Bajar de peso',
+        'subir_peso': 'Subir de peso',
+        'mejorar_salud': 'Mejorar salud general',
+        'energia': 'Aumentar energía',
+        'digestion': 'Mejorar digestión',
+        'habitos': 'Mejorar hábitos alimentarios',
+        'rendimiento': 'Mejorar rendimiento deportivo',
+        'masa_muscular': 'Aumentar masa muscular',
+        'embarazo': 'Nutrición en embarazo/lactancia',
+        'patologia': 'Manejo de patología',
+    }
+
     return render_template('patient_dashboard.html',
                          patient_file=patient_file,
                          recipes=recipes,
-                         total_recipes=total_recipes)
+                         total_recipes=total_recipes,
+                         objetivos_list=objetivos_list,
+                         obj_labels=obj_labels,
+                         pauta_data=pauta_data)
 
 
 @app.route('/dashboard/patient/ficha')
