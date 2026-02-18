@@ -145,6 +145,26 @@
         z-index:999;
         display:none;
     }
+    .spec-grid {
+        display:flex;
+        flex-wrap:wrap;
+        gap:0.5rem;
+        margin-top:0.5rem;
+    }
+    .spec-chip {
+        padding:0.5rem 0.875rem;
+        border:1.5px solid var(--glass-border, rgba(255,255,255,0.45));
+        border-radius:20px;
+        font-size:0.8rem;
+        font-weight:500;
+        cursor:pointer;
+        transition:all 0.2s;
+        background:var(--glass-bg-subtle, rgba(255,255,255,0.35));
+        color:var(--bt-fg-default);
+        user-select:none;
+    }
+    .spec-chip:hover { border-color:#10b981; background:#f0fdf4; }
+    .spec-chip.selected { border-color:#10b981; background:#ecfdf5; color:#059669; font-weight:600; }
     @media(max-width:600px) { .form-row { grid-template-columns:1fr; } }
 </style>
 {% endblock %}
@@ -167,6 +187,10 @@
             <textarea id="profileBio" rows="4" placeholder="Cuenta a tus pacientes sobre tu experiencia, enfoque y formacion..."></textarea>
             <p class="hint">Maximo 500 caracteres. Se muestra en la pagina de reservas.</p>
         </div>
+
+        <h3 class="section-title">Áreas de especialidad</h3>
+        <p style="font-size:0.8rem;color:var(--bt-fg-muted);margin:-0.5rem 0 0.75rem;">Selecciona las áreas en las que te especializas. Se muestran en la página de reservas.</p>
+        <div class="spec-grid" id="specGrid"></div>
 
         <h3 class="section-title">Consulta</h3>
         <div class="form-row">
@@ -232,11 +256,39 @@
 
 {% block extra_js %}
 <script>
+const ALL_SPECIALTIES = [
+    {% for key, label in specialties %}
+    {key: '{{ key }}', label: '{{ label }}'},
+    {% endfor %}
+];
+
+let selectedSpecs = [];
+
 function showToast(msg) {
     const t = document.getElementById('toastMsg');
     t.textContent = msg;
     t.style.display = 'block';
     setTimeout(function(){ t.style.display = 'none'; }, 3000);
+}
+
+function renderSpecGrid(currentSpecs) {
+    selectedSpecs = currentSpecs || [];
+    const grid = document.getElementById('specGrid');
+    grid.innerHTML = '';
+    ALL_SPECIALTIES.forEach(function(s) {
+        const chip = document.createElement('div');
+        chip.className = 'spec-chip' + (selectedSpecs.includes(s.key) ? ' selected' : '');
+        chip.textContent = s.label;
+        chip.onclick = function() {
+            chip.classList.toggle('selected');
+            if (chip.classList.contains('selected')) {
+                selectedSpecs.push(s.key);
+            } else {
+                selectedSpecs = selectedSpecs.filter(k => k !== s.key);
+            }
+        };
+        grid.appendChild(chip);
+    });
 }
 
 // Load existing profile
@@ -249,6 +301,7 @@ function showToast(msg) {
             document.getElementById('profileBio').value = p.bio || '';
             document.getElementById('profilePrecio').value = p.consulta_precio || '';
             document.getElementById('profileDuracion').value = p.consulta_duracion || 60;
+            renderSpecGrid(p.specialization || []);
             if (p.banco_info) {
                 document.getElementById('bancoBanco').value = p.banco_info.banco || '';
                 document.getElementById('bancoTipo').value = p.banco_info.tipo_cuenta || '';
@@ -267,6 +320,7 @@ async function saveProfile() {
 
     const payload = {
         bio: document.getElementById('profileBio').value.trim(),
+        specialization: selectedSpecs,
         consulta_precio: parseInt(document.getElementById('profilePrecio').value) || null,
         consulta_duracion: parseInt(document.getElementById('profileDuracion').value) || 60,
         banco_info: {

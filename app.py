@@ -2788,7 +2788,7 @@ def nutritionist_profile_page():
     log_debug(f"[NUTRI-PROFILE-PAGE] user_id={current_user.id}")
     if current_user.user_type != 'nutricionista':
         return redirect('/dashboard')
-    return render_template('nutritionist_profile.html')
+    return render_template('nutritionist_profile.html', specialties=NUTRITIONIST_SPECIALTIES)
 
 # ============================================
 # BOOKING SYSTEM - Public API
@@ -3122,6 +3122,8 @@ def api_nutri_profile_save():
     try:
         if 'bio' in data:
             current_user.bio = data['bio']
+        if 'specialization' in data:
+            current_user.specialization = ','.join(data['specialization']) if isinstance(data['specialization'], list) else data['specialization']
         if 'consulta_precio' in data:
             current_user.consulta_precio = data['consulta_precio']
         if 'consulta_duracion' in data:
