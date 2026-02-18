@@ -1405,6 +1405,9 @@ def submit_public_intake(token):
                 patient.frecuencia_consumo = val
             log_debug(f"[SUBMIT-INTAKE] frecuencia_consumo saved with {len(val) if isinstance(val, dict) else '?'} items")
 
+        # Run all calculations (IMC, GEB, GET, macros, etc.)
+        patient.calcular_todo()
+
         # Marcar como completado
         patient.mark_intake_completed()
 
