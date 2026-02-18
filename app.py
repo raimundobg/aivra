@@ -2296,6 +2296,114 @@ def reset_all_data():
         }), 500
 
 
+@app.route('/api/create-dummy-nutritionists', methods=['GET', 'POST'])
+def create_dummy_nutritionists():
+    """Crear nutricionistas dummy para testing."""
+    try:
+        dummy_nutris = [
+            {
+                'email': 'maria.gonzalez@demo.cl',
+                'first_name': 'Maria',
+                'last_name': 'Gonzalez',
+                'birth_date': date(1988, 3, 15),
+                'country': 'Chile',
+                'city': 'Santiago',
+                'specialization': 'nutricion_clinica,control_peso,diabetes_metabolismo',
+                'bio': 'Nutricionista clinica con 10 anos de experiencia en control de peso y manejo de diabetes. Enfoque integral y personalizado.',
+                'consulta_precio': 35000,
+                'consulta_duracion': 45,
+                'license_number': 'NC-2015-001',
+            },
+            {
+                'email': 'carlos.fernandez@demo.cl',
+                'first_name': 'Carlos',
+                'last_name': 'Fernandez',
+                'birth_date': date(1990, 7, 22),
+                'country': 'Chile',
+                'city': 'Santiago',
+                'specialization': 'nutricion_deportiva,rendimiento_atletico,control_peso',
+                'bio': 'Especialista en nutricion deportiva y rendimiento. Trabajo con atletas amateur y profesionales para optimizar su alimentacion.',
+                'consulta_precio': 40000,
+                'consulta_duracion': 60,
+                'license_number': 'NC-2017-042',
+            },
+            {
+                'email': 'ana.martinez@demo.cl',
+                'first_name': 'Ana',
+                'last_name': 'Martinez',
+                'birth_date': date(1985, 11, 8),
+                'country': 'Chile',
+                'city': 'Valparaiso',
+                'specialization': 'gastroenterologia_nutricional,alergias_intolerancias,enfermedad_celiaca',
+                'bio': 'Especializada en problemas digestivos, intolerancias y alergias alimentarias. Certificada en enfermedad celiaca y dieta FODMAP.',
+                'consulta_precio': 38000,
+                'consulta_duracion': 50,
+                'license_number': 'NC-2013-018',
+            },
+            {
+                'email': 'valentina.rojas@demo.cl',
+                'first_name': 'Valentina',
+                'last_name': 'Rojas',
+                'birth_date': date(1992, 5, 30),
+                'country': 'Chile',
+                'city': 'Santiago',
+                'specialization': 'embarazo_lactancia,nutricion_pediatrica,nutricion_adolescente',
+                'bio': 'Dedicada a la nutricion materno-infantil. Acompano a mamas durante embarazo, lactancia y alimentacion complementaria del bebe.',
+                'consulta_precio': 32000,
+                'consulta_duracion': 45,
+                'license_number': 'NC-2019-067',
+            },
+        ]
+
+        created = []
+        for data in dummy_nutris:
+            existing = User.query.filter_by(email=data['email']).first()
+            if existing:
+                created.append(f"SKIP: {data['email']} (already exists)")
+                continue
+
+            user = User(
+                email=data['email'],
+                first_name=data['first_name'],
+                last_name=data['last_name'],
+                birth_date=data['birth_date'],
+                country=data['country'],
+                city=data['city'],
+                user_type=UserType.NUTRICIONISTA,
+                subscription_plan=SubscriptionPlan.PROFESSIONAL,
+                specialization=data['specialization'],
+                bio=data['bio'],
+                consulta_precio=data['consulta_precio'],
+                consulta_duracion=data['consulta_duracion'],
+                license_number=data['license_number'],
+                is_active=True,
+            )
+            user.set_password('demo1234')
+            db.session.add(user)
+            db.session.flush()
+
+            # Create schedule: Mon-Fri 9:00-17:00
+            for day in range(5):  # 0=Mon to 4=Fri
+                schedule = NutritionistSchedule(
+                    nutritionist_id=user.id,
+                    day_of_week=day,
+                    start_time='09:00',
+                    end_time='17:00',
+                    slot_duration=data['consulta_duracion'],
+                    is_active=True,
+                )
+                db.session.add(schedule)
+
+            created.append(f"OK: {data['first_name']} {data['last_name']} ({data['email']})")
+
+        db.session.commit()
+        return jsonify({'success': True, 'created': created})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 # ============================================
 # ENDPOINTS PAUTA GENERATOR
 # ============================================
@@ -2697,9 +2805,12 @@ def api_public_specialties():
 @app.route('/api/public/nutritionists')
 def api_public_nutritionists():
     """List nutritionists, optionally filtered by specialty. Shows all by default."""
-    specialty = request.args.get('specialty', '')
-    log_debug(f"[PUBLIC-NUTRITIONISTS] specialty='{specialty}'")
+    specialty_param = request.args.get('specialty', '')
+    log_debug(f"[PUBLIC-NUTRITIONISTS] specialty='{specialty_param}'")
     query = User.query.filter_by(user_type='nutricionista', is_active=True)
+
+    # Support comma-separated specialties
+    filter_specs = [s.strip() for s in specialty_param.split(',') if s.strip()] if specialty_param else []
 
     nutritionists = query.all()
     results = []
@@ -2707,8 +2818,9 @@ def api_public_nutritionists():
         specs = n.get_specialties_list()
 
         # Si hay filtro de especialidad (y no es 'todos'), filtrar
-        if specialty and specialty != 'todos' and specialty not in specs:
-            continue
+        if filter_specs and 'todos' not in filter_specs:
+            if not any(fs in specs for fs in filter_specs):
+                continue
 
         results.append({
             'id': n.id,

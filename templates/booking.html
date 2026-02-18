@@ -118,8 +118,8 @@
 
             <!-- Step 1: Choose Specialty -->
             <div class="booking-step active" id="step1">
-                <h2 class="step-title">Elige tu area de interes</h2>
-                <p class="step-subtitle">Selecciona la especialidad que mejor se ajuste a lo que necesitas</p>
+                <h2 class="step-title">Elige tu área de interés</h2>
+                <p class="step-subtitle">Selecciona una o más especialidades que te interesen</p>
                 <div class="specialty-grid" id="specialtyGrid"></div>
                 <div class="btn-row" style="justify-content:flex-end;">
                     <button class="btn-next" id="btnToStep2" disabled onclick="goToStep(2)">
@@ -200,7 +200,7 @@
 
 <script>
 // State
-let selectedSpecialty = '';
+let selectedSpecialties = [];
 let selectedNutri = null;
 let selectedDate = '';
 let selectedSlot = '';
@@ -253,9 +253,31 @@ function goToStep(n) {
             card.dataset.key = s.key;
             card.innerHTML = '<div class="icon"><i class="fas ' + icon + '"></i></div><div class="label">' + s.label + '</div>';
             card.onclick = function() {
-                document.querySelectorAll('.specialty-card').forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                selectedSpecialty = s.key;
+                if (s.key === 'todos') {
+                    // "Ver todos" deselects everything else
+                    document.querySelectorAll('.specialty-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedSpecialties = ['todos'];
+                } else {
+                    // Deselect "todos" if it was selected
+                    const todosCard = grid.querySelector('[data-key="todos"]');
+                    if (todosCard) todosCard.classList.remove('selected');
+                    selectedSpecialties = selectedSpecialties.filter(k => k !== 'todos');
+
+                    // Toggle this specialty
+                    card.classList.toggle('selected');
+                    if (card.classList.contains('selected')) {
+                        selectedSpecialties.push(s.key);
+                    } else {
+                        selectedSpecialties = selectedSpecialties.filter(k => k !== s.key);
+                    }
+
+                    // If nothing selected, re-select "todos"
+                    if (selectedSpecialties.length === 0) {
+                        if (todosCard) todosCard.classList.add('selected');
+                        selectedSpecialties = ['todos'];
+                    }
+                }
                 document.getElementById('btnToStep2').disabled = false;
             };
             grid.appendChild(card);
@@ -263,7 +285,7 @@ function goToStep(n) {
             // Seleccionar "Ver todos" por default (primer elemento)
             if (index === 0) {
                 card.classList.add('selected');
-                selectedSpecialty = s.key;
+                selectedSpecialties = ['todos'];
                 document.getElementById('btnToStep2').disabled = false;
             }
         });
@@ -278,7 +300,8 @@ async function loadNutritionists() {
     document.getElementById('btnToStep3').disabled = true;
 
     try {
-        const res = await fetch('/api/public/nutritionists?specialty=' + encodeURIComponent(selectedSpecialty));
+        const specParam = selectedSpecialties.join(',');
+        const res = await fetch('/api/public/nutritionists?specialty=' + encodeURIComponent(specParam));
         const data = await res.json();
         list.innerHTML = '';
 
@@ -406,7 +429,7 @@ async function submitBooking() {
                 client_name: document.getElementById('clientName').value.trim(),
                 client_email: document.getElementById('clientEmail').value.trim(),
                 client_phone: document.getElementById('clientPhone').value.trim(),
-                specialty: selectedSpecialty,
+                specialty: selectedSpecialties.join(','),
                 booking_date: selectedDate,
                 booking_time: selectedSlot,
                 notes: document.getElementById('clientNotes').value.trim()

@@ -26,40 +26,40 @@ class SubscriptionPlan:
 
 # Especialidades de nutricionistas (key, label)
 NUTRITIONIST_SPECIALTIES = [
-    # Clinica / Medicina
-    ('nutricion_clinica', 'Nutricion Clinica'),
+    # Clínica / Medicina
+    ('nutricion_clinica', 'Nutrición Clínica'),
     ('medicina_integrativa', 'Medicina Integrativa'),
-    ('nutricion_oncologica', 'Nutricion Oncologica'),
-    ('nutricion_renal', 'Nutricion Renal'),
-    ('nutricion_hepatica', 'Nutricion Hepatica'),
+    ('nutricion_oncologica', 'Nutrición Oncológica'),
+    ('nutricion_renal', 'Nutrición Renal'),
+    ('nutricion_hepatica', 'Nutrición Hepática'),
     ('diabetes_metabolismo', 'Diabetes y Metabolismo'),
     ('enfermedades_cardiovasculares', 'Enfermedades Cardiovasculares'),
-    ('nutricion_critica', 'Nutricion en Paciente Critico'),
-    # Peso y Composicion Corporal
-    ('control_peso', 'Control de Peso y Composicion Corporal'),
-    ('obesidad_cirugia_bariatrica', 'Obesidad y Cirugia Bariatrica'),
+    ('nutricion_critica', 'Nutrición en Paciente Crítico'),
+    # Peso y Composición Corporal
+    ('control_peso', 'Control de Peso y Composición Corporal'),
+    ('obesidad_cirugia_bariatrica', 'Obesidad y Cirugía Bariátrica'),
     # Deporte y Rendimiento
-    ('nutricion_deportiva', 'Nutricion Deportiva'),
-    ('rendimiento_atletico', 'Rendimiento Atletico de Alto Nivel'),
+    ('nutricion_deportiva', 'Nutrición Deportiva'),
+    ('rendimiento_atletico', 'Rendimiento Atlético de Alto Nivel'),
     # Etapas de Vida
-    ('nutricion_pediatrica', 'Nutricion Pediatrica'),
-    ('nutricion_geriatrica', 'Nutricion Geriatrica'),
+    ('nutricion_pediatrica', 'Nutrición Pediátrica'),
+    ('nutricion_geriatrica', 'Nutrición Geriátrica'),
     ('embarazo_lactancia', 'Embarazo y Lactancia'),
-    ('nutricion_adolescente', 'Nutricion del Adolescente'),
+    ('nutricion_adolescente', 'Nutrición del Adolescente'),
     # Digestivo y Alergias
-    ('gastroenterologia_nutricional', 'Gastroenterologia Nutricional'),
+    ('gastroenterologia_nutricional', 'Gastroenterología Nutricional'),
     ('alergias_intolerancias', 'Alergias e Intolerancias Alimentarias'),
-    ('enfermedad_celiaca', 'Enfermedad Celiaca'),
+    ('enfermedad_celiaca', 'Enfermedad Celíaca'),
     # Salud Mental y Conducta
     ('tca_conducta_alimentaria', 'Trastornos de Conducta Alimentaria'),
-    ('nutricion_psicologia', 'Nutricion y Psicologia (Mindful Eating)'),
+    ('nutricion_psicologia', 'Nutrición y Psicología (Mindful Eating)'),
     # Dietas Especiales
-    ('alimentacion_vegetariana_vegana', 'Alimentacion Vegetariana y Vegana'),
-    ('nutricion_funcional', 'Nutricion Funcional'),
-    ('nutrigenomica', 'Nutrigenomica y Nutricion Personalizada'),
+    ('alimentacion_vegetariana_vegana', 'Alimentación Vegetariana y Vegana'),
+    ('nutricion_funcional', 'Nutrición Funcional'),
+    ('nutrigenomica', 'Nutrigenómica y Nutrición Personalizada'),
     # Comunitaria y Empresarial
-    ('nutricion_comunitaria', 'Nutricion Comunitaria y Salud Publica'),
-    ('nutricion_empresarial', 'Nutricion Empresarial y Corporativa'),
+    ('nutricion_comunitaria', 'Nutrición Comunitaria y Salud Pública'),
+    ('nutricion_empresarial', 'Nutrición Empresarial y Corporativa'),
 ]
 
 SPECIALTIES_DICT = {key: label for key, label in NUTRITIONIST_SPECIALTIES}
