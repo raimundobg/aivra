@@ -2265,6 +2265,37 @@ def migrate_database():
             'error': str(e)
         }), 500
 
+@app.route('/api/reset-all-data', methods=['POST'])
+def reset_all_data():
+    """Endpoint para borrar toda la data de pacientes y bookings (para testing)."""
+    try:
+        from sqlalchemy import text
+        deleted = {}
+
+        # Borrar pacientes
+        count = PatientFile.query.delete()
+        deleted['patient_files'] = count
+
+        # Borrar bookings
+        count = Booking.query.delete()
+        deleted['bookings'] = count
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'All data deleted',
+            'deleted': deleted
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 # ============================================
 # ENDPOINTS PAUTA GENERATOR
 # ============================================
