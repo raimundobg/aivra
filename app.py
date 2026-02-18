@@ -2437,30 +2437,16 @@ def reset_all_data():
     """NUCLEAR RESET: borra TODA la data de la app (para testing)."""
     try:
         from sqlalchemy import text
-        deleted = {}
 
-        # Orden: tablas hijas primero, padres después
-        tables = [
-            ('user_recipes', 'DELETE FROM user_recipes'),
-            ('bookings', 'DELETE FROM bookings'),
-            ('patient_files', 'DELETE FROM patient_files'),
-            ('nutritionist_schedules', 'DELETE FROM nutritionist_schedules'),
-            ('users', 'DELETE FROM users'),
-        ]
-
-        for name, sql in tables:
-            try:
-                result = db.session.execute(text(sql))
-                deleted[name] = result.rowcount
-            except Exception as e:
-                deleted[name] = f'error: {str(e)}'
-
+        # TRUNCATE CASCADE ignora todas las FK constraints
+        db.session.execute(text(
+            "TRUNCATE TABLE user_recipes, bookings, patient_files, nutritionist_schedules, users RESTART IDENTITY CASCADE"
+        ))
         db.session.commit()
 
         return jsonify({
             'success': True,
-            'message': 'ALL data deleted (users, patients, bookings, recipes, schedules)',
-            'deleted': deleted
+            'message': 'ALL tables truncated: users, patients, bookings, recipes, schedules'
         })
 
     except Exception as e:
