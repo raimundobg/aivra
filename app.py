@@ -2446,13 +2446,13 @@ def reset_all_data():
         except Exception:
             pass
 
+        # Borrar bookings primero (FK a patient_files)
+        count = Booking.query.delete()
+        deleted['bookings'] = count
+
         # Borrar pacientes (PatientFile)
         count = PatientFile.query.delete()
         deleted['patient_files'] = count
-
-        # Borrar bookings
-        count = Booking.query.delete()
-        deleted['bookings'] = count
 
         # Borrar usuarios tipo paciente
         count = User.query.filter_by(user_type='paciente').delete()
