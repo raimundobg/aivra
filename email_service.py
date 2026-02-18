@@ -259,6 +259,72 @@ def send_patient_welcome_email(patient_email, patient_name, password):
         return {'success': False, 'error': str(e)}
 
 
+def send_booking_reminder(booking, nutritionist, is_patient=True, time_label='en 24 horas'):
+    """
+    Send booking reminder email to patient or nutritionist.
+
+    Args:
+        booking: Booking object
+        nutritionist: User object (nutritionist)
+        is_patient: True = send to patient, False = send to nutritionist
+        time_label: Human-readable time until appointment (e.g., 'en 24 horas', 'en 1 hora')
+    """
+    if is_patient:
+        to_email = booking.client_email
+        recipient_name = booking.client_name
+        counterpart_name = nutritionist.get_full_name()
+        message_intro = f'Te recordamos que tienes una consulta agendada con <strong>{counterpart_name}</strong>.'
+    else:
+        to_email = nutritionist.email
+        recipient_name = nutritionist.get_full_name()
+        counterpart_name = booking.client_name
+        message_intro = f'Te recordamos que tienes una consulta agendada con el paciente <strong>{counterpart_name}</strong>.'
+
+    if not to_email:
+        return {'success': False, 'error': 'No email address'}
+
+    # Check if intake form is pending
+    intake_pending = False
+    intake_url = ''
+    if is_patient and booking.patient_file:
+        pf = booking.patient_file
+        if not pf.intake_completed and pf.intake_token:
+            intake_pending = True
+            intake_url = pf.get_intake_url(os.environ.get('RAILWAY_STATIC_URL', 'https://web-production-3a113.up.railway.app'))
+
+    try:
+        subject = f'Recordatorio: Cita {time_label} - BiteTrack'
+
+        html = render_template(
+            'email/booking_reminder.html',
+            recipient_name=recipient_name,
+            message_intro=message_intro,
+            booking_date=booking.booking_date.strftime('%d/%m/%Y'),
+            booking_time=booking.booking_time,
+            counterpart_name=counterpart_name,
+            specialty_label=booking.get_specialty_label(),
+            time_label=time_label,
+            is_patient=is_patient,
+            intake_pending=intake_pending,
+            intake_url=intake_url
+        )
+
+        text = (
+            f"Hola {recipient_name},\n\n"
+            f"Recordatorio: tienes una cita {time_label}.\n\n"
+            f"Fecha: {booking.booking_date.strftime('%d/%m/%Y')}\n"
+            f"Hora: {booking.booking_time}\n"
+            f"{'Nutricionista' if is_patient else 'Paciente'}: {counterpart_name}\n\n"
+            f"Saludos,\nEquipo BiteTrack"
+        )
+
+        return _send_email(to_email, subject, html, text)
+
+    except Exception as e:
+        current_app.logger.error(f"Error enviando reminder a {to_email}: {str(e)}")
+        return {'success': False, 'error': str(e)}
+
+
 def is_mail_configured():
     """Check if any email backend is configured."""
     resend_key = os.environ.get('RESEND_API_KEY', '')

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recordatorio de Cita - BiteTrack</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f7fa;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f7fa;padding:40px 0;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background:linear-gradient(135deg,#3b82f6,#2563eb);padding:32px 40px;text-align:center;">
+                            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-0.5px;">BiteTrack</h1>
+                            <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Recordatorio de Cita</p>
+                        </td>
+                    </tr>
+
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding:40px;">
+                            <h2 style="margin:0 0 16px;color:#1f2937;font-size:20px;font-weight:600;">Hola {{ recipient_name }},</h2>
+
+                            <p style="margin:0 0 24px;color:#4b5563;font-size:15px;line-height:1.6;">
+                                {{ message_intro }}
+                            </p>
+
+                            <!-- Appointment Details -->
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border-radius:8px;margin:0 0 24px;">
+                                <tr>
+                                    <td style="padding:20px;">
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="padding:4px 0;color:#374151;font-size:14px;font-weight:600;width:120px;">Fecha:</td>
+                                                <td style="padding:4px 0;color:#2563eb;font-size:14px;font-weight:700;">{{ booking_date }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:4px 0;color:#374151;font-size:14px;font-weight:600;">Hora:</td>
+                                                <td style="padding:4px 0;color:#2563eb;font-size:14px;font-weight:700;">{{ booking_time }} hrs</td>
+                                            </tr>
+                                            {% if is_patient %}
+                                            <tr>
+                                                <td style="padding:4px 0;color:#374151;font-size:14px;font-weight:600;">Nutricionista:</td>
+                                                <td style="padding:4px 0;color:#1f2937;font-size:14px;">{{ counterpart_name }}</td>
+                                            </tr>
+                                            {% else %}
+                                            <tr>
+                                                <td style="padding:4px 0;color:#374151;font-size:14px;font-weight:600;">Paciente:</td>
+                                                <td style="padding:4px 0;color:#1f2937;font-size:14px;">{{ counterpart_name }}</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if specialty_label %}
+                                            <tr>
+                                                <td style="padding:4px 0;color:#374151;font-size:14px;font-weight:600;">Especialidad:</td>
+                                                <td style="padding:4px 0;color:#1f2937;font-size:14px;">{{ specialty_label }}</td>
+                                            </tr>
+                                            {% endif %}
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            {% if time_label %}
+                            <p style="margin:0 0 24px;padding:14px 20px;background:#fef3c7;border-radius:8px;color:#92400e;font-size:14px;font-weight:500;text-align:center;">
+                                Tu cita es {{ time_label }}
+                            </p>
+                            {% endif %}
+
+                            {% if intake_pending %}
+                            <p style="margin:0 0 16px;color:#4b5563;font-size:15px;line-height:1.6;">
+                                Recuerda completar tu formulario pre-consulta antes de la cita:
+                            </p>
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center" style="padding:8px 0 24px;">
+                                        <a href="{{ intake_url }}" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#10b981,#059669);color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:8px;font-size:15px;font-weight:600;">
+                                            Completar Formulario
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            {% endif %}
+
+                            <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
+
+                            <p style="margin:0;color:#9ca3af;font-size:12px;line-height:1.5;">
+                                Si necesitas cancelar o reprogramar, contacta directamente a tu {{ 'nutricionista' if is_patient else 'paciente' }}.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color:#f9fafb;padding:24px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+                            <p style="margin:0;color:#9ca3af;font-size:12px;">
+                                Equipo BiteTrack &mdash; Nutricion inteligente
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

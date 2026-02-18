@@ -98,7 +98,7 @@ try:
     import pandas as pd
     from functools import lru_cache
     from pauta_generator import PautaInteligente
-    from email_service import init_mail, send_intake_email, send_booking_confirmation, is_mail_configured
+    from email_service import init_mail, send_intake_email, send_booking_confirmation, send_booking_reminder, is_mail_configured
 
 
     db.init_app(app)
@@ -2412,7 +2412,7 @@ def migrate_database():
         inspector = inspect(db.engine)
         results = []
 
-        # Columnas nuevas para patient_files
+        # Columnas nuevas para patient_files y bookings
         new_columns = {
             'patient_files': [
                 ('intake_token', 'VARCHAR(64)'),
@@ -2427,6 +2427,11 @@ def migrate_database():
                 ('otros_diagnosticos', 'TEXT'),
                 ('comidas_al_dia', 'VARCHAR(20)'),
                 ('patient_user_id', 'INTEGER'),
+            ],
+            'bookings': [
+                ('reminder_24h_sent', 'BOOLEAN DEFAULT FALSE'),
+                ('reminder_1h_sent', 'BOOLEAN DEFAULT FALSE'),
+                ('reminder_nutri_24h_sent', 'BOOLEAN DEFAULT FALSE'),
             ]
         }
 
@@ -2471,6 +2476,103 @@ def migrate_database():
             'success': False,
             'error': str(e)
         }), 500
+
+# ============================================
+# CRON: BOOKING REMINDERS
+# ============================================
+
+@app.route('/api/cron/send-reminders', methods=['GET', 'POST'])
+def cron_send_reminders():
+    """
+    Cron endpoint: sends booking reminders to patients and nutritionists.
+    Should be called every 30 minutes by an external cron service.
+
+    Sends:
+    - 24h reminder to patient (when booking is 20-28h away)
+    - 1h reminder to patient (when booking is 30min-2h away)
+    - 24h reminder to nutritionist (when booking is 20-28h away)
+    """
+    # Simple auth via query param to prevent abuse
+    cron_key = request.args.get('key', '')
+    expected_key = os.environ.get('CRON_SECRET', 'bitetrack-cron-2024')
+    if cron_key != expected_key:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    from datetime import timedelta
+    now = datetime.utcnow()
+    results = {'sent': [], 'errors': [], 'checked': 0}
+
+    try:
+        # Get all upcoming bookings (next 28 hours) that are pending or confirmed
+        upcoming = Booking.query.filter(
+            Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED]),
+            Booking.booking_date >= now.date(),
+            Booking.booking_date <= (now + timedelta(hours=28)).date()
+        ).all()
+
+        results['checked'] = len(upcoming)
+
+        for booking in upcoming:
+            booking_dt = booking.get_datetime()
+            if not booking_dt:
+                continue
+
+            hours_until = (booking_dt - now).total_seconds() / 3600
+
+            # Skip past bookings
+            if hours_until < 0:
+                continue
+
+            nutri = User.query.get(booking.nutritionist_id)
+            if not nutri:
+                continue
+
+            # 24h reminder to patient (20-28 hours before)
+            if 20 <= hours_until <= 28 and not booking.reminder_24h_sent:
+                result = send_booking_reminder(booking, nutri, is_patient=True, time_label='en 24 horas')
+                if result.get('success'):
+                    booking.reminder_24h_sent = True
+                    results['sent'].append(f'24h patient: {booking.client_email}')
+                else:
+                    results['errors'].append(f'24h patient {booking.client_email}: {result.get("error")}')
+
+            # 24h reminder to nutritionist (20-28 hours before)
+            if 20 <= hours_until <= 28 and not booking.reminder_nutri_24h_sent:
+                result = send_booking_reminder(booking, nutri, is_patient=False, time_label='en 24 horas')
+                if result.get('success'):
+                    booking.reminder_nutri_24h_sent = True
+                    results['sent'].append(f'24h nutri: {nutri.email}')
+                else:
+                    results['errors'].append(f'24h nutri {nutri.email}: {result.get("error")}')
+
+            # 1h reminder to patient (0.5-2 hours before)
+            if 0.5 <= hours_until <= 2 and not booking.reminder_1h_sent:
+                result = send_booking_reminder(booking, nutri, is_patient=True, time_label='en 1 hora')
+                if result.get('success'):
+                    booking.reminder_1h_sent = True
+                    results['sent'].append(f'1h patient: {booking.client_email}')
+                else:
+                    results['errors'].append(f'1h patient {booking.client_email}: {result.get("error")}')
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'checked': results['checked'],
+            'sent': results['sent'],
+            'errors': results['errors'],
+            'timestamp': now.isoformat()
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
 
 @app.route('/api/reset-all-data', methods=['GET', 'POST'])
 def reset_all_data():

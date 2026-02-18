@@ -348,10 +348,23 @@ class Booking(db.Model):
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Reminder tracking
+    reminder_24h_sent = db.Column(db.Boolean, default=False)
+    reminder_1h_sent = db.Column(db.Boolean, default=False)
+    reminder_nutri_24h_sent = db.Column(db.Boolean, default=False)
+
     patient_file = db.relationship('PatientFile', backref='booking')
 
     def get_specialty_label(self):
         return SPECIALTIES_DICT.get(self.specialty, self.specialty or '')
+
+    def get_datetime(self):
+        """Return combined datetime of booking_date + booking_time"""
+        from datetime import datetime as dt
+        try:
+            return dt.combine(self.booking_date, dt.strptime(self.booking_time, '%H:%M').time())
+        except (ValueError, TypeError):
+            return None
 
     def __repr__(self):
         return f'<Booking {self.client_name} {self.booking_date} {self.booking_time}>'
