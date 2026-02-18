@@ -295,12 +295,19 @@ async function saveSchedule() {
     btn.innerHTML = '<i class="fas fa-save" style="margin-right:0.5rem;"></i> Guardar Horario';
 }
 
-// Load existing schedule
+// Load existing schedule (auto-save defaults if none exist)
 (async function() {
     try {
         const res = await fetch('/api/nutritionist/schedule');
         const data = await res.json();
-        buildGrid(data.success ? data.schedule : []);
+        const schedule = data.success ? data.schedule : [];
+        buildGrid(schedule);
+
+        // If no schedule saved yet, auto-save the defaults (Mon-Fri 9-17)
+        if (schedule.length === 0) {
+            console.log('[SCHEDULE] No schedule found, auto-saving defaults...');
+            await saveSchedule();
+        }
     } catch(e) {
         buildGrid([]);
     }
