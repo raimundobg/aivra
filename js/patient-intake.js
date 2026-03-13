@@ -188,6 +188,7 @@
                 databaseLoaded = true;
                 console.log(`[OK] Base de datos cargada: ${result.total_grupos} grupos, ${result.total_alimentos} alimentos`);
                 initializeGroupSelects();
+                initFoodSearch();
                 return true;
             } else {
                 throw new Error(result.error || 'Error cargando alimentos');
@@ -362,31 +363,141 @@
     window.calcularGET = function() {
         const geb = calcularGEB();
         if (!geb) return null;
-        
-        const actividad = elements.actividadFisica?.value;
-        const factorActividad = CONFIG.FACTORES_ACTIVIDAD[actividad] || 1.2;
-        
-        const get = Math.round(geb * factorActividad);
-        
+
+        const fa = parseFloat(document.getElementById('factor_actividad_num')?.value) || 1.2;
+
+        const get = Math.round(geb * fa);
+
         const getValue = document.getElementById('getValue');
         const summaryGET = document.getElementById('summaryGET');
-        
-        if (getValue) getValue.textContent = get;
+
+        if (getValue) getValue.value = get;
         if (summaryGET) summaryGET.textContent = get;
-        
+
+        actualizarGetAjustado();
         markAsChanged();
         return get;
     };
-    
+
+    // Toggle between calculation methods
+    window.toggleMetodoCalculo = function() {
+        const metodo = document.getElementById('metodo_calculo')?.value;
+        const harris = document.getElementById('metodoHarrisBenedict');
+        const factorial = document.getElementById('metodoFactorial');
+        const calorimetria = document.getElementById('metodoCalorimetria');
+
+        if (harris) harris.style.display = metodo === 'tmb_fa' ? '' : 'none';
+        if (factorial) factorial.style.display = metodo === 'factorial' ? '' : 'none';
+        if (calorimetria) calorimetria.style.display = metodo === 'calorimetria' ? '' : 'none';
+
+        // Recalculate for the active method
+        if (metodo === 'tmb_fa') {
+            calcularGETdesdeFA();
+        } else if (metodo === 'factorial') {
+            calcularGETfactorial();
+        }
+        markAsChanged();
+    };
+
+    // Harris-Benedict: GEB x FA
+    window.calcularGETdesdeFA = function() {
+        const geb = calcularGEB();
+        if (!geb) return;
+        const fa = parseFloat(document.getElementById('factor_actividad_num')?.value) || 1.2;
+        const get = Math.round(geb * fa);
+        const getValue = document.getElementById('getValue');
+        if (getValue) getValue.value = get;
+        actualizarGetAjustado();
+        markAsChanged();
+    };
+
+    // Factorial: kcal/kg x peso
+    window.calcularGETfactorial = function() {
+        const peso = parseFloat(elements.peso?.value);
+        if (!peso) return;
+        const objetivo = document.getElementById('factorial_objetivo')?.value;
+        const kcalkg = parseFloat(document.getElementById('factorial_kcalkg')?.value) || 30;
+
+        // Sync kcalkg from objective selector
+        if (objetivo && document.getElementById('factorial_kcalkg')) {
+            document.getElementById('factorial_kcalkg').value = objetivo;
+        }
+
+        const factorialPeso = document.getElementById('factorialPeso');
+        if (factorialPeso) factorialPeso.textContent = peso + ' kg';
+
+        const get = Math.round(kcalkg * peso);
+        const getEl = document.getElementById('getValueFactorial');
+        if (getEl) getEl.value = get;
+
+        // Also update main getValue so macros work
+        const getValue = document.getElementById('getValue');
+        if (getValue) getValue.value = get;
+
+        actualizarGetAjustado();
+        markAsChanged();
+    };
+
+    // Manual GET override (any method)
+    window.onGetManualChange = function() {
+        actualizarGetAjustado();
+        markAsChanged();
+    };
+
+    // Apply ajuste calorico to GET -> GET Final
+    window.actualizarGetAjustado = function() {
+        const metodo = document.getElementById('metodo_calculo')?.value || 'tmb_fa';
+        let getBase = 0;
+
+        if (metodo === 'tmb_fa') {
+            getBase = parseFloat(document.getElementById('getValue')?.value) || 0;
+        } else if (metodo === 'factorial') {
+            getBase = parseFloat(document.getElementById('getValueFactorial')?.value) || 0;
+        } else if (metodo === 'calorimetria') {
+            getBase = parseFloat(document.getElementById('getValueCalorimetria')?.value) || 0;
+        }
+
+        const ajuste = parseFloat(document.getElementById('ajuste_calorico')?.value) || 0;
+        const getFinal = getBase + ajuste;
+
+        const ajustadoEl = document.getElementById('getAjustadoValue');
+        const ajustadoHidden = document.getElementById('getAjustadoHidden');
+
+        if (ajustadoEl) ajustadoEl.textContent = getFinal > 0 ? getFinal : '-';
+        if (ajustadoHidden) ajustadoHidden.value = getFinal > 0 ? getFinal : '';
+
+        // Update macros using GET Final
+        calcularMacrosConGet(getFinal > 0 ? getFinal : getBase);
+    };
+
+    // Helper: get current active GET value
+    function getActiveGET() {
+        const metodo = document.getElementById('metodo_calculo')?.value || 'tmb_fa';
+        let getBase = 0;
+        if (metodo === 'tmb_fa') {
+            getBase = parseFloat(document.getElementById('getValue')?.value) || 0;
+        } else if (metodo === 'factorial') {
+            getBase = parseFloat(document.getElementById('getValueFactorial')?.value) || 0;
+        } else if (metodo === 'calorimetria') {
+            getBase = parseFloat(document.getElementById('getValueCalorimetria')?.value) || 0;
+        }
+        const ajuste = parseFloat(document.getElementById('ajuste_calorico')?.value) || 0;
+        return (getBase + ajuste) || getBase;
+    }
+
     window.calcularMacros = function() {
-        const get = parseFloat(document.getElementById('getValue')?.textContent) || 0;
+        const get = getActiveGET();
         if (get === 0) return;
+        calcularMacrosConGet(get);
+    };
+
+    function calcularMacrosConGet(get) {
+        if (!get || get <= 0) return;
 
         const protPct = parseFloat(document.getElementById('proteinas_porcentaje')?.value) || 20;
         const carbsPct = parseFloat(document.getElementById('carbohidratos_porcentaje')?.value) || 50;
         const grasasPct = parseFloat(document.getElementById('grasas_porcentaje')?.value) || 30;
 
-        // 100% = P + C + G (macros solidos). Liquidos se calculan aparte.
         const total = protPct + carbsPct + grasasPct;
         const totalEl = document.getElementById('totalPorcentaje');
 
@@ -400,7 +511,6 @@
         const grasasG = Math.round((get * grasasPct / 100) / 9);
         const fibraG = Math.round(14 * (get / 1000));
 
-        // Liquidos: 35 ml/kg peso corporal (calculado aparte del GET)
         const peso = parseFloat(document.getElementById('peso')?.value) || 0;
         const liquidosMl = Math.round(peso * 35);
         const liquidosL = (liquidosMl / 1000).toFixed(1);
@@ -410,19 +520,34 @@
         document.getElementById('grasasG').textContent = grasasG + 'g';
         document.getElementById('fibraG').textContent = fibraG + 'g';
 
-        // Mostrar liquidos recomendados si existe el elemento
+        // gr/kg display
+        if (peso > 0) {
+            const protGrKg = document.getElementById('protGrKg');
+            const carbsGrKg = document.getElementById('carbsGrKg');
+            const grasasGrKg = document.getElementById('grasasGrKg');
+            if (protGrKg) protGrKg.textContent = (protG / peso).toFixed(1) + ' gr/kg';
+            if (carbsGrKg) carbsGrKg.textContent = (carbsG / peso).toFixed(1) + ' gr/kg';
+            if (grasasGrKg) grasasGrKg.textContent = (grasasG / peso).toFixed(1) + ' gr/kg';
+        }
+
         const liquidosEl = document.getElementById('liquidosRecomendados');
         if (liquidosEl) {
             liquidosEl.textContent = liquidosL + ' L';
         }
 
         markAsChanged();
-    };
-    
+    }
+
     window.calcularRequerimientos = function() {
+        const metodo = document.getElementById('metodo_calculo')?.value || 'tmb_fa';
         calcularGEB();
-        calcularGET();
-        calcularMacros();
+        if (metodo === 'tmb_fa') {
+            calcularGETdesdeFA();
+        } else if (metodo === 'factorial') {
+            calcularGETfactorial();
+        } else {
+            actualizarGetAjustado();
+        }
     };
     
     // ============================================
@@ -865,6 +990,231 @@
         document.getElementById('totalDiaLipidos').textContent = totalLipidos.toFixed(1) + 'g';
     }
     
+    // ============================================
+    // FOOD SEARCH (R24H text-based autocomplete)
+    // ============================================
+    let FOOD_SEARCH_LIST = []; // flat array for text search
+    let foodSearchTimeout = null;
+
+    function buildFoodSearchList() {
+        if (!ALIMENTOS_DATABASE || FOOD_SEARCH_LIST.length > 0) return;
+        for (const grupo in ALIMENTOS_DATABASE) {
+            for (const subgrupo in ALIMENTOS_DATABASE[grupo]) {
+                const items = ALIMENTOS_DATABASE[grupo][subgrupo];
+                if (!Array.isArray(items)) continue;
+                for (const alimento of items) {
+                    FOOD_SEARCH_LIST.push({
+                        nombre: alimento.nombre,
+                        grupo: grupo,
+                        subgrupo: subgrupo,
+                        medida_casera: alimento.medida_casera || '',
+                        kcal: alimento.kcal || 0,
+                        proteinas: alimento.proteinas || 0,
+                        carbohidratos: alimento.carbohidratos || 0,
+                        lipidos: alimento.lipidos || 0
+                    });
+                }
+            }
+        }
+        console.log(`[Food Search] Built search index: ${FOOD_SEARCH_LIST.length} alimentos`);
+    }
+
+    function searchFoods(query) {
+        if (!query || query.length < 2 || !FOOD_SEARCH_LIST.length) return [];
+        const terms = query.toLowerCase().split(/\s+/);
+        return FOOD_SEARCH_LIST.filter(food => {
+            const name = food.nombre.toLowerCase();
+            return terms.every(t => name.includes(t));
+        }).slice(0, 15);
+    }
+
+    function showFoodSearchResults(results, container) {
+        if (!results.length) {
+            container.style.display = 'none';
+            return;
+        }
+        container.innerHTML = results.map((food, i) => `
+            <div class="food-search-item px-3 py-2" style="cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem; transition: background 0.15s;"
+                 onmousedown="window.selectSearchFood(${i}, this)" onmouseenter="this.style.background='#f0fdf4'" onmouseleave="this.style.background=''" data-idx="${i}">
+                <div style="font-weight: 500;">${food.nombre}</div>
+                <div style="color: #94a3b8; font-size: 0.75rem;">
+                    <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 0.7rem;">${food.grupo.replace(/_/g, ' ')}</span>
+                    ${food.medida_casera} · ${food.kcal} kcal · P:${food.proteinas}g C:${food.carbohidratos}g L:${food.lipidos}g
+                </div>
+            </div>
+        `).join('');
+        container.style.display = 'block';
+        container._results = results;
+    }
+
+    // Get the currently active meal tab
+    function getActiveMealType() {
+        const activeTab = document.querySelector('#mealTabs .nav-link.active');
+        if (!activeTab) return 'desayuno';
+        const target = activeTab.getAttribute('data-bs-target');
+        return target ? target.replace('#', '') : 'desayuno';
+    }
+
+    // Select food from main search bar - add row to active meal
+    window.selectSearchFood = function(idx, el) {
+        const container = el.closest('#r24hSearchResults');
+        const results = container._results;
+        const food = results[idx];
+        if (!food) return;
+
+        const mealType = getActiveMealType();
+        addFoodToMeal(mealType, food);
+
+        container.style.display = 'none';
+        document.getElementById('r24hFoodSearch').value = '';
+    };
+
+    // Add a food item as a new row with data pre-filled
+    function addFoodToMeal(mealType, food) {
+        const table = document.getElementById(`${mealType}Table`);
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+
+        const newRow = document.createElement('tr');
+        newRow.className = 'meal-row';
+        newRow.dataset.meal = mealType;
+
+        newRow.innerHTML = `
+            <td>
+                <select class="form-select form-select-sm grupo-select" onchange="window.loadSubgrupos(this, '${mealType}')">
+                    <option value="">Grupo</option>
+                    ${Object.keys(ALIMENTOS_DATABASE).map(g =>
+                        `<option value="${g}" ${g === food.grupo ? 'selected' : ''}>${g.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>`
+                    ).join('')}
+                </select>
+            </td>
+            <td>
+                <select class="form-select form-select-sm subgrupo-select">
+                    <option value="${food.subgrupo}" selected>${food.subgrupo.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                </select>
+            </td>
+            <td>
+                <div class="position-relative">
+                    <input type="text" class="form-control form-control-sm food-text-search" value="${food.nombre}" placeholder="Buscar alimento..."
+                        style="font-weight: 500;">
+                    <div class="food-inline-results position-absolute w-100" style="z-index: 1050; display: none; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 0 0 8px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); left: 0; top: 100%;"></div>
+                </div>
+            </td>
+            <td class="porcion-cell">
+                <span>${food.medida_casera || '-'}</span>
+            </td>
+            <td class="nutrient-cell kcal-cell text-center">${food.kcal}</td>
+            <td class="nutrient-cell prot-cell text-center">${food.proteinas}</td>
+            <td class="nutrient-cell carbs-cell text-center">${food.carbohidratos}</td>
+            <td class="nutrient-cell lipidos-cell text-center">${food.lipidos}</td>
+            <td>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="window.removeRow(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(newRow);
+
+        // Attach inline search to the text input
+        const textInput = newRow.querySelector('.food-text-search');
+        attachInlineFoodSearch(textInput);
+
+        updateMealTotals(mealType);
+        markAsChanged();
+    }
+
+    // Attach inline autocomplete to a food text input
+    function attachInlineFoodSearch(input) {
+        const resultsDiv = input.closest('.position-relative')?.querySelector('.food-inline-results');
+        if (!resultsDiv) return;
+
+        input.addEventListener('input', function() {
+            clearTimeout(foodSearchTimeout);
+            foodSearchTimeout = setTimeout(() => {
+                const results = searchFoods(this.value);
+                showInlineFoodResults(results, resultsDiv, input);
+            }, 200);
+        });
+
+        input.addEventListener('blur', function() {
+            setTimeout(() => { resultsDiv.style.display = 'none'; }, 200);
+        });
+    }
+
+    function showInlineFoodResults(results, container, input) {
+        if (!results.length) {
+            container.style.display = 'none';
+            return;
+        }
+        container.innerHTML = results.map((food, i) => `
+            <div class="food-search-item px-2 py-1" style="cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 0.8rem;"
+                 onmousedown="window.selectInlineFood(${i}, this)" onmouseenter="this.style.background='#f0fdf4'" onmouseleave="this.style.background=''" data-idx="${i}">
+                <span style="font-weight: 500;">${food.nombre}</span>
+                <span style="color: #94a3b8; font-size: 0.7rem; margin-left: 4px;">${food.kcal} kcal</span>
+            </div>
+        `).join('');
+        container.style.display = 'block';
+        container._results = results;
+        container._input = input;
+    }
+
+    // Select food from inline search
+    window.selectInlineFood = function(idx, el) {
+        const container = el.closest('.food-inline-results');
+        const results = container._results;
+        const input = container._input;
+        const food = results[idx];
+        if (!food || !input) return;
+
+        const row = input.closest('tr');
+        input.value = food.nombre;
+
+        // Update grupo select
+        const grupoSelect = row.querySelector('.grupo-select');
+        if (grupoSelect) grupoSelect.value = food.grupo;
+
+        // Update subgrupo
+        const subgrupoSelect = row.querySelector('.subgrupo-select');
+        if (subgrupoSelect) {
+            subgrupoSelect.innerHTML = `<option value="${food.subgrupo}" selected>${food.subgrupo.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>`;
+            subgrupoSelect.disabled = false;
+        }
+
+        // Update porcion and nutrients
+        row.querySelector('.porcion-cell').innerHTML = `<span>${food.medida_casera || '-'}</span>`;
+        row.querySelector('.kcal-cell').textContent = food.kcal;
+        row.querySelector('.prot-cell').textContent = food.proteinas;
+        row.querySelector('.carbs-cell').textContent = food.carbohidratos;
+        row.querySelector('.lipidos-cell').textContent = food.lipidos;
+
+        container.style.display = 'none';
+        updateMealTotals(row.dataset.meal);
+        markAsChanged();
+    };
+
+    // Initialize main search bar
+    function initFoodSearch() {
+        buildFoodSearchList();
+
+        const searchInput = document.getElementById('r24hFoodSearch');
+        const resultsContainer = document.getElementById('r24hSearchResults');
+        if (!searchInput || !resultsContainer) return;
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(foodSearchTimeout);
+            foodSearchTimeout = setTimeout(() => {
+                const results = searchFoods(this.value);
+                showFoodSearchResults(results, resultsContainer);
+            }, 200);
+        });
+
+        searchInput.addEventListener('blur', function() {
+            setTimeout(() => { resultsContainer.style.display = 'none'; }, 200);
+        });
+
+        console.log('[Food Search] Main search bar initialized');
+    }
+
     function initializeGroupSelects() {
         document.querySelectorAll('.grupo-select').forEach(select => {
             select.innerHTML = '<option value="">Grupo</option>';
@@ -945,24 +1295,43 @@
                 const grupoSelect = row.querySelector('.grupo-select');
                 const subgrupoSelect = row.querySelector('.subgrupo-select');
                 const alimentoSelect = row.querySelector('.alimento-select');
+                const foodTextSearch = row.querySelector('.food-text-search');
                 const porcionCell = row.querySelector('.porcion-cell');
-                const cantidadSelect = porcionCell.querySelector('.cantidad-select');
-                
-                if (grupoSelect.value && subgrupoSelect.value && alimentoSelect.value && cantidadSelect) {
+                const cantidadSelect = porcionCell?.querySelector('.cantidad-select');
+
+                // Text-search rows (added via food search)
+                if (foodTextSearch && foodTextSearch.value.trim()) {
+                    registro[meal].push({
+                        grupo: grupoSelect?.value || '',
+                        subgrupo: subgrupoSelect?.value || '',
+                        alimento: foodTextSearch.value.trim(),
+                        alimento_nombre: foodTextSearch.value.trim(),
+                        porcion: porcionCell?.textContent?.trim() || '',
+                        medida: porcionCell?.textContent?.trim() || '',
+                        cantidad: 1,
+                        kcal: parseFloat(row.querySelector('.kcal-cell')?.textContent) || 0,
+                        proteinas: parseFloat(row.querySelector('.prot-cell')?.textContent) || 0,
+                        carbohidratos: parseFloat(row.querySelector('.carbs-cell')?.textContent) || 0,
+                        lipidos: parseFloat(row.querySelector('.lipidos-cell')?.textContent) || 0
+                    });
+                }
+                // Dropdown-based rows (original flow)
+                else if (grupoSelect?.value && subgrupoSelect?.value && alimentoSelect?.value && cantidadSelect) {
                     const selectedOption = alimentoSelect.options[alimentoSelect.selectedIndex];
                     const alimentoData = JSON.parse(selectedOption.dataset.alimento);
-                    
+
                     registro[meal].push({
                         grupo: grupoSelect.value,
                         subgrupo: subgrupoSelect.value,
-                        alimento: alimentoSelect.value,
+                        alimento: alimentoSelect.options[alimentoSelect.selectedIndex].textContent,
                         alimento_nombre: alimentoSelect.options[alimentoSelect.selectedIndex].textContent,
                         porcion: alimentoData.medida_casera,
+                        medida: alimentoData.medida_casera,
                         cantidad: parseFloat(cantidadSelect.value),
-                        kcal: parseFloat(row.querySelector('.kcal-cell').textContent) || 0,
-                        proteinas: parseFloat(row.querySelector('.prot-cell').textContent) || 0,
-                        carbohidratos: parseFloat(row.querySelector('.carbs-cell').textContent) || 0,
-                        lipidos: parseFloat(row.querySelector('.lipidos-cell').textContent) || 0
+                        kcal: parseFloat(row.querySelector('.kcal-cell')?.textContent) || 0,
+                        proteinas: parseFloat(row.querySelector('.prot-cell')?.textContent) || 0,
+                        carbohidratos: parseFloat(row.querySelector('.carbs-cell')?.textContent) || 0,
+                        lipidos: parseFloat(row.querySelector('.lipidos-cell')?.textContent) || 0
                     });
                 }
             });
@@ -1034,6 +1403,8 @@
         { id: 'nombre', label: 'Nombre Completo' },
         { id: 'fecha_nacimiento', label: 'Fecha de Nacimiento' },
         { id: 'sexo', label: 'Sexo' },
+        { id: 'peso', label: 'Peso (kg)' },
+        { id: 'talla', label: 'Talla (cm)' },
         { id: 'motivo_consulta', label: 'Motivo de Consulta' }
     ];
 
@@ -1314,6 +1685,26 @@
             fechaAtencion.value = now.toISOString().slice(0, 16);
         }
         
+        // GEB formula hover tooltip
+        const gebContainer = document.getElementById('gebContainer');
+        const gebPopup = document.getElementById('gebFormulaPopup');
+        if (gebContainer && gebPopup) {
+            gebContainer.addEventListener('mouseenter', function() { gebPopup.style.display = 'block'; });
+            gebContainer.addEventListener('mouseleave', function() { gebPopup.style.display = 'none'; });
+        }
+
+        // Sync FA from activity level dropdown if present
+        const actividadEl = document.getElementById('nivel_actividad_fisica');
+        if (actividadEl) {
+            actividadEl.addEventListener('change', function() {
+                const faMap = CONFIG.FACTORES_ACTIVIDAD;
+                const fa = faMap[this.value] || 1.2;
+                const faInput = document.getElementById('factor_actividad_num');
+                if (faInput) faInput.value = fa;
+                calcularGETdesdeFA();
+            });
+        }
+
         console.log('Patient Intake Form V3.4 inicializado correctamente');
     }
     

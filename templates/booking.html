@@ -456,7 +456,7 @@ async function submitBooking() {
             }
 
             if (data.email_sent) {
-                document.getElementById('successMsg').textContent += ' Te enviamos un email de confirmacion.';
+                document.getElementById('successMsg').textContent += ' Te enviamos un email de confirmacion. Si no lo encuentras, revisa tu carpeta de Spam o Promociones.';
             }
         } else {
             alert(data.error || 'Error al crear la reserva');

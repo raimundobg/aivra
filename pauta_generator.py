@@ -160,8 +160,9 @@ class AlimentoBase:
     keywords: Set[str] = field(default_factory=set)
     
     def __post_init__(self):
+        nombre_str = str(self.nombre) if self.nombre else ''
         self.keywords = set(
-            word.lower() for word in self.nombre.replace(',', ' ').replace('(', ' ').replace(')', ' ').split()
+            word.lower() for word in nombre_str.replace(',', ' ').replace('(', ' ').replace(')', ' ').split()
             if len(word) > 2
         )
 
@@ -266,7 +267,7 @@ class PautaInteligente:
         alimentos = []
         
         for grupo_original, subgrupos in self.raw_db.items():
-            grupo_lower = grupo_original.lower().strip()
+            grupo_lower = (str(grupo_original) if grupo_original else '').lower().strip()
             
             # Intentar match directo primero
             grupo_norm = grupo_map.get(grupo_lower)
@@ -344,17 +345,31 @@ class PautaInteligente:
                 
                 grupo = item.get('grupo', '')
                 subgrupo = item.get('subgrupo', '')
-                # El frontend puede guardar como 'alimento_idx' O como 'alimento'
-                alimento_idx = item.get('alimento_idx') or item.get('alimento')
-                
+                # El frontend puede guardar as 'alimento_idx', 'alimento', or 'alimento_nombre' (text-search rows)
+                alimento_idx = item.get('alimento_idx') or item.get('alimento') or item.get('alimento_nombre')
+
                 print(f"      📦 Item {i}: grupo='{grupo}', subgrupo='{subgrupo}', alimento={alimento_idx}")
                 
-                if not grupo:
-                    print(f"      ⚠️ Sin grupo, saltando")
+                if not grupo and not alimento_idx:
+                    print(f"      ⚠️ Sin grupo ni alimento, saltando")
                     continue
-                
-                alimento_encontrado = self._buscar_alimento_en_db(grupo, subgrupo, alimento_idx)
-                
+
+                alimento_encontrado = None
+                if grupo:
+                    alimento_encontrado = self._buscar_alimento_en_db(grupo, subgrupo, alimento_idx)
+
+                # Fallback: if grupo search failed but we have a food name, search entire DB by name
+                if not alimento_encontrado and alimento_idx:
+                    alimento_norm = self._normalizar_texto(str(alimento_idx))
+                    if alimento_norm and len(alimento_norm) >= 3:
+                        print(f"      🔄 Buscando '{alimento_norm}' en toda la base de datos...")
+                        for al in self.alimentos_db:
+                            al_norm = self._normalizar_texto(al.nombre)
+                            if alimento_norm == al_norm or alimento_norm in al_norm or al_norm in alimento_norm:
+                                alimento_encontrado = al
+                                print(f"      ✅ Match global: {al.nombre} ({al.grupo_normalizado})")
+                                break
+
                 if alimento_encontrado:
                     resultado[tiempo_norm].append({
                         'alimento': alimento_encontrado,
@@ -480,17 +495,59 @@ class PautaInteligente:
                 # Si encontramos subgrupo, buscar alimento
                 if best_items:
                     if alimento_idx is not None:
+                        # Try numeric index first
                         try:
                             idx = int(alimento_idx)
                             if 0 <= idx < len(best_items):
                                 item = best_items[idx]
                                 alimento = self._crear_alimento_base(item, db_grupo, best_subgrupo)
-                                print(f"         ✓ Alimento encontrado: {alimento.nombre}")
+                                print(f"         ✓ Alimento encontrado por idx: {alimento.nombre}")
                                 return alimento
                         except (ValueError, IndexError):
                             pass
-                    
-                    # Si no hay idx o es inválido, retornar el primero
+
+                        # Fallback: match by name (for text-search rows where alimento_idx is a food name)
+                        alimento_norm = self._normalizar_texto(str(alimento_idx))
+                        if alimento_norm:
+                            best_name_match = None
+                            best_name_score = 0
+                            for item in best_items:
+                                item_nombre = self._normalizar_texto(item.get('nombre', ''))
+                                if not item_nombre:
+                                    continue
+                                # Exact match
+                                if alimento_norm == item_nombre:
+                                    best_name_match = item
+                                    best_name_score = 100
+                                    break
+                                # Partial match: search term is contained in item name or vice versa
+                                elif alimento_norm in item_nombre and best_name_score < 80:
+                                    best_name_match = item
+                                    best_name_score = 80
+                                elif item_nombre in alimento_norm and best_name_score < 60:
+                                    best_name_match = item
+                                    best_name_score = 60
+
+                            if best_name_match:
+                                alimento = self._crear_alimento_base(best_name_match, db_grupo, best_subgrupo)
+                                print(f"         ✓ Alimento encontrado por nombre: {alimento.nombre} (score: {best_name_score})")
+                                return alimento
+
+                    # If no idx and no name match, also try searching ALL subgroups by name
+                    if alimento_idx is not None:
+                        alimento_norm = self._normalizar_texto(str(alimento_idx))
+                        if alimento_norm:
+                            for other_subgrupo, other_items in db_subgrupos.items():
+                                if not isinstance(other_items, list) or other_subgrupo == best_subgrupo:
+                                    continue
+                                for item in other_items:
+                                    item_nombre = self._normalizar_texto(item.get('nombre', ''))
+                                    if item_nombre and (alimento_norm in item_nombre or item_nombre in alimento_norm):
+                                        alimento = self._crear_alimento_base(item, db_grupo, other_subgrupo)
+                                        print(f"         ✓ Alimento encontrado en otro subgrupo: {alimento.nombre} ({other_subgrupo})")
+                                        return alimento
+
+                    # Last resort: return first item in matched subgroup
                     alimento = self._crear_alimento_base(best_items[0], db_grupo, best_subgrupo)
                     print(f"         ✓ Alimento (default): {alimento.nombre}")
                     return alimento
@@ -1007,12 +1064,15 @@ class PautaInteligente:
             return None
 
         # Penalizar alimentos ya usados mucho esta semana (variedad semanal)
-        MAX_WEEKLY_REPEATS = 3  # Un alimento no debería aparecer más de 3 veces por semana
+        # Patient-preferred foods (from R24H) get softer penalties so they appear more often
+        MAX_WEEKLY_REPEATS = 3
+        MAX_WEEKLY_REPEATS_PREFERRED = 5  # R24H foods can appear up to 5 times/week
         for c in candidatos:
             weekly_count = self.usados_semana.get(c['id'], 0)
-            if weekly_count >= MAX_WEEKLY_REPEATS:
+            max_repeats = MAX_WEEKLY_REPEATS_PREFERRED if c['es_preferido'] else MAX_WEEKLY_REPEATS
+            if weekly_count >= max_repeats:
                 c['score'] -= 80  # Fuerte penalización para evitar repetición excesiva
-            elif weekly_count >= 2:
+            elif weekly_count >= max_repeats - 1:
                 c['score'] -= 30  # Penalización moderada
             elif weekly_count >= 1:
                 c['score'] -= 10  # Penalización leve para fomentar variedad
@@ -1306,7 +1366,7 @@ class PautaInteligente:
         peso = self.patient.get('peso_kg')
         talla = self.patient.get('talla_m')
         edad = self.patient.get('edad')
-        sexo = self.patient.get('sexo', '').lower()
+        sexo = (self.patient.get('sexo') or '').lower()
         
         if not all([peso, talla, edad]):
             return 2000

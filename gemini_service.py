@@ -311,6 +311,175 @@ Puedes referenciar estos datos al responder."""
             print(f"[ERROR] Gemini chat: {e}")
             return f"Error al procesar tu mensaje. Por favor intenta de nuevo. ({str(e)[:50]})"
 
+    # ============================================
+    # MODIFICAR PAUTA CON IA
+    # ============================================
+
+    def modificar_pauta(self, pauta_actual: Optional[Dict], instruccion: str,
+                        patient_data: Optional[Dict] = None) -> Dict:
+        """
+        Modifica o genera una pauta alimentaria usando IA.
+
+        Args:
+            pauta_actual: Pauta existente a modificar (None = generar desde cero)
+            instruccion: Instruccion en lenguaje natural del nutricionista
+            patient_data: Datos del paciente
+
+        Returns:
+            Pauta modificada/generada en formato JSON
+        """
+        if not self.is_available():
+            raise RuntimeError("Gemini AI no disponible. Verifica GEMINI_API_KEY.")
+
+        # Extract patient context
+        restricciones = []
+        get_kcal = 2000
+        if patient_data:
+            restricciones = patient_data.get('restricciones_alimentarias', [])
+            if isinstance(restricciones, str):
+                restricciones = [r.strip() for r in restricciones.split(',') if r.strip()]
+            get_kcal = patient_data.get('get_kcal') or 2000
+
+        paciente_info = ""
+        if patient_data:
+            paciente_info = f"""
+DATOS DEL PACIENTE:
+- Nombre: {patient_data.get('nombre', 'Paciente')}
+- Sexo: {patient_data.get('sexo', '')}
+- Edad: {patient_data.get('edad', '')}
+- Peso: {patient_data.get('peso_kg', '')} kg
+- Talla: {patient_data.get('talla_m', '')} m
+- GET objetivo: {get_kcal} kcal/dia
+- Proteinas objetivo: {patient_data.get('proteinas_g', '')}g
+- Carbohidratos objetivo: {patient_data.get('carbohidratos_g', '')}g
+- Grasas objetivo: {patient_data.get('grasas_g', '')}g
+- Restricciones: {', '.join(restricciones) if restricciones else 'Ninguna'}
+- Alergias: {patient_data.get('alergias', 'Ninguna')}
+- Intolerancias: {patient_data.get('intolerancias', 'Ninguna')}
+- Objetivos: {patient_data.get('objetivos', '')}"""
+
+        schema_example = '''{
+  "tipo": "semanal",
+  "version": "4.1-ia",
+  "generado_en": "2026-03-13T...",
+  "paciente": {"id": 1, "nombre": "...", "objetivos": "..."},
+  "requerimientos": {"get_kcal": 2000, "proteinas_g": 100, "carbohidratos_g": 250, "grasas_g": 67},
+  "dias": {
+    "lunes": {
+      "tiempos": {
+        "desayuno": {
+          "nombre": "Desayuno", "hora": "08:00",
+          "alimentos": [
+            {"nombre": "Pan integral", "cantidad": 2, "medida_casera": "rebanadas", "gramos": 60, "kcal": 140, "proteinas": 5, "carbohidratos": 26, "lipidos": 1.5}
+          ],
+          "totales": {"kcal": 400, "proteinas": 15, "carbohidratos": 50, "lipidos": 12}
+        },
+        "colacion_am": {"nombre": "Colación AM", "hora": "10:30", "alimentos": [...], "totales": {...}},
+        "almuerzo": {"nombre": "Almuerzo", "hora": "13:00", "alimentos": [...], "totales": {...}},
+        "colacion_pm": {"nombre": "Colación PM", "hora": "16:00", "alimentos": [...], "totales": {...}},
+        "cena": {"nombre": "Cena", "hora": "20:00", "alimentos": [...], "totales": {...}}
+      },
+      "totales": {"kcal": 2000, "proteinas": 100, "carbohidratos": 250, "lipidos": 67},
+      "cumplimiento_kcal": 100.0
+    },
+    "martes": {...}, "miercoles": {...}, "jueves": {...}, "viernes": {...}, "sabado": {...}, "domingo": {...}
+  },
+  "resumen_semanal": {
+    "promedio_diario": {"kcal": 2000, "proteinas": 100, "carbohidratos": 250, "lipidos": 67},
+    "total_semanal": {"kcal": 14000},
+    "cumplimiento_promedio": 100.0
+  }
+}'''
+
+        if pauta_actual:
+            # MODIFY existing pauta
+            prompt = f"""Eres un nutricionista clinico experto. Debes MODIFICAR la pauta alimentaria semanal segun la instruccion del profesional.
+
+{paciente_info}
+
+INSTRUCCION DEL NUTRICIONISTA:
+{instruccion}
+
+PAUTA ACTUAL A MODIFICAR:
+{json.dumps(pauta_actual, ensure_ascii=False)}
+
+REGLAS CRITICAS:
+1. Modifica SOLO lo necesario para cumplir la instruccion
+2. Mantiene la estructura JSON exacta (mismas keys en todos los niveles)
+3. Recalcula los totales de kcal/proteinas/carbohidratos/lipidos en cada tiempo y dia afectado
+4. Recalcula resumen_semanal.promedio_diario y cumplimiento_promedio
+5. Respeta restricciones y alergias del paciente
+6. Mantiene el GET objetivo de {get_kcal} kcal/dia (a menos que la instruccion indique lo contrario)
+7. Usa alimentos reales chilenos/latinoamericanos con valores nutricionales realistas
+8. Cada alimento DEBE tener: nombre, cantidad, medida_casera, gramos, kcal, proteinas, carbohidratos, lipidos
+9. cumplimiento_kcal = (total_kcal_dia / {get_kcal}) * 100
+
+RESPONDE SOLO CON EL JSON COMPLETO DE LA PAUTA MODIFICADA. Sin texto adicional."""
+        else:
+            # GENERATE from scratch
+            prompt = f"""Eres un nutricionista clinico experto. Genera una pauta alimentaria semanal completa basandote en la instruccion del profesional.
+
+{paciente_info}
+
+INSTRUCCION DEL NUTRICIONISTA:
+{instruccion}
+
+ESTRUCTURA JSON REQUERIDA (sigue este esquema EXACTAMENTE):
+{schema_example}
+
+REGLAS CRITICAS:
+1. Genera 7 dias completos (lunes a domingo) con 5 tiempos de comida cada uno
+2. Cada alimento DEBE tener: nombre, cantidad, medida_casera, gramos, kcal, proteinas, carbohidratos, lipidos
+3. Los valores nutricionales deben ser REALISTAS (no inventados)
+4. Usa alimentos reales chilenos/latinoamericanos
+5. Respeta el GET de {get_kcal} kcal/dia
+6. Respeta restricciones y alergias del paciente
+7. Calcula correctamente todos los totales por tiempo, dia y semana
+8. cumplimiento_kcal = (total_kcal_dia / {get_kcal}) * 100
+9. Varia los alimentos entre dias (no repetir exactamente)
+
+RESPONDE SOLO CON EL JSON COMPLETO. Sin texto adicional."""
+
+        response = self.model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                temperature=0.2,
+                max_output_tokens=8000,
+            )
+        )
+
+        # Parse response
+        content = response.text
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0]
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0]
+
+        result = json.loads(content.strip())
+
+        # Validate required keys
+        required_keys = {'tipo', 'dias', 'requerimientos', 'resumen_semanal'}
+        missing = required_keys - set(result.keys())
+        if missing:
+            raise ValueError(f"Respuesta IA incompleta: faltan keys {missing}")
+
+        expected_dias = {'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'}
+        if not expected_dias.issubset(set(result.get('dias', {}).keys())):
+            raise ValueError("Respuesta IA: dias incompletos")
+
+        # Safety: preserve non-AI fields from original pauta
+        if pauta_actual:
+            for field in ['configuracion_dieta', 'tiempos_comida', 'paciente', 'version']:
+                if field in pauta_actual:
+                    result[field] = pauta_actual[field]
+            result['version'] = '4.1-ia-mod'
+        else:
+            result['version'] = '4.1-ia-gen'
+
+        result['generado_en'] = datetime.now().isoformat()
+
+        return result
+
     def sugerir_preguntas(self, contexto_paciente: Optional[Dict] = None) -> List[str]:
         """Genera preguntas sugeridas basadas en el contexto"""
         preguntas_base = [
@@ -353,6 +522,11 @@ def chat_con_asistente(mensaje: str, contexto_paciente: Optional[Dict] = None,
 def obtener_sugerencias_chat(contexto_paciente: Optional[Dict] = None) -> List[str]:
     """Wrapper para sugerencias de preguntas"""
     return gemini_service.sugerir_preguntas(contexto_paciente)
+
+
+def modificar_pauta_ia(pauta_actual, instruccion, patient_data=None):
+    """Wrapper para modificar/generar pauta con IA"""
+    return gemini_service.modificar_pauta(pauta_actual, instruccion, patient_data)
 
 
 def ia_disponible() -> bool:

@@ -59,7 +59,13 @@
                     <button type="button" class="btn-ficha btn-pauta" id="btnPauta" onclick="generarPauta()"
                         style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
                         <i class="fas fa-utensils"></i>
-                        <span>Generar Pauta</span>
+                        <span>Generar Pauta IA</span>
+                    </button>
+
+                    <button type="button" class="btn-ficha" onclick="abrirPautaManual()"
+                        style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white;">
+                        <i class="fas fa-edit"></i>
+                        <span>Pauta Manual</span>
                     </button>
 
                     <button type="button" class="btn-ficha btn-alertas" id="btnAlertas" onclick="cargarAlertasIA()"
@@ -91,26 +97,31 @@
     <div class="container page-wrapper">
         <!-- Patient Summary -->
         <div class="patient-summary" id="patientSummary">
-            <div class="summary-item">
+            <div class="summary-item" title="Fecha nacimiento → Hoy" style="cursor: help;">
                 <div class="summary-value" id="summaryEdad">{{ patient.calcular_edad() or '-' }}</div>
                 <div class="summary-label">Edad (años)</div>
+                <div class="formula-tooltip">Calculado desde fecha de nacimiento</div>
             </div>
             <div
-                class="summary-item {{ 'warning' if patient.imc and patient.imc >= 25 and patient.imc < 30 else 'danger' if patient.imc and patient.imc >= 30 else '' }}">
+                class="summary-item {{ 'warning' if patient.imc and patient.imc >= 25 and patient.imc < 30 else 'danger' if patient.imc and patient.imc >= 30 else '' }}" title="Peso (kg) / Talla² (m)" style="cursor: help;">
                 <div class="summary-value" id="summaryIMC">{{ patient.imc or '-' }}</div>
                 <div class="summary-label">IMC</div>
+                <div class="formula-tooltip">IMC = Peso (kg) / Talla² (m)<br>Normal: 18.5-24.9 | Sobrepeso: 25-29.9 | Obesidad: ≥30</div>
             </div>
-            <div class="summary-item">
+            <div class="summary-item" title="Durnin-Womersley (4 pliegues)" style="cursor: help;">
                 <div class="summary-value" id="summaryGrasa">{{ patient.porcentaje_grasa or '-' }}%</div>
                 <div class="summary-label">% Grasa</div>
+                <div class="formula-tooltip">Durnin-Womersley: D = C - M × log₁₀(∑4 pliegues)<br>% Grasa = (495/D) - 450<br>Pliegues: bicipital, tricipital, subescapular, supracrestídeo</div>
             </div>
-            <div class="summary-item info">
+            <div class="summary-item info" title="Harris-Benedict × Factor Actividad" style="cursor: help;">
                 <div class="summary-value" id="summaryGET">{{ patient.get_kcal or '-' }}</div>
                 <div class="summary-label">GET (kcal)</div>
+                <div class="formula-tooltip">GEB (Harris-Benedict):<br>♂ = 88.36 + 13.4×Peso + 4.8×Talla(cm) - 5.7×Edad<br>♀ = 447.6 + 9.2×Peso + 3.1×Talla(cm) - 4.3×Edad<br>GET = GEB × Factor Actividad (1.2-1.9)</div>
             </div>
-            <div class="summary-item">
+            <div class="summary-item" title="GET × %Proteínas / 4" style="cursor: help;">
                 <div class="summary-value" id="summaryProteinas">{{ patient.proteinas_g or '-' }}g</div>
                 <div class="summary-label">Proteínas</div>
+                <div class="formula-tooltip">Proteínas (g) = GET × %Prot / 4<br>1g proteína = 4 kcal</div>
             </div>
         </div>
 
@@ -215,6 +226,7 @@
                                 </label>
                                 <textarea class="form-control" id="objetivos" name="objetivos"
                                     rows="3">{{ patient.objetivos or '' }}</textarea>
+                                <div id="objetivos_display" class="mt-1" style="display:none;"></div>
                             </div>
 
                             <div class="subsection-header">
@@ -227,6 +239,7 @@
                                 </label>
                                 <textarea class="form-control" id="diagnosticos" name="diagnosticos"
                                     rows="2">{{ patient.diagnosticos or '' }}</textarea>
+                                <div id="diagnosticos_display" class="mt-1" style="display:none;"></div>
                             </div>
 
                             <div class="col-md-6">
@@ -259,6 +272,25 @@
                                 </label>
                                 <textarea class="form-control" id="intolerancias" name="intolerancias"
                                     rows="2">{{ patient.intolerancias or '' }}</textarea>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="fas fa-times-circle"></i> Alimentos que No Consume
+                                </label>
+                                <textarea class="form-control" id="alimentos_no_consume" name="alimentos_no_consume"
+                                    rows="2">{{ patient.alimentos_no_consume or '' }}</textarea>
+                            </div>
+
+                            <!-- Observaciones Section 1 -->
+                            <div class="col-12 mt-3">
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                                    <i class="fas fa-sticky-note me-1"></i> Observaciones
+                                </button>
+                                <div style="display: {{ 'block' if patient.notas_seguimiento else 'none' }}; margin-top: 8px;">
+                                    <textarea class="form-control" name="obs_antecedentes" rows="2"
+                                        placeholder="Notas u observaciones sobre antecedentes generales...">{{ patient.notas_seguimiento or '' }}</textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -385,6 +417,81 @@
                                 <input type="number" class="form-control" id="perimetro_muneca" name="perimetro_muneca"
                                     step="0.1" value="{{ patient.perimetro_muneca or '' }}">
                             </div>
+
+                            <!-- Observaciones Section 2 -->
+                            <div class="col-12 mt-3">
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                                    <i class="fas fa-sticky-note me-1"></i> Observaciones
+                                </button>
+                                <div style="display: none; margin-top: 8px;">
+                                    <textarea class="form-control" name="obs_antropometria" rows="2"
+                                        placeholder="Notas sobre mediciones antropometricas..."></textarea>
+                                </div>
+                            </div>
+
+                            <!-- FICHA-007: Expanded Anthropometry -->
+                            <div class="subsection-header mt-3">
+                                <i class="fas fa-body-text"></i> Composición Corporal Avanzada
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Método de Medición</label>
+                                <select class="form-select" name="metodo_composicion" id="metodo_composicion">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="inbody" {{ 'selected' if patient.metodo_composicion == 'inbody' }}>InBody</option>
+                                    <option value="bicompartimental" {{ 'selected' if patient.metodo_composicion == 'bicompartimental' }}>Bicompartimental</option>
+                                    <option value="tetracompartimental" {{ 'selected' if patient.metodo_composicion == 'tetracompartimental' }}>Tetracompartimental</option>
+                                    <option value="pentacompartimental" {{ 'selected' if patient.metodo_composicion == 'pentacompartimental' }}>Pentacompartimental</option>
+                                    <option value="pliegues" {{ 'selected' if patient.metodo_composicion == 'pliegues' }}>Medidas (Pliegues)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">% Grasa Corporal</label>
+                                <input type="number" class="form-control" name="porcentaje_grasa" step="0.1" value="{{ patient.porcentaje_grasa or '' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Masa Muscular (kg)</label>
+                                <input type="number" class="form-control" name="masa_muscular_kg" step="0.1" value="{{ patient.masa_muscular_kg or '' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Masa Grasa (kg)</label>
+                                <input type="number" class="form-control" name="masa_grasa_kg" step="0.1" value="{{ patient.masa_grasa_kg or '' }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Grasa Visceral</label>
+                                <input type="number" class="form-control" name="grasa_visceral" step="0.1" value="{{ patient.grasa_visceral or '' }}">
+                            </div>
+
+                            <!-- FICHA-008: Historical Measurements -->
+                            <div class="subsection-header mt-3">
+                                <i class="fas fa-chart-line"></i> Historial de Mediciones
+                            </div>
+                            <div class="col-12">
+                                <div id="historialAntroContainer">
+                                    <table class="table table-sm table-striped" style="font-size: 0.8rem;">
+                                        <thead>
+                                            <tr><th>Fecha</th><th>Peso</th><th>Talla</th><th>IMC</th><th>% Grasa</th><th>M. Muscular</th><th>M. Grasa</th><th>G. Visceral</th><th></th></tr>
+                                        </thead>
+                                        <tbody id="historialAntroBody">
+                                            {% set hist = patient.historial_antropometria or [] %}
+                                            {% if hist is iterable and hist is not string %}
+                                            {% for entry in hist %}
+                                            <tr>
+                                                <td>{{ entry.fecha }}</td><td>{{ entry.peso }}</td><td>{{ entry.talla }}</td>
+                                                <td>{{ entry.imc }}</td><td>{{ entry.grasa_pct }}</td><td>{{ entry.masa_muscular }}</td>
+                                                <td>{{ entry.masa_grasa }}</td><td>{{ entry.grasa_visceral }}</td>
+                                                <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
+                                            </tr>
+                                            {% endfor %}
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="agregarMedicionAntro()">
+                                        <i class="fas fa-plus me-1"></i> Agregar Medición
+                                    </button>
+                                </div>
+                                <canvas id="pesoEvolutionChart" height="120" class="mt-2"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -481,6 +588,44 @@
                                 <input type="number" class="form-control" id="vitamina_b12" name="vitamina_b12"
                                     step="0.1" value="{{ patient.vitamina_b12 or '' }}">
                             </div>
+
+                            <!-- FICHA-009: Biochemical History -->
+                            <div class="subsection-header mt-3">
+                                <i class="fas fa-history"></i> Historial de Exámenes
+                            </div>
+                            <div class="col-12">
+                                <table class="table table-sm table-striped" style="font-size: 0.8rem;">
+                                    <thead><tr><th>Fecha</th><th>Examen</th><th>Valor</th><th>Rango Ref.</th><th></th></tr></thead>
+                                    <tbody id="historialBioBody">
+                                        {% set histbio = patient.historial_bioquimico or [] %}
+                                        {% if histbio is iterable and histbio is not string %}
+                                        {% for entry in histbio %}
+                                        <tr><td>{{ entry.fecha }}</td><td>{{ entry.tipo }}</td><td>{{ entry.valor }}</td><td>{{ entry.rango }}</td>
+                                        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td></tr>
+                                        {% endfor %}
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="agregarExamenBio()">
+                                    <i class="fas fa-plus me-1"></i> Agregar Examen
+                                </button>
+                            </div>
+
+                            <div class="col-12 mt-3">
+                                <label class="form-label"><i class="fas fa-upload me-1"></i> Subir Informes (PDF/Imagen)</label>
+                                <input type="file" class="form-control form-control-sm" name="archivo_examen" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                            </div>
+
+                            <!-- Observaciones Section 3 -->
+                            <div class="col-12 mt-3">
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                                    <i class="fas fa-sticky-note me-1"></i> Observaciones
+                                </button>
+                                <div style="display: none; margin-top: 8px;">
+                                    <textarea class="form-control" name="obs_bioquimica" rows="2"
+                                        placeholder="Notas sobre resultados bioquimicos..."></textarea>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -548,7 +693,7 @@
                                     <i class="fas fa-running"></i> Actividad Física
                                 </label>
                                 <select class="form-select" id="actividad_fisica" name="actividad_fisica"
-                                    onchange="calcularGET()">
+                                    onchange="calcularRequerimientos(); updateAFClassification();">
                                     <option value="">Seleccionar</option>
                                     <option value="sedentario" {{ 'selected' if patient.actividad_fisica=='sedentario'
                                         }}>Sedentario</option>
@@ -561,25 +706,33 @@
                                     <option value="muy_activo" {{ 'selected' if patient.actividad_fisica=='muy_activo'
                                         }}>Muy Activo (diario)</option>
                                 </select>
+                                <div id="afClassificationBadge" class="mt-2"></div>
                             </div>
 
-                            <div class="col-md-4">
-                                <label class="form-label">Tipo de Ejercicio</label>
-                                <input type="text" class="form-control" id="tipo_ejercicio" name="tipo_ejercicio"
-                                    value="{{ patient.tipo_ejercicio or '' }}">
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Duración (min/sesión)</label>
-                                <input type="number" class="form-control" id="duracion_ejercicio"
-                                    name="duracion_ejercicio" value="{{ patient.duracion_ejercicio or '' }}">
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Percepción Esfuerzo (1-10)</label>
-                                <input type="number" class="form-control" id="percepcion_esfuerzo"
-                                    name="percepcion_esfuerzo" min="1" max="10"
-                                    value="{{ patient.percepcion_esfuerzo or '' }}">
+                            <!-- FICHA-006: Multi-activity breakdown -->
+                            <div class="col-12">
+                                <label class="form-label"><i class="fas fa-list"></i> Detalle de Actividades Físicas</label>
+                                <div id="actividadesContainer">
+                                    {% set acts = patient.actividades_detalladas or [] %}
+                                    {% if acts is iterable and acts is not string %}
+                                    {% for act in acts %}
+                                    <div class="row g-2 mb-2 actividad-row align-items-end">
+                                        <div class="col-md-3"><input type="text" class="form-control form-control-sm" placeholder="Tipo (ej: Pilates)" value="{{ act.tipo }}"></div>
+                                        <div class="col-md-2"><input type="number" class="form-control form-control-sm" placeholder="Veces/sem" value="{{ act.frecuencia }}"></div>
+                                        <div class="col-md-2"><input type="number" class="form-control form-control-sm" placeholder="Min" value="{{ act.duracion }}"></div>
+                                        <div class="col-md-2"><input type="number" class="form-control form-control-sm" placeholder="Esfuerzo 1-10" min="1" max="10" value="{{ act.esfuerzo }}"></div>
+                                        <div class="col-md-2"><input type="text" class="form-control form-control-sm" placeholder="Horario" value="{{ act.horario }}"></div>
+                                        <div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.actividad-row').remove()"><i class="fas fa-minus"></i></button></div>
+                                    </div>
+                                    {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-1" onclick="agregarActividad()">
+                                    <i class="fas fa-plus me-1"></i> Agregar Actividad
+                                </button>
+                                <input type="hidden" name="tipo_ejercicio" value="{{ patient.tipo_ejercicio or '' }}">
+                                <input type="hidden" name="duracion_ejercicio" value="{{ patient.duracion_ejercicio or '' }}">
+                                <input type="hidden" name="percepcion_esfuerzo" value="{{ patient.percepcion_esfuerzo or '' }}">
                             </div>
 
                             <div class="col-md-4">
@@ -604,7 +757,36 @@
                                 });
                             </script>
 
+                            <!-- FICHA-005: Sleep quality + stress notes -->
+                            <div class="col-md-12 mt-3">
+                                <div class="subsection-header"><i class="fas fa-bed"></i> Detalle Sueno y Estres</div>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Observaciones sobre calidad de sueno</label>
+                                <textarea class="form-control" id="observaciones_sueno" name="observaciones_sueno" rows="2"
+                                    placeholder="Ej: Despierta varias veces, cuesta conciliar, usa pantallas antes de dormir...">{{ patient.observaciones_sueno or '' }}</textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Gatillantes de estres</label>
+                                <textarea class="form-control" id="gatillantes_estres" name="gatillantes_estres" rows="2"
+                                    placeholder="Trabajo, familia, finanzas, salud...">{{ patient.gatillantes_estres or '' }}</textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Como maneja el estres</label>
+                                <textarea class="form-control" id="manejo_estres" name="manejo_estres" rows="2"
+                                    placeholder="Ejercicio, meditacion, terapia, comer...">{{ patient.manejo_estres or '' }}</textarea>
+                            </div>
 
+                            <!-- Observaciones Section 4 -->
+                            <div class="col-12 mt-3">
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                                    <i class="fas fa-sticky-note me-1"></i> Observaciones
+                                </button>
+                                <div style="display: none; margin-top: 8px;">
+                                    <textarea class="form-control" name="obs_estilo_vida" rows="2"
+                                        placeholder="Notas sobre estilo de vida..."></textarea>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -668,28 +850,9 @@
                                     value="{{ patient.delivery_restaurante or '' }}">
                             </div>
 
-                            <div class="col-md-12">
-                                <div class="subsection-header"><i class="fas fa-clock"></i> Horarios y Hábitos</div>
-                            </div>
-
+                            <!-- Conducta alimentaria (moved from Horarios subsection) -->
                             <div class="col-md-4">
-                                <label class="form-label">Horario Desayuno</label>
-                                <input type="time" class="form-control" id="horario_desayuno" name="horario_desayuno"
-                                    value="{{ patient.horario_desayuno or '' }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Horario Almuerzo</label>
-                                <input type="time" class="form-control" id="horario_almuerzo" name="horario_almuerzo"
-                                    value="{{ patient.horario_almuerzo or '' }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Horario Cena</label>
-                                <input type="time" class="form-control" id="horario_cena" name="horario_cena"
-                                    value="{{ patient.horario_cena or '' }}">
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="form-check mt-4">
+                                <div class="form-check mt-2">
                                     <input class="form-check-input" type="checkbox" id="pica_entre_comidas"
                                         name="pica_entre_comidas" value="true" {{ 'checked' if
                                         patient.pica_entre_comidas }}>
@@ -699,7 +862,7 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="form-check mt-4">
+                                <div class="form-check mt-2">
                                     <input class="form-check-input" type="checkbox" id="come_frente_tv"
                                         name="come_frente_tv" value="true" {{ 'checked' if patient.come_frente_tv }}>
                                     <label class="form-check-label" for="come_frente_tv">
@@ -708,7 +871,7 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="form-check mt-4">
+                                <div class="form-check mt-2">
                                     <input class="form-check-input" type="checkbox" id="come_rapido" name="come_rapido"
                                         value="true" {{ 'checked' if patient.come_rapido }}>
                                     <label class="form-check-label" for="come_rapido">
@@ -747,6 +910,17 @@
                                 </div>
                             </div>
                             {% endif %}
+
+                            <!-- Observaciones Section 4b -->
+                            <div class="col-12 mt-3">
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                                    <i class="fas fa-sticky-note me-1"></i> Observaciones
+                                </button>
+                                <div style="display: none; margin-top: 8px;">
+                                    <textarea class="form-control" name="obs_conducta" rows="2"
+                                        placeholder="Notas sobre conducta y entorno alimentario..."></textarea>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -777,24 +951,28 @@
                                     <i class="fas fa-chart-line"></i> Escala de Bristol
                                 </label>
                                 {% set bristol_val = patient.consistencia_heces|int if patient.consistencia_heces else 0 %}
-                                <div class="d-flex gap-1">
+                                {% set bristol_desc = {
+                                    1: 'Trozos duros separados',
+                                    2: 'Forma de salchicha grumosa',
+                                    3: 'Salchicha con grietas',
+                                    4: 'Lisa y suave (Ideal)',
+                                    5: 'Trozos blandos',
+                                    6: 'Pastosa, blanda',
+                                    7: 'Líquida, acuosa'
+                                } %}
+                                {% set bristol_class = {
+                                    1: 'bg-danger', 2: 'bg-danger',
+                                    3: 'bg-success', 4: 'bg-success',
+                                    5: 'bg-warning text-dark', 6: 'bg-orange', 7: 'bg-orange'
+                                } %}
+                                <div class="list-group list-group-flush" style="font-size: 0.8rem;">
                                     {% for i in range(1, 8) %}
-                                    <span class="badge {{ 'bg-danger' if i in [1,2] else 'bg-success' if i in [3,4] else 'bg-warning text-dark' if i == 5 else 'bg-orange' }} {{ 'border border-dark border-2' if bristol_val == i else 'opacity-25' }}"
-                                        style="padding: 0.5rem; font-size: 0.9rem; {% if i in [6,7] %}background-color: #fd7e14 !important;{% endif %}">
-                                        {{ i }}
-                                    </span>
+                                    <div class="list-group-item d-flex align-items-center px-2 py-1 {{ 'border-start border-3 border-primary fw-bold' if bristol_val == i else 'opacity-50' }}" style="background: transparent;">
+                                        <span class="badge {{ bristol_class[i] }} me-2" style="min-width: 28px; {% if i in [6,7] %}background-color: #fd7e14 !important;{% endif %}">{{ i }}</span>
+                                        <span>{{ bristol_desc[i] }}</span>
+                                    </div>
                                     {% endfor %}
                                 </div>
-                                <small class="text-muted">
-                                    {% if bristol_val == 1 %}Constipacion severa
-                                    {% elif bristol_val == 2 %}Constipacion leve
-                                    {% elif bristol_val == 3 %}Normal
-                                    {% elif bristol_val == 4 %}Ideal
-                                    {% elif bristol_val == 5 %}Falta fibra
-                                    {% elif bristol_val == 6 %}Diarrea leve
-                                    {% elif bristol_val == 7 %}Diarrea severa
-                                    {% else %}No registrado{% endif %}
-                                </small>
                                 <input type="hidden" id="consistencia_heces" name="consistencia_heces"
                                     value="{{ patient.consistencia_heces or '' }}">
                             </div>
@@ -859,6 +1037,32 @@
                                     id="consistencia_heces" name="consistencia_heces">
                             </div>
                             {% endif %}
+
+                            <!-- GI Triggers detail (FICHA-003) -->
+                            <div class="col-12 mt-3">
+                                <label class="form-label">
+                                    <i class="fas fa-exclamation-triangle text-warning"></i> Gatillantes de Sintomas GI
+                                </label>
+                                <textarea class="form-control" id="gatillantes_gi" name="gatillantes_gi" rows="3"
+                                    placeholder="Describe que alimentos, situaciones o habitos gatillan los sintomas digestivos del paciente...">{{ patient.gatillantes_gi or '' }}</textarea>
+                                {% if patient.sintomas_gi %}
+                                <div class="alert alert-warning mt-2 py-2 px-3" style="border-radius: 10px; font-size: 0.85rem;">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    <strong>Alerta:</strong> Paciente reporta sintomas GI. Considerar estos gatillantes al planificar pauta alimentaria.
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Observaciones Section 4c -->
+                            <div class="col-12 mt-3">
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                                    <i class="fas fa-sticky-note me-1"></i> Observaciones
+                                </button>
+                                <div style="display: none; margin-top: 8px;">
+                                    <textarea class="form-control" name="obs_sintomas_gi" rows="2"
+                                        placeholder="Notas sobre sintomas gastrointestinales..."></textarea>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -927,36 +1131,7 @@
                             </div>
                             {% endif %}
 
-                            <div class="col-12 mt-4">
-                                <h6 class="text-primary fw-bold mb-3"><i class="fas fa-utensils me-2"></i>Hábitos y
-                                    Horarios (Ingesta Pública)</h6>
-                                <div class="row g-3">
-                                    <div class="col-md-3">
-                                        <label class="small text-muted d-block">Desayuno</label>
-                                        <strong>{{ patient.horario_desayuno or '--:--' }}</strong>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="small text-muted d-block">Almuerzo</label>
-                                        <strong>{{ patient.horario_almuerzo or '--:--' }}</strong>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="small text-muted d-block">Cena</label>
-                                        <strong>{{ patient.horario_cena or '--:--' }}</strong>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="small text-muted d-block">Cigarrillos/día</label>
-                                        <strong>{{ patient.cigarrillos_dia if patient.fuma else '0' }}</strong>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    {% if patient.pica_entre_comidas %}<span class="badge bg-info me-1">Pica entre
-                                        comidas</span>{% endif %}
-                                    {% if patient.come_frente_tv %}<span class="badge bg-info me-1">Frente a
-                                        TV/Celular</span>{% endif %}
-                                    {% if patient.come_rapido %}<span class="badge bg-info me-1">Come rápido</span>{%
-                                    endif %}
-                                </div>
-                            </div>
+                            <!-- Ingesta Publica section removed (FICHA-002) - data now in Conducta y Entorno -->
                         </div>
                     </div>
                 </div>
@@ -980,57 +1155,98 @@
                             <i class="fas fa-clock"></i> Registro Alimentario 24 Horas
                         </div>
 
+                        <!-- Horarios de Comidas (R24H-002: moved here from Conducta y Entorno) -->
+                        <div class="row g-3 mb-4" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 12px; padding: 1rem; border: 1px solid #f59e0b33;">
+                            <div class="col-12">
+                                <h6 class="mb-2" style="font-weight: 600; color: #92400e; font-size: 0.9rem;">
+                                    <i class="fas fa-clock me-1"></i> Horarios de Comidas
+                                </h6>
+                            </div>
+                            <div class="col-md-4 col-6">
+                                <label class="form-label small fw-bold"><i class="fas fa-sun me-1 text-warning"></i> Desayuno</label>
+                                <input type="time" class="form-control form-control-sm" name="horario_desayuno" value="{{ patient.horario_desayuno or '08:00' }}">
+                            </div>
+                            <div class="col-md-4 col-6">
+                                <label class="form-label small fw-bold"><i class="fas fa-hamburger me-1 text-success"></i> Almuerzo</label>
+                                <input type="time" class="form-control form-control-sm" name="horario_almuerzo" value="{{ patient.horario_almuerzo or '13:00' }}">
+                            </div>
+                            <div class="col-md-4 col-6">
+                                <label class="form-label small fw-bold"><i class="fas fa-moon me-1 text-primary"></i> Cena</label>
+                                <input type="time" class="form-control form-control-sm" name="horario_cena" value="{{ patient.horario_cena or '20:00' }}">
+                            </div>
+                        </div>
+
+                        <!-- Food Search (R24H-001) -->
+                        <div class="mb-3 position-relative">
+                            <label class="form-label small fw-bold"><i class="fas fa-search me-1"></i> Buscar Alimento</label>
+                            <input type="text" class="form-control" id="r24hFoodSearch" placeholder="Escriba para buscar alimentos... ej: pan, leche, arroz" autocomplete="off">
+                            <div id="r24hSearchResults" class="position-absolute w-100" style="z-index: 1050; display: none; max-height: 300px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 0 0 8px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
+                        </div>
+
+                        <!-- Hidden input for JSON data on save -->
+                        <input type="hidden" id="registro_24h_data" name="registro_24h_json" value="">
+
+                        <!-- R24hrs Editable Tables (R24H-004: always editable) -->
                         <div id="registro24hContainer">
                             {% set registro = patient.registro_24h %}
-                            {% if registro and registro is mapping %}
-                            {% set meal_labels = {'desayuno': 'Desayuno', 'colacion1': 'Colación AM', 'almuerzo':
-                            'Almuerzo', 'colacion2': 'Colación PM', 'cena': 'Cena'} %}
-                            {% for meal_key, items in registro.items() %}
-                            <div class="card mb-3"
-                                style="border: 1px solid var(--bt-border-default, #e2e8f0); border-radius: 12px; overflow: hidden;">
-                                <div class="card-header"
+                            {% set meal_keys = ['desayuno', 'colacion1', 'almuerzo', 'colacion2', 'cena'] %}
+                            {% set meal_labels = {'desayuno': 'Desayuno', 'colacion1': 'Colación AM', 'almuerzo': 'Almuerzo', 'colacion2': 'Colación PM', 'cena': 'Cena'} %}
+                            {% set meal_icons = {'desayuno': 'sun', 'colacion1': 'apple-alt', 'almuerzo': 'hamburger', 'colacion2': 'apple-alt', 'cena': 'moon'} %}
+
+                            {% for meal_key in meal_keys %}
+                            <div class="card mb-3" style="border: 1px solid var(--bt-border-default, #e2e8f0); border-radius: 12px; overflow: hidden;">
+                                <div class="card-header d-flex justify-content-between align-items-center"
                                     style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-bottom: 1px solid #bbf7d0; padding: 0.75rem 1rem;">
                                     <h6 class="mb-0" style="font-weight: 600; color: #166534;">
-                                        <i
-                                            class="fas fa-{{ 'sun' if meal_key == 'desayuno' else 'apple-alt' if 'colacion' in meal_key else 'hamburger' if meal_key == 'almuerzo' else 'moon' }} me-2"></i>
-                                        {{ meal_labels.get(meal_key, meal_key|capitalize) }}
-                                        <span class="badge bg-success ms-2">{{ items|length }} alimento{{ 's' if
-                                            items|length > 1 }}</span>
+                                        <i class="fas fa-{{ meal_icons[meal_key] }} me-2"></i>
+                                        {{ meal_labels[meal_key] }}
+                                        <span class="badge bg-success ms-2 r24h-count" data-meal="{{ meal_key }}">
+                                            {% if registro and registro is mapping and registro[meal_key] %}{{ registro[meal_key]|length }}{% else %}0{% endif %}
+                                        </span>
                                     </h6>
+                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="addR24hRow('{{ meal_key }}')">
+                                        <i class="fas fa-plus me-1"></i> Agregar
+                                    </button>
                                 </div>
                                 <div class="card-body p-0">
-                                    <table class="table table-sm mb-0" style="font-size: 0.875rem;">
+                                    <table class="table table-sm mb-0" style="font-size: 0.875rem;" id="r24hTable_{{ meal_key }}">
                                         <thead style="background: #f8fafc;">
                                             <tr>
-                                                <th style="padding: 0.5rem 1rem; font-weight: 600; color: #64748b;">
-                                                    Grupo</th>
-                                                <th style="padding: 0.5rem 1rem; font-weight: 600; color: #64748b;">
-                                                    Alimento</th>
-                                                <th style="padding: 0.5rem 1rem; font-weight: 600; color: #64748b;">
-                                                    Cantidad</th>
-                                                <th style="padding: 0.5rem 1rem; font-weight: 600; color: #64748b;">
-                                                    Medida</th>
+                                                <th style="padding: 0.5rem; font-weight: 600; color: #64748b; width: 25%;">Alimento</th>
+                                                <th style="padding: 0.5rem; font-weight: 600; color: #64748b; width: 20%;">Grupo</th>
+                                                <th style="padding: 0.5rem; font-weight: 600; color: #64748b; width: 15%;">Cantidad</th>
+                                                <th style="padding: 0.5rem; font-weight: 600; color: #64748b; width: 20%;">Medida</th>
+                                                <th style="padding: 0.5rem; font-weight: 600; color: #64748b; width: 15%;">Kcal</th>
+                                                <th style="padding: 0.5rem; width: 5%;"></th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {% if items is iterable and items is not string %}
-                                            {% for item in items %}
-                                            <tr>
-                                                <td style="padding: 0.5rem 1rem;">
-                                                    <span class="badge"
-                                                        style="background: #e0f2fe; color: #0369a1; font-size: 0.8rem;">{{
-                                                        item.grupo if item is mapping else item }}</span>
+                                            {% if registro and registro is mapping and registro[meal_key] %}
+                                            {% for item in registro[meal_key] %}
+                                            {% if item is mapping %}
+                                            <tr class="r24h-row" data-meal="{{ meal_key }}">
+                                                <td style="padding: 0.4rem;">
+                                                    <input type="text" class="form-control form-control-sm r24h-alimento" value="{{ item.alimento_nombre or item.alimento or '' }}" placeholder="Buscar alimento...">
                                                 </td>
-                                                <td style="padding: 0.5rem 1rem; font-weight: 500;">{{ item.alimento
-                                                    if
-                                                    item is mapping else '-' }}</td>
-                                                <td style="padding: 0.5rem 1rem;">{{ item.cantidad if item is
-                                                    mapping
-                                                    else '-' }}</td>
-                                                <td style="padding: 0.5rem 1rem; color: #64748b;">{{ item.medida if
-                                                    item
-                                                    is mapping else '-' }}</td>
+                                                <td style="padding: 0.4rem;">
+                                                    <input type="text" class="form-control form-control-sm r24h-grupo" value="{{ item.grupo or '' }}" placeholder="Grupo" readonly style="background: #f1f5f9;">
+                                                </td>
+                                                <td style="padding: 0.4rem;">
+                                                    <input type="number" class="form-control form-control-sm r24h-cantidad" value="{{ item.cantidad or 1 }}" min="0.25" step="0.25">
+                                                </td>
+                                                <td style="padding: 0.4rem;">
+                                                    <input type="text" class="form-control form-control-sm r24h-medida" value="{{ item.medida or item.porcion or '' }}" placeholder="Medida casera">
+                                                </td>
+                                                <td style="padding: 0.4rem;">
+                                                    <span class="r24h-kcal badge bg-light text-dark">{{ item.kcal or '-' }}</span>
+                                                </td>
+                                                <td style="padding: 0.4rem;">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="this.closest('tr').remove(); updateR24hCounts();" title="Eliminar">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </td>
                                             </tr>
+                                            {% endif %}
                                             {% endfor %}
                                             {% endif %}
                                         </tbody>
@@ -1038,19 +1254,6 @@
                                 </div>
                             </div>
                             {% endfor %}
-                            {% elif registro and registro is string %}
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <pre
-                                    style="white-space: pre-wrap; margin: 0; font-family: inherit;">{{ registro }}</pre>
-                            </div>
-                            {% else %}
-                            <div class="text-center py-4" style="color: #94a3b8;">
-                                <i class="fas fa-utensils fa-2x mb-2"></i>
-                                <p class="mb-0">No hay registro alimentario 24h registrado</p>
-                                <small>Se completará cuando se llene el formulario de ingesta</small>
-                            </div>
-                            {% endif %}
                         </div>
 
                         <!-- FRECUENCIA DE CONSUMO SEMANAL -->
@@ -1058,7 +1261,7 @@
                             <i class="fas fa-calendar-week"></i> Frecuencia de Consumo Semanal
                         </div>
 
-                        <div id="frecuenciaConsumoContainer">
+                        <div id="frecuenciaConsumoContainer" data-freq="{{ (patient.frecuencia_consumo or {})|tojson|e }}">
                             {% set frecuencia = patient.frecuencia_consumo %}
                             {% if frecuencia and frecuencia is mapping %}
                             {% set freq_labels = {
@@ -1152,26 +1355,129 @@
                 <div class="collapse" id="section5">
                     <div class="accordion-content">
                         <div class="row g-4">
-                            <div class="col-md-4">
-                                <div class="calculated-field">
-                                    <div class="value" id="gebValue">{{ patient.geb_kcal or '-' }}</div>
-                                    <div class="label">GEB (kcal)</div>
+                            <!-- Método de Cálculo selector -->
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Método de Cálculo</label>
+                                <select class="form-select" name="metodo_calculo" id="metodo_calculo" onchange="toggleMetodoCalculo()">
+                                    <option value="tmb_fa" {{ 'selected' if patient.metodo_calculo == 'tmb_fa' or not patient.metodo_calculo }}>Harris-Benedict (GEB × FA)</option>
+                                    <option value="factorial" {{ 'selected' if patient.metodo_calculo == 'factorial' }}>Método Factorial (kcal/kg)</option>
+                                    <option value="calorimetria" {{ 'selected' if patient.metodo_calculo == 'calorimetria' }}>Calorimetría (manual)</option>
+                                </select>
+                            </div>
+
+                            <!-- ====== MÉTODO 1: Harris-Benedict ====== -->
+                            <div id="metodoHarrisBenedict" class="col-md-9">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-3">
+                                        <div class="calculated-field" style="cursor: help;" title="Harris-Benedict: ♂ = 88.36 + 13.4×P + 4.8×T(cm) - 5.7×E | ♀ = 447.6 + 9.2×P + 3.1×T(cm) - 4.3×E">
+                                            <div class="value" id="gebValue">{{ patient.geb_kcal or '-' }}</div>
+                                            <div class="label">GEB (kcal)</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1 text-center" style="font-size: 1.5rem; color: #64748b; padding-bottom: 1rem;">×</div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold" title="1.2=Sedentario, 1.375=Ligero, 1.55=Moderado, 1.725=Activo, 1.9=Muy activo" style="cursor: help;">
+                                            Factor Actividad <i class="fas fa-info-circle text-muted" style="font-size: 0.7rem;"></i>
+                                        </label>
+                                        <input type="number" class="form-control" id="factor_actividad_num" name="factor_actividad_num"
+                                            value="{{ patient.factor_actividad_num or 1.2 }}" min="1.0" max="2.5" step="0.05"
+                                            onchange="calcularGETdesdeFA()" style="font-weight: 700; font-size: 1.1rem; text-align: center; border: 2px solid #10b981;">
+                                        <div class="d-flex justify-content-between mt-1" style="font-size: 0.65rem; color: #94a3b8;">
+                                            <span>1.2 Sed</span><span>1.375 Lig</span><span>1.55 Mod</span><span>1.725 Act</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1 text-center" style="font-size: 1.5rem; color: #64748b; padding-bottom: 1rem;">=</div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">GET (kcal)</label>
+                                        <input type="number" class="form-control" id="getValue" name="get_kcal"
+                                            value="{{ patient.get_kcal or '' }}" step="10" placeholder="Auto"
+                                            onchange="onGetManualChange()" style="font-weight: 800; font-size: 1.2rem; text-align: center; border: 2px solid #3b82f6; color: #3b82f6;">
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
-                                <div class="calculated-field">
-                                    <div class="value" id="getValue">{{ patient.get_kcal or '-' }}</div>
-                                    <div class="label">GET (kcal)</div>
+                            <!-- ====== MÉTODO 2: Factorial (kcal/kg) ====== -->
+                            <div id="metodoFactorial" class="col-md-9" style="display: none;">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">Objetivo</label>
+                                        <select class="form-select" id="factorial_objetivo" onchange="calcularGETfactorial()">
+                                            <option value="25">Bajar peso (25 kcal/kg)</option>
+                                            <option value="30" selected>Mantener (30 kcal/kg)</option>
+                                            <option value="35">Subir peso (35 kcal/kg)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small fw-bold">kcal/kg</label>
+                                        <input type="number" class="form-control text-center" id="factorial_kcalkg" value="30"
+                                            min="20" max="50" step="1" onchange="calcularGETfactorial()" style="font-weight: 700;">
+                                    </div>
+                                    <div class="col-md-1 text-center" style="font-size: 1.5rem; color: #64748b; padding-bottom: 1rem;">×</div>
+                                    <div class="col-md-2">
+                                        <div class="calculated-field">
+                                            <div class="value" id="factorialPeso">{{ patient.peso_kg or '-' }}</div>
+                                            <div class="label">Peso (kg)</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1 text-center" style="font-size: 1.5rem; color: #64748b; padding-bottom: 1rem;">=</div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">GET (kcal)</label>
+                                        <input type="number" class="form-control" id="getValueFactorial"
+                                            value="" step="10" placeholder="Auto"
+                                            onchange="onGetManualChange()" style="font-weight: 800; font-size: 1.2rem; text-align: center; border: 2px solid #3b82f6; color: #3b82f6;">
+                                    </div>
+                                </div>
+                                <div class="mt-2 p-2 rounded" style="background: #fef3c7; font-size: 0.75rem; color: #92400e;">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    <strong>Método Factorial (ADA):</strong> 25 kcal/kg para bajar peso, 30 para mantener, 35 para subir. Para deportistas usar factores mayores.
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
-                                <button type="button" class="btn btn-primary w-100 h-100"
-                                    onclick="calcularRequerimientos()">
-                                    <i class="fas fa-sync-alt me-2"></i>
-                                    Recalcular
+                            <!-- ====== MÉTODO 3: Calorimetría (manual) ====== -->
+                            <div id="metodoCalorimetria" class="col-md-9" style="display: none;">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">GET Medido por Calorimetría (kcal)</label>
+                                        <input type="number" class="form-control" id="getValueCalorimetria"
+                                            value="" step="10" placeholder="Ingrese GET medido"
+                                            onchange="onGetManualChange()" style="font-weight: 800; font-size: 1.2rem; text-align: center; border: 2px solid #3b82f6; color: #3b82f6;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Ajuste y GET Final (shared across methods) -->
+                            <div class="col-md-6">
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-5">
+                                        <label class="form-label small fw-bold">Ajuste (kcal)</label>
+                                        <input type="number" class="form-control text-center" name="ajuste_calorico" id="ajuste_calorico"
+                                            value="{{ patient.ajuste_calorico or 0 }}" step="50" placeholder="-300"
+                                            onchange="actualizarGetAjustado()" style="font-weight: 600;">
+                                    </div>
+                                    <div class="col-1 text-center" style="font-size: 1.2rem; color: #64748b; padding-bottom: 0.5rem;">=</div>
+                                    <div class="col-5">
+                                        <div class="calculated-field {{ 'warning' if patient.ajuste_calorico and patient.ajuste_calorico < 0 else '' }}" style="border: 2px solid #10b981; border-radius: 8px; padding: 0.5rem;">
+                                            <div class="value" id="getAjustadoValue" style="font-size: 1.5rem;">{{ patient.get_kcal_ajustado or patient.get_kcal or '-' }}</div>
+                                            <div class="label fw-bold" style="color: #166534;">GET Final (kcal)</div>
+                                        </div>
+                                        <input type="hidden" name="get_kcal_ajustado" id="getAjustadoHidden" value="{{ patient.get_kcal_ajustado or '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end gap-2">
+                                <button type="button" class="btn btn-primary"
+                                    onclick="calcularRequerimientos()" title="Recalcular todo">
+                                    <i class="fas fa-sync-alt me-1"></i> Recalcular
                                 </button>
+                                <small class="text-muted">Recalcula GEB, GET y macros</small>
+                            </div>
+
+                            <!-- M9: Liquidos recomendados desde GET -->
+                            <div class="col-12">
+                                <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;font-size:13px;">
+                                    <i class="fas fa-glass-water"></i>
+                                    <span>Líquidos recomendados: <strong id="liquidosRecomendados">-</strong> ml/día (1 ml por kcal del GET)</span>
+                                </div>
                             </div>
 
                             <div class="subsection-header">
@@ -1182,21 +1488,21 @@
                                 <label class="form-label">Proteínas (%)</label>
                                 <input type="number" class="form-control" id="proteinas_porcentaje"
                                     name="proteinas_porcentaje" value="{{ patient.proteinas_porcentaje or 20 }}"
-                                    min="10" max="40" onchange="calcularMacros()">
+                                    min="10" max="40" onchange="recalcularMacrosFromGET()">
                             </div>
 
                             <div class="col-md-3">
                                 <label class="form-label">Carbohidratos (%)</label>
                                 <input type="number" class="form-control" id="carbohidratos_porcentaje"
                                     name="carbohidratos_porcentaje" value="{{ patient.carbohidratos_porcentaje or 50 }}"
-                                    min="30" max="70" onchange="calcularMacros()">
+                                    min="30" max="70" onchange="recalcularMacrosFromGET()">
                             </div>
 
                             <div class="col-md-3">
                                 <label class="form-label">Grasas (%)</label>
                                 <input type="number" class="form-control" id="grasas_porcentaje"
                                     name="grasas_porcentaje" value="{{ patient.grasas_porcentaje or 30 }}" min="15"
-                                    max="45" onchange="calcularMacros()">
+                                    max="45" onchange="recalcularMacrosFromGET()">
                             </div>
 
                             <div class="col-md-3">
@@ -1205,25 +1511,25 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <!-- PAUTA-003: Show gr/kg alongside grams -->
+                            <div class="col-md-4">
                                 <div class="calculated-field">
                                     <div class="value" id="proteinasG">{{ patient.proteinas_g or '-' }}g</div>
-                                    <div class="label">Proteínas</div>
+                                    <div class="label">Proteínas <small id="protGrKg" class="text-primary">({{ '%.1f'|format(patient.proteinas_g / patient.peso_kg) if patient.proteinas_g and patient.peso_kg else '-' }} gr/kg)</small></div>
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="calculated-field">
-                                    <div class="value" id="carbohidratosG">{{ patient.carbohidratos_g or '-' }}g
-                                    </div>
-                                    <div class="label">Carbohidratos</div>
+                                    <div class="value" id="carbohidratosG">{{ patient.carbohidratos_g or '-' }}g</div>
+                                    <div class="label">Carbohidratos <small id="carbsGrKg" class="text-info">({{ '%.1f'|format(patient.carbohidratos_g / patient.peso_kg) if patient.carbohidratos_g and patient.peso_kg else '-' }} gr/kg)</small></div>
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="calculated-field">
                                     <div class="value" id="grasasG">{{ patient.grasas_g or '-' }}g</div>
-                                    <div class="label">Grasas</div>
+                                    <div class="label">Grasas <small id="grasasGrKg" class="text-warning">({{ '%.1f'|format(patient.grasas_g / patient.peso_kg) if patient.grasas_g and patient.peso_kg else '-' }} gr/kg)</small></div>
                                 </div>
                             </div>
 
@@ -1342,8 +1648,8 @@
                                             <span class="badge" id="badgeFrutasVerduras">--</span>
                                         </div>
                                         <div class="habit-item d-flex justify-content-between align-items-center py-2">
-                                            <span><i class="fas fa-clock text-secondary me-2"></i>Fraccionamiento</span>
-                                            <span class="badge" id="badgeFraccionamiento">--</span>
+                                            <span><i class="fas fa-stomach text-secondary me-2"></i>Digestion</span>
+                                            <span class="badge" id="badgeDigestion">--</span>
                                         </div>
                                     </div>
                                     <hr>
@@ -1427,6 +1733,8 @@
         <div class="chatbot-suggestions" id="chatbotSuggestions">
             <button class="suggestion-btn" onclick="enviarSugerencia(this)">Estrategias para este paciente?</button>
             <button class="suggestion-btn" onclick="enviarSugerencia(this)">Como mejorar adherencia?</button>
+            <button class="suggestion-btn" onclick="enviarSugerencia(this)">Sugiere mejoras al R24H considerando frecuencia consumo y actividad fisica</button>
+            <button class="suggestion-btn" onclick="enviarSugerencia(this)">Que alimentos faltan en la dieta de este paciente?</button>
         </div>
         <div class="chatbot-input">
             <input type="text" id="chatInput" placeholder="Escribe tu pregunta..."
@@ -1451,8 +1759,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="/js/patient-file.js"></script>
     <script>
-        // Radar Chart de Habitos
+        // BUG-006: Format JSON arrays as readable labels
+        const _objL = {'bajar_peso':'Bajar de peso','subir_peso':'Subir de peso','ganar_masa':'Ganar masa muscular','salud_general':'Mejorar salud general','energia':'Tener más energía','digestion':'Mejorar digestión','rendimiento':'Mejorar rendimiento deportivo','habitos':'Mejorar hábitos alimenticios','condicion':'Manejar condición médica','bajar_grasa':'Bajar grasa corporal'};
+        const _diagL = {'diabetes':'Diabetes','hipertension':'Hipertensión','colesterol':'Colesterol/Triglicéridos','cancer':'Cáncer','obesidad':'Obesidad','corazon':'Enf. del Corazón','tiroides':'Tiroides','renal':'Enf. Renal','colon_irritable':'Colon Irritable','anemia':'Anemia','tca':'TCA'};
+        function _fmtJson(id, labels) { const ta=document.getElementById(id); if(!ta)return; try{const v=ta.value.trim();if(v.startsWith('[')){ta.value=JSON.parse(v).map(x=>labels[x]||x.replace(/_/g,' ')).join(', ');}}catch(e){} }
+
         document.addEventListener('DOMContentLoaded', function() {
+            _fmtJson('objetivos', _objL);
+            _fmtJson('diagnosticos', _diagL);
             initHabitosRadarChart();
         });
 
@@ -1470,7 +1784,7 @@
             const radarChart = new Chart(ctx, {
                 type: 'radar',
                 data: {
-                    labels: ['Hidratacion', 'Sueno', 'Estres', 'Actividad', 'Frutas/Verduras', 'Fraccionamiento'],
+                    labels: ['Hidratacion', 'Sueno', 'Estres', 'Actividad', 'Frutas/Verduras', 'Digestion'],
                     datasets: [{
                         label: 'Habitos del Paciente',
                         data: [
@@ -1479,7 +1793,7 @@
                             scores.estres,
                             scores.actividad,
                             scores.frutasVerduras,
-                            scores.fraccionamiento
+                            scores.digestion
                         ],
                         backgroundColor: primaryColor,
                         borderColor: primaryBorder,
@@ -1553,20 +1867,46 @@
             const actividadVal = actividadSelect?.value || 'sedentario';
             const actividad = actividadMap[actividadVal.toLowerCase()] || 2;
 
-            // Frutas y Verduras: basado en frecuencia semanal
-            const frutasRadio = document.querySelector('input[name="freq_frutas"]:checked');
-            const verdurasRadio = document.querySelector('input[name="freq_verduras"]:checked');
-            const frutas = parseInt(frutasRadio?.value) || 0;
-            const verduras = parseInt(verdurasRadio?.value) || 0;
-            const frutasVerduras = Math.min(10, ((frutas + verduras) / 14) * 10);
+            // BUG-007: Frutas y Verduras from frecuencia_consumo data
+            const freqData = JSON.parse(document.getElementById('frecuenciaConsumoContainer')?.dataset?.freq || '{}');
+            const freqScoreMap = {'nunca': 0, '1-3_mes': 1, '1_sem': 2, '2-4_sem': 4, '5-6_sem': 6, 'diario': 7, '2_dia': 10};
+            const frutasScore = freqScoreMap[freqData.frutas] || freqScoreMap[freqData.frutas_raw] || 0;
+            const verdurasScore = freqScoreMap[freqData.verduras] || freqScoreMap[freqData.verduras_raw] || 0;
+            const frutasVerduras = Math.min(10, (frutasScore + verdurasScore) / 2);
 
-            // Fraccionamiento: basado en tiempos de comida (5 tiempos = ideal)
-            const desayuno = document.getElementById('horario_desayuno')?.value ? 1 : 0;
-            const almuerzo = document.getElementById('horario_almuerzo')?.value ? 1 : 0;
-            const cena = document.getElementById('horario_cena')?.value ? 1 : 0;
-            // Asumimos colaciones si hay horarios principales
-            const tiemposComida = desayuno + almuerzo + cena;
-            const fraccionamiento = Math.min(10, (tiemposComida / 3) * 10);
+            // Digestion: based on GI symptoms, fiber intake (legumbres), evacuation frequency, Bristol scale
+            let digestion = 7; // base score, good if no issues
+
+            // Penalize for GI symptoms
+            const sintomasGI = document.querySelector('[name="sintomas_gi"]');
+            const sintomasVal = sintomasGI?.value?.toLowerCase() || '';
+            if (sintomasVal && sintomasVal !== 'ninguno' && sintomasVal !== 'no' && sintomasVal.length > 3) {
+                digestion -= 2; // has GI symptoms
+            }
+            // Penalize for reflux/bloating
+            const reflujoEl = document.getElementById('reflujo');
+            const hinchazonEl = document.getElementById('hinchazon');
+            if (reflujoEl?.checked) digestion -= 1.5;
+            if (hinchazonEl?.checked) digestion -= 1.5;
+
+            // Bonus for fiber sources (legumbres from frecuencia consumo)
+            const legumbresScore = freqScoreMap[freqData.legumbres] || 0;
+            if (legumbresScore >= 4) digestion += 1; // eats legumbres regularly
+            if (legumbresScore >= 6) digestion += 0.5;
+
+            // Bonus for good evacuation
+            const evacFreq = document.querySelector('[name="frecuencia_evacuacion"]')?.value || '';
+            if (evacFreq === 'diaria') digestion += 1;
+            else if (evacFreq === '2-3_dia') digestion += 0.5;
+            else if (evacFreq === 'irregular') digestion -= 1;
+
+            // Bristol scale: 3-4 is ideal
+            const bristolEl = document.getElementById('consistencia_heces');
+            const bristol = parseInt(bristolEl?.value) || 0;
+            if (bristol === 3 || bristol === 4) digestion += 1;
+            else if (bristol === 1 || bristol === 2 || bristol === 6 || bristol === 7) digestion -= 1;
+
+            digestion = Math.max(0, Math.min(10, digestion));
 
             return {
                 hidratacion: Math.round(hidratacion * 10) / 10,
@@ -1574,7 +1914,7 @@
                 estres: Math.round(estres * 10) / 10,
                 actividad: Math.round(actividad * 10) / 10,
                 frutasVerduras: Math.round(frutasVerduras * 10) / 10,
-                fraccionamiento: Math.round(fraccionamiento * 10) / 10
+                digestion: Math.round(digestion * 10) / 10
             };
         }
 
@@ -1591,7 +1931,7 @@
                 { id: 'badgeEstres', score: scores.estres },
                 { id: 'badgeActividad', score: scores.actividad },
                 { id: 'badgeFrutasVerduras', score: scores.frutasVerduras },
-                { id: 'badgeFraccionamiento', score: scores.fraccionamiento }
+                { id: 'badgeDigestion', score: scores.digestion }
             ];
 
             items.forEach(item => {
@@ -2013,6 +2353,495 @@
             }
         }
     </style>
+
+    <script>
+    // FICHA-006: Add activity row
+    function agregarActividad() {
+        const c = document.getElementById('actividadesContainer');
+        c.insertAdjacentHTML('beforeend', `
+            <div class="row g-2 mb-2 actividad-row align-items-end">
+                <div class="col-md-3"><input type="text" class="form-control form-control-sm" placeholder="Tipo (ej: Pilates)"></div>
+                <div class="col-md-2"><input type="number" class="form-control form-control-sm" placeholder="Veces/sem"></div>
+                <div class="col-md-2"><input type="number" class="form-control form-control-sm" placeholder="Min"></div>
+                <div class="col-md-2"><input type="number" class="form-control form-control-sm" placeholder="Esfuerzo 1-10" min="1" max="10"></div>
+                <div class="col-md-2"><input type="text" class="form-control form-control-sm" placeholder="Horario"></div>
+                <div class="col-md-1"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.actividad-row').remove()"><i class="fas fa-minus"></i></button></div>
+            </div>`);
+    }
+
+    // FICHA-008: Add anthropometry measurement row
+    function agregarMedicionAntro() {
+        const tbody = document.getElementById('historialAntroBody');
+        tbody.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td><input type="date" class="form-control form-control-sm"></td>
+                <td><input type="number" class="form-control form-control-sm" step="0.1" placeholder="kg"></td>
+                <td><input type="number" class="form-control form-control-sm" step="0.01" placeholder="m"></td>
+                <td><input type="number" class="form-control form-control-sm" step="0.1"></td>
+                <td><input type="number" class="form-control form-control-sm" step="0.1" placeholder="%"></td>
+                <td><input type="number" class="form-control form-control-sm" step="0.1" placeholder="kg"></td>
+                <td><input type="number" class="form-control form-control-sm" step="0.1" placeholder="kg"></td>
+                <td><input type="number" class="form-control form-control-sm" step="0.1"></td>
+                <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
+            </tr>`);
+    }
+
+    // FICHA-009: Add biochemistry exam row
+    function agregarExamenBio() {
+        const tbody = document.getElementById('historialBioBody');
+        tbody.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td><input type="date" class="form-control form-control-sm"></td>
+                <td><input type="text" class="form-control form-control-sm" placeholder="Ej: Glucosa"></td>
+                <td><input type="text" class="form-control form-control-sm" placeholder="Valor"></td>
+                <td><input type="text" class="form-control form-control-sm" placeholder="Rango ref."></td>
+                <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
+            </tr>`);
+    }
+
+    // ============================================
+    // REQUERIMIENTOS: Multi-method calorie calculation
+    // ============================================
+
+    // Toggle visibility based on selected method
+    function toggleMetodoCalculo() {
+        const metodo = document.getElementById('metodo_calculo').value;
+        document.getElementById('metodoHarrisBenedict').style.display = metodo === 'tmb_fa' ? '' : 'none';
+        document.getElementById('metodoFactorial').style.display = metodo === 'factorial' ? '' : 'none';
+        document.getElementById('metodoCalorimetria').style.display = metodo === 'calorimetria' ? '' : 'none';
+
+        // Recalculate for selected method
+        if (metodo === 'tmb_fa') calcularGETdesdeFA();
+        else if (metodo === 'factorial') calcularGETfactorial();
+    }
+
+    // Method 1: Harris-Benedict GEB × Factor Actividad
+    function calcularGETdesdeFA() {
+        const geb = parseFloat(document.getElementById('gebValue')?.textContent) || 0;
+        const fa = parseFloat(document.getElementById('factor_actividad_num')?.value) || 1.2;
+        if (geb > 0) {
+            const get = Math.round(geb * fa);
+            document.getElementById('getValue').value = get;
+            actualizarGetAjustado();
+            recalcularMacrosFromGET();
+        }
+    }
+
+    // Method 2: Factorial (kcal/kg × peso)
+    function calcularGETfactorial() {
+        const objetivo = document.getElementById('factorial_objetivo').value;
+        const kcalkg = parseFloat(document.getElementById('factorial_kcalkg')?.value) || parseFloat(objetivo);
+        // Sync kcal/kg input with objective dropdown
+        document.getElementById('factorial_kcalkg').value = kcalkg;
+
+        const peso = parseFloat(document.querySelector('[name="peso"]')?.value || document.getElementById('factorialPeso')?.textContent) || 0;
+        document.getElementById('factorialPeso').textContent = peso || '-';
+
+        if (peso > 0) {
+            const get = Math.round(kcalkg * peso);
+            document.getElementById('getValueFactorial').value = get;
+            // Also sync main GET
+            document.getElementById('getValue').value = get;
+            actualizarGetAjustado();
+            recalcularMacrosFromGET();
+        }
+    }
+
+    // When objective dropdown changes, sync kcal/kg
+    document.addEventListener('DOMContentLoaded', function() {
+        const objSelect = document.getElementById('factorial_objetivo');
+        if (objSelect) {
+            objSelect.addEventListener('change', function() {
+                document.getElementById('factorial_kcalkg').value = this.value;
+                calcularGETfactorial();
+            });
+        }
+        // Initialize method visibility
+        toggleMetodoCalculo();
+    });
+
+    // Manual GET override
+    function onGetManualChange() {
+        actualizarGetAjustado();
+        recalcularMacrosFromGET();
+    }
+
+    // Updated: GET is now an input, not textContent
+    function actualizarGetAjustado() {
+        const metodo = document.getElementById('metodo_calculo').value;
+        let get = 0;
+        if (metodo === 'factorial') {
+            get = parseFloat(document.getElementById('getValueFactorial')?.value) || 0;
+        } else if (metodo === 'calorimetria') {
+            get = parseFloat(document.getElementById('getValueCalorimetria')?.value) || 0;
+        } else {
+            get = parseFloat(document.getElementById('getValue')?.value) || 0;
+        }
+        const ajuste = parseInt(document.getElementById('ajuste_calorico')?.value) || 0;
+        const final_val = get + ajuste;
+        const el = document.getElementById('getAjustadoValue');
+        const hiddenEl = document.getElementById('getAjustadoHidden');
+        if (el) el.textContent = final_val > 0 ? Math.round(final_val) : '-';
+        if (hiddenEl) hiddenEl.value = final_val > 0 ? Math.round(final_val) : '';
+    }
+
+    // Recalculate macros from current GET Final
+    function recalcularMacrosFromGET() {
+        const getFinal = parseFloat(document.getElementById('getAjustadoValue')?.textContent) || 0;
+        if (getFinal <= 0) return;
+
+        const protPct = parseFloat(document.getElementById('proteinas_porcentaje')?.value) || 20;
+        const carbsPct = parseFloat(document.getElementById('carbohidratos_porcentaje')?.value) || 50;
+        const grasasPct = parseFloat(document.getElementById('grasas_porcentaje')?.value) || 30;
+
+        const protG = Math.round((getFinal * protPct / 100) / 4);
+        const carbsG = Math.round((getFinal * carbsPct / 100) / 4);
+        const grasasG = Math.round((getFinal * grasasPct / 100) / 9);
+        const fibraG = Math.round(14 * (getFinal / 1000));
+
+        const protEl = document.getElementById('proteinasG');
+        const carbsEl = document.getElementById('carbohidratosG');
+        const grasasEl = document.getElementById('grasasG');
+        const fibraEl = document.getElementById('fibraG');
+
+        if (protEl) protEl.textContent = protG + 'g';
+        if (carbsEl) carbsEl.textContent = carbsG + 'g';
+        if (grasasEl) grasasEl.textContent = grasasG + 'g';
+        if (fibraEl) fibraEl.textContent = fibraG + 'g';
+
+        // Update gr/kg
+        const peso = parseFloat(document.querySelector('[name="peso"]')?.value) || 0;
+        if (peso > 0) {
+            const protGrKg = document.getElementById('protGrKg');
+            const carbsGrKg = document.getElementById('carbsGrKg');
+            const grasasGrKg = document.getElementById('grasasGrKg');
+            if (protGrKg) protGrKg.textContent = '(' + (protG / peso).toFixed(1) + ' gr/kg)';
+            if (carbsGrKg) carbsGrKg.textContent = '(' + (carbsG / peso).toFixed(1) + ' gr/kg)';
+            if (grasasGrKg) grasasGrKg.textContent = '(' + (grasasG / peso).toFixed(1) + ' gr/kg)';
+        }
+
+        // M9: Update liquidos recomendados (1ml per kcal)
+        const liquidosEl = document.getElementById('liquidosRecomendados');
+        if (liquidosEl && getFinal > 0) liquidosEl.textContent = Math.round(getFinal);
+
+        // Update summary card
+        const summaryProt = document.getElementById('summaryProteinas');
+        if (summaryProt) summaryProt.textContent = protG + 'g';
+        const summaryGET = document.getElementById('summaryGET');
+        if (summaryGET) summaryGET.textContent = getFinal;
+    }
+
+    // AF Classification badge
+    window.updateAFClassification = function() {
+        const af = document.getElementById('actividad_fisica')?.value || '';
+        const badge = document.getElementById('afClassificationBadge');
+        if (!badge) return;
+        const classMap = {
+            'sedentario':  { label: 'Sedentario — Factor 1.2', color: '#ef4444', icon: 'fa-couch', alert: 'Riesgo: baja actividad física. Considerar plan de activación gradual.' },
+            'ligero':      { label: 'Ligero — Factor 1.375', color: '#f59e0b', icon: 'fa-walking', alert: '' },
+            'moderado':    { label: 'Moderado — Factor 1.55', color: '#10b981', icon: 'fa-running', alert: '' },
+            'activo':      { label: 'Activo — Factor 1.725', color: '#3b82f6', icon: 'fa-dumbbell', alert: '' },
+            'muy_activo':  { label: 'Muy Activo — Factor 1.9', color: '#8b5cf6', icon: 'fa-fire', alert: 'Alto gasto energético. Asegurar ingesta calórica y proteica adecuada.' }
+        };
+        const info = classMap[af];
+        if (!info) { badge.innerHTML = ''; return; }
+        let html = `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:6px;font-size:13px;font-weight:500;background:${info.color}15;color:${info.color};border:1px solid ${info.color}30;">
+            <i class="fas ${info.icon}"></i> ${info.label}</span>`;
+        if (info.alert) {
+            html += `<div style="margin-top:6px;padding:6px 10px;border-radius:6px;font-size:12px;background:#fef3c7;color:#92400e;border:1px solid #fde68a;">
+                <i class="fas fa-exclamation-triangle me-1"></i>${info.alert}</div>`;
+        }
+        badge.innerHTML = html;
+    };
+    // Initialize AF classification on load
+    document.addEventListener('DOMContentLoaded', function() { updateAFClassification(); });
+
+    // Override calcularRequerimientos to use new system
+    window.calcularRequerimientos = function() {
+        // First recalculate GEB (Harris-Benedict)
+        const peso = parseFloat(document.querySelector('[name="peso"]')?.value) || 0;
+        const talla = parseFloat(document.querySelector('[name="talla"]')?.value) || 0;
+        const sexo = document.getElementById('sexo')?.value || '';
+        const edadEl = document.getElementById('summaryEdad');
+        const edad = parseInt(edadEl?.textContent) || 30;
+
+        if (peso && talla) {
+            const alturaCm = talla * 100;
+            let geb;
+            if (sexo === 'Masculino') {
+                geb = 88.362 + (13.397 * peso) + (4.799 * alturaCm) - (5.677 * edad);
+            } else {
+                geb = 447.593 + (9.247 * peso) + (3.098 * alturaCm) - (4.330 * edad);
+            }
+            geb = Math.round(geb);
+            const gebEl = document.getElementById('gebValue');
+            if (gebEl) gebEl.textContent = geb;
+        }
+
+        // Update factorial peso display
+        const factPeso = document.getElementById('factorialPeso');
+        if (factPeso) factPeso.textContent = peso || '-';
+
+        // Recalculate based on selected method
+        const metodo = document.getElementById('metodo_calculo').value;
+        if (metodo === 'tmb_fa') calcularGETdesdeFA();
+        else if (metodo === 'factorial') calcularGETfactorial();
+        else actualizarGetAjustado();
+
+        recalcularMacrosFromGET();
+    };
+
+    // ============================================
+    // R24H: FOOD SEARCH + EDITABLE REGISTRO 24H
+    // ============================================
+    let R24H_FOOD_DB = null;
+    let R24H_FOOD_LIST = []; // flat array for search
+    let r24hSearchTimeout = null;
+    let r24hActiveInput = null; // track which alimento input triggered the search
+
+    // Load food database
+    async function loadR24hFoodDB() {
+        try {
+            const resp = await fetch('/api/alimentos');
+            const result = await resp.json();
+            if (result.success) {
+                R24H_FOOD_DB = result.data;
+                // Build flat searchable list
+                R24H_FOOD_LIST = [];
+                for (const grupo in R24H_FOOD_DB) {
+                    for (const subgrupo in R24H_FOOD_DB[grupo]) {
+                        for (const alimento of R24H_FOOD_DB[grupo][subgrupo]) {
+                            R24H_FOOD_LIST.push({
+                                nombre: alimento.nombre,
+                                grupo: grupo,
+                                subgrupo: subgrupo,
+                                medida_casera: alimento.medida_casera || '',
+                                kcal: alimento.kcal || 0,
+                                proteinas: alimento.proteinas || 0,
+                                carbohidratos: alimento.carbohidratos || 0,
+                                lipidos: alimento.lipidos || 0
+                            });
+                        }
+                    }
+                }
+                console.log(`[R24H] Food DB loaded: ${R24H_FOOD_LIST.length} alimentos`);
+            }
+        } catch (e) {
+            console.error('[R24H] Error loading food DB:', e);
+        }
+    }
+
+    // Search foods
+    function searchR24hFoods(query) {
+        if (!query || query.length < 2 || !R24H_FOOD_LIST.length) return [];
+        const terms = query.toLowerCase().split(/\s+/);
+        return R24H_FOOD_LIST.filter(food => {
+            const name = food.nombre.toLowerCase();
+            return terms.every(t => name.includes(t));
+        }).slice(0, 15);
+    }
+
+    // Show search results dropdown (for the main search bar)
+    function showR24hSearchResults(results, targetContainer) {
+        const container = targetContainer || document.getElementById('r24hSearchResults');
+        if (!results.length) {
+            container.style.display = 'none';
+            return;
+        }
+        container.innerHTML = results.map((food, i) => `
+            <div class="r24h-search-item px-3 py-2" style="cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem;"
+                 onmousedown="selectR24hFood(${i}, this)" data-idx="${i}">
+                <div style="font-weight: 500;">${food.nombre}</div>
+                <div style="color: #94a3b8; font-size: 0.75rem;">
+                    <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 0.7rem;">${food.grupo.replace(/_/g, ' ')}</span>
+                    ${food.medida_casera} · ${food.kcal} kcal
+                </div>
+            </div>
+        `).join('');
+        container.style.display = 'block';
+        // Store the results for reference
+        container._results = results;
+    }
+
+    // Select food from main search bar - adds to first visible meal with no alimento
+    function selectR24hFood(idx, el) {
+        const container = el.closest('#r24hSearchResults, .r24h-inline-results');
+        const results = container._results;
+        const food = results[idx];
+        if (!food) return;
+
+        // If triggered from an inline row input
+        if (r24hActiveInput) {
+            const row = r24hActiveInput.closest('tr');
+            r24hActiveInput.value = food.nombre;
+            row.querySelector('.r24h-grupo').value = food.grupo.replace(/_/g, ' ');
+            row.querySelector('.r24h-medida').value = food.medida_casera;
+            row.querySelector('.r24h-kcal').textContent = food.kcal;
+            container.style.display = 'none';
+            r24hActiveInput = null;
+            updateR24hCounts();
+            return;
+        }
+
+        // From main search bar: find first meal with an empty row, or add to desayuno
+        const meals = ['desayuno', 'colacion1', 'almuerzo', 'colacion2', 'cena'];
+        let targetMeal = 'desayuno';
+        for (const meal of meals) {
+            const table = document.getElementById('r24hTable_' + meal);
+            const emptyRow = table?.querySelector('tbody .r24h-row .r24h-alimento[value=""]');
+            if (emptyRow) {
+                targetMeal = meal;
+                break;
+            }
+        }
+        addR24hRow(targetMeal, food);
+        container.style.display = 'none';
+        document.getElementById('r24hFoodSearch').value = '';
+    }
+
+    // Add a new row to a meal table
+    function addR24hRow(mealKey, foodData) {
+        const table = document.getElementById('r24hTable_' + mealKey);
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        const tr = document.createElement('tr');
+        tr.className = 'r24h-row';
+        tr.dataset.meal = mealKey;
+        tr.innerHTML = `
+            <td style="padding: 0.4rem; position: relative;">
+                <input type="text" class="form-control form-control-sm r24h-alimento" value="${foodData ? foodData.nombre : ''}" placeholder="Buscar alimento...">
+                <div class="r24h-inline-results position-absolute w-100" style="z-index: 1050; display: none; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 0 0 8px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); left: 0; top: 100%;"></div>
+            </td>
+            <td style="padding: 0.4rem;">
+                <input type="text" class="form-control form-control-sm r24h-grupo" value="${foodData ? foodData.grupo.replace(/_/g, ' ') : ''}" placeholder="Grupo" readonly style="background: #f1f5f9;">
+            </td>
+            <td style="padding: 0.4rem;">
+                <input type="number" class="form-control form-control-sm r24h-cantidad" value="${foodData ? 1 : 1}" min="0.25" step="0.25">
+            </td>
+            <td style="padding: 0.4rem;">
+                <input type="text" class="form-control form-control-sm r24h-medida" value="${foodData ? foodData.medida_casera : ''}" placeholder="Medida casera">
+            </td>
+            <td style="padding: 0.4rem;">
+                <span class="r24h-kcal badge bg-light text-dark">${foodData ? foodData.kcal : '-'}</span>
+            </td>
+            <td style="padding: 0.4rem;">
+                <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="this.closest('tr').remove(); updateR24hCounts();" title="Eliminar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+
+        // Attach inline search to the new alimento input
+        const input = tr.querySelector('.r24h-alimento');
+        attachR24hInlineSearch(input);
+
+        updateR24hCounts();
+        input.focus();
+    }
+
+    // Attach inline food search to an alimento input
+    function attachR24hInlineSearch(input) {
+        const resultsDiv = input.closest('td').querySelector('.r24h-inline-results');
+        if (!resultsDiv) return;
+
+        input.addEventListener('input', function() {
+            r24hActiveInput = this;
+            clearTimeout(r24hSearchTimeout);
+            r24hSearchTimeout = setTimeout(() => {
+                const results = searchR24hFoods(this.value);
+                showR24hSearchResults(results, resultsDiv);
+            }, 200);
+        });
+
+        input.addEventListener('blur', function() {
+            setTimeout(() => { resultsDiv.style.display = 'none'; }, 200);
+        });
+    }
+
+    // Update meal count badges
+    function updateR24hCounts() {
+        const meals = ['desayuno', 'colacion1', 'almuerzo', 'colacion2', 'cena'];
+        meals.forEach(meal => {
+            const table = document.getElementById('r24hTable_' + meal);
+            if (!table) return;
+            const rows = table.querySelectorAll('tbody .r24h-row');
+            const filledRows = Array.from(rows).filter(r => r.querySelector('.r24h-alimento')?.value?.trim());
+            const badge = document.querySelector(`.r24h-count[data-meal="${meal}"]`);
+            if (badge) badge.textContent = filledRows.length;
+        });
+    }
+
+    // Collect R24H data for saving
+    function collectR24hDataFromFicha() {
+        const meals = ['desayuno', 'colacion1', 'almuerzo', 'colacion2', 'cena'];
+        const registro = {};
+        meals.forEach(meal => {
+            const table = document.getElementById('r24hTable_' + meal);
+            if (!table) return;
+            registro[meal] = [];
+            table.querySelectorAll('tbody .r24h-row').forEach(row => {
+                const alimento = row.querySelector('.r24h-alimento')?.value?.trim();
+                if (!alimento) return;
+                registro[meal].push({
+                    alimento: alimento,
+                    alimento_nombre: alimento,
+                    grupo: row.querySelector('.r24h-grupo')?.value || '',
+                    cantidad: parseFloat(row.querySelector('.r24h-cantidad')?.value) || 1,
+                    medida: row.querySelector('.r24h-medida')?.value || '',
+                    kcal: parseInt(row.querySelector('.r24h-kcal')?.textContent) || 0
+                });
+            });
+        });
+        return registro;
+    }
+
+    // Initialize R24H on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadR24hFoodDB();
+
+        // Main search bar
+        const searchInput = document.getElementById('r24hFoodSearch');
+        const searchResults = document.getElementById('r24hSearchResults');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                r24hActiveInput = null; // main search bar, not inline
+                clearTimeout(r24hSearchTimeout);
+                r24hSearchTimeout = setTimeout(() => {
+                    const results = searchR24hFoods(this.value);
+                    showR24hSearchResults(results, searchResults);
+                }, 200);
+            });
+            searchInput.addEventListener('blur', function() {
+                setTimeout(() => { searchResults.style.display = 'none'; }, 200);
+            });
+        }
+
+        // Attach inline search to existing pre-filled rows
+        document.querySelectorAll('.r24h-alimento').forEach(input => {
+            // Create inline results div if not present
+            let resultsDiv = input.closest('td').querySelector('.r24h-inline-results');
+            if (!resultsDiv) {
+                resultsDiv = document.createElement('div');
+                resultsDiv.className = 'r24h-inline-results position-absolute w-100';
+                resultsDiv.style.cssText = 'z-index: 1050; display: none; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 0 0 8px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); left: 0; top: 100%;';
+                input.closest('td').style.position = 'relative';
+                input.closest('td').appendChild(resultsDiv);
+            }
+            attachR24hInlineSearch(input);
+        });
+
+        // Hover effect for search items
+        document.addEventListener('mouseover', function(e) {
+            const item = e.target.closest('.r24h-search-item');
+            if (item) item.style.background = '#f0fdf4';
+        });
+        document.addEventListener('mouseout', function(e) {
+            const item = e.target.closest('.r24h-search-item');
+            if (item) item.style.background = '';
+        });
+    });
+    </script>
 </body>
 
 </html>

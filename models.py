@@ -425,6 +425,7 @@ class PatientFile(db.Model):
     suplementos = db.Column(db.Text)   # Suplementos actuales
     alergias = db.Column(db.Text)      # Alergias alimentarias
     intolerancias = db.Column(db.Text) # Intolerancias
+    alimentos_no_consume = db.Column(db.Text)  # Alimentos que no consume (por gusto u otros motivos)
     cirugias = db.Column(db.Text)      # Cirugías previas
     antecedentes_familiares = db.Column(db.Text)
     otros_diagnosticos = db.Column(db.Text)  # Diagnosticos adicionales (campo libre)
@@ -448,6 +449,7 @@ class PatientFile(db.Model):
 
     # Síntomas Gastrointestinales
     frecuencia_evacuacion = db.Column(db.String(50))
+    gatillantes_gi = db.Column(db.Text)  # Triggers for GI symptoms
     reflujo = db.Column(db.String(10))
     reflujo_alimento = db.Column(db.Text)
     hinchazon = db.Column(db.String(10))
@@ -569,20 +571,41 @@ class PatientFile(db.Model):
     restricciones_alimentarias = db.Column(db.JSON)  # ["vegetariano", "vegano", "sin_gluten", "sin_lactosa", "kosher", "halal"]
     delivery_restaurante = db.Column(db.Integer)  # 0-7 veces/semana
     
+    # ===== 6.2 EXPANDED ANTHROPOMETRY (FICHA-007) =====
+    masa_muscular_kg = db.Column(db.Float)      # Masa muscular en kg
+    grasa_visceral = db.Column(db.Float)        # Grasa visceral (nivel)
+    metodo_composicion = db.Column(db.String(50))  # InBody, Bicompartimental, etc.
+
+    # ===== 6.3 HISTORICAL DATA (FICHA-008, FICHA-009) =====
+    historial_antropometria = db.Column(db.JSON)  # [{fecha, peso, talla, imc, grasa_pct, masa_muscular, masa_grasa, grasa_visceral}]
+    historial_bioquimico = db.Column(db.JSON)     # [{fecha, tipo_examen, valor, rango_referencia, archivo}]
+    archivos_examenes = db.Column(db.JSON)        # [{nombre, fecha, ruta}]
+
+    # ===== 6.4 MULTI-ACTIVITY (FICHA-006) =====
+    actividades_detalladas = db.Column(db.JSON)  # [{tipo, frecuencia_semanal, duracion_min, esfuerzo, horario}]
+    clasificacion_actividad = db.Column(db.String(20))  # sedentario, ligero, moderado, vigoroso
+
     # ===== 7. REQUERIMIENTOS NUTRICIONALES =====
     # Calculados automáticamente
     get_kcal = db.Column(db.Float)           # Gasto Energético Total
     geb_kcal = db.Column(db.Float)           # Gasto Energético Basal (Harris-Benedict)
     factor_actividad = db.Column(db.Float)
+    factor_actividad_num = db.Column(db.Float)  # Numeric FA input (1.0-2.5) for Harris-Benedict method
     factor_estres = db.Column(db.Float)
-    
+    metodo_calculo = db.Column(db.String(30))  # calorimetria, tmb_fa, factorial (PAUTA-001)
+    ajuste_calorico = db.Column(db.Integer)    # +/- kcal deficit/superavit (PAUTA-002)
+    get_kcal_ajustado = db.Column(db.Float)    # GET final after adjustment
+
     # Macronutrientes objetivo
     proteinas_g = db.Column(db.Float)
     proteinas_porcentaje = db.Column(db.Float)
+    proteinas_grkg = db.Column(db.Float)       # gr/kg body weight (PAUTA-003)
     carbohidratos_g = db.Column(db.Float)
     carbohidratos_porcentaje = db.Column(db.Float)
+    carbohidratos_grkg = db.Column(db.Float)   # gr/kg body weight (PAUTA-003)
     grasas_g = db.Column(db.Float)
     grasas_porcentaje = db.Column(db.Float)
+    grasas_grkg = db.Column(db.Float)          # gr/kg body weight (PAUTA-003)
     fibra_g = db.Column(db.Float)
     
     # ===== 8. DIAGNÓSTICO NUTRICIONAL =====
@@ -930,6 +953,10 @@ class PatientFile(db.Model):
             'riesgo_cardiovascular': self.riesgo_cardiovascular,
             'geb_kcal': self.geb_kcal,
             'get_kcal': self.get_kcal,
+            'get_kcal_ajustado': self.get_kcal_ajustado,
+            'factor_actividad_num': self.factor_actividad_num,
+            'metodo_calculo': self.metodo_calculo,
+            'ajuste_calorico': self.ajuste_calorico,
             'proteinas_g': self.proteinas_g,
             'carbohidratos_g': self.carbohidratos_g,
             'grasas_g': self.grasas_g,
@@ -961,6 +988,7 @@ class PatientFile(db.Model):
 
             # Sintomas GI
             'frecuencia_evacuacion': self.frecuencia_evacuacion,
+            'gatillantes_gi': self.gatillantes_gi,
             'consistencia_heces': self.consistencia_heces,  # Escala Bristol
             'sintomas_gi': self.sintomas_gi,
             'reflujo': self.reflujo,
@@ -971,6 +999,7 @@ class PatientFile(db.Model):
             'alergias_alimento': self.alergias_alimento,
             'alergias': self.alergias,
             'intolerancias': self.intolerancias,
+            'alimentos_no_consume': self.alimentos_no_consume,
             'restricciones_alimentarias': self.restricciones_alimentarias,
 
             # CRITICAL: Frecuencia de Consumo y Registro 24h

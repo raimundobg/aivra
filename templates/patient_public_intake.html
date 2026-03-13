@@ -513,6 +513,13 @@
             border-spacing: 0;
         }
 
+        .efc-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: white;
+        }
+
         .efc-table th {
             font-size: 0.6875rem;
             font-weight: 600;
@@ -521,6 +528,7 @@
             padding: 0.5rem 0.25rem;
             border-bottom: 2px solid var(--gray-200);
             white-space: nowrap;
+            background: white;
         }
 
         .efc-table th:first-child {
@@ -771,9 +779,18 @@
 
 
                     <div class="col-12">
-                        <label class="form-label">Direccion (opcional)</label>
+                        <label class="form-label">Direccion <span class="required">*</span></label>
                         <input type="text" class="form-control" name="direccion" value="{{ patient.direccion or '' }}"
-                            placeholder="Ciudad, Comuna">
+                            required placeholder="Ciudad, Comuna">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">RUT <span class="required">*</span></label>
+                        <input type="text" class="form-control" name="rut" value="{{ patient.rut or '' }}"
+                            required placeholder="Ej: 12.345.678-9"
+                            pattern="^[0-9]{1,2}\.?[0-9]{3}\.?[0-9]{3}-?[0-9kK]$"
+                            title="Formato RUT: 12.345.678-9"
+                            oninput="formatRUT(this)">
                     </div>
                 </div>
 
@@ -940,6 +957,12 @@
                         <textarea class="form-control" name="intolerancias" rows="2"
                             placeholder="Alimentos que te caen mal o te producen malestar">{{ patient.intolerancias or '' }}</textarea>
                     </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Alimentos que NO consumes (por gusto u otros motivos)</label>
+                        <textarea class="form-control" name="alimentos_no_consume" rows="2"
+                            placeholder="Ej: Betarraga, higado, aceitunas, etc.">{{ patient.alimentos_no_consume or '' }}</textarea>
+                    </div>
                 </div>
 
                 <div class="nav-buttons">
@@ -1018,12 +1041,25 @@
 
                     <div class="col-md-6">
                         <label class="form-label">Consumo de alcohol</label>
-                        <select class="form-select" name="consumo_alcohol">
+                        <select class="form-select" name="consumo_alcohol" onchange="toggleTipoAlcohol(this.value)">
                             <option value="">Seleccionar...</option>
                             <option value="nunca">Nunca</option>
                             <option value="ocasional">Ocasionalmente (eventos)</option>
                             <option value="semanal">1-2 veces por semana</option>
                             <option value="frecuente">3+ veces por semana</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6" id="tipoAlcoholWrapper" style="display: none;">
+                        <label class="form-label">Tipo de alcohol que consumes</label>
+                        <select class="form-select" name="tipo_alcohol">
+                            <option value="">Seleccionar...</option>
+                            <option value="vino">Vino</option>
+                            <option value="cerveza">Cerveza</option>
+                            <option value="pisco">Pisco</option>
+                            <option value="coctel">Cóctel</option>
+                            <option value="destilado">Destilado (Vodka, Ron, etc)</option>
+                            <option value="otro">Otro</option>
                         </select>
                     </div>
 
@@ -1038,6 +1074,12 @@
                     <div class="col-md-6" id="cigarrillos_wrapper" style="display: none;">
                         <label class="form-label">¿Cuantos cigarrillos al dia?</label>
                         <input type="number" class="form-control" name="cigarrillos_dia" value="0" min="0">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label"><i class="fas fa-glass-water me-2 text-info"></i>Agua (litros/dia)</label>
+                        <input type="number" class="form-control" name="consumo_agua_litros" step="0.5" min="0" max="10" placeholder="Ej: 1.5">
+                        <small class="text-muted">Recomendado: minimo 2 litros (8 vasos) al dia</small>
                     </div>
 
                     <div class="col-md-6">
@@ -1146,6 +1188,10 @@
                                 <i class="fas fa-dumbbell"></i> Ganar masa muscular
                             </label>
                             <label class="checkbox-pill">
+                                <input type="checkbox" name="objetivos" value="bajar_grasa">
+                                <i class="fas fa-fire"></i> Bajar grasa corporal
+                            </label>
+                            <label class="checkbox-pill">
                                 <input type="checkbox" name="objetivos" value="mejorar_salud">
                                 <i class="fas fa-heart"></i> Mejorar salud general
                             </label>
@@ -1204,6 +1250,13 @@
                                 <i class="fas fa-check"></i> Ninguno
                             </label>
                         </div>
+                    </div>
+
+                    <!-- GI Triggers (conditional, shown when any symptom selected) -->
+                    <div class="col-12" id="giTriggersWrapper" style="display: none;">
+                        <label class="form-label">Que alimentos o situaciones gatillan estos sintomas?</label>
+                        <textarea class="form-control" name="gatillantes_gi" rows="2"
+                            placeholder="Ej: lacteos, legumbres, comida grasa, comer rapido, estres..."></textarea>
                     </div>
 
                     <!-- Bristol Scale -->
@@ -1398,6 +1451,30 @@
                     <p style="margin: 16px 0 0; color: #6b7280; font-size: 12px;">También te enviamos estas credenciales a tu email.</p>
                 </div>
             </div>
+
+            <!-- Existing Account Box (shown when email already registered) -->
+            <div id="existingAccountBox" style="display: none; margin-top: 24px;">
+                <div style="background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 2px solid #3b82f6; border-radius: 16px; padding: 28px 24px; text-align: center;">
+                    <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                        <i class="fas fa-user-circle" style="color: #fff; font-size: 24px;"></i>
+                    </div>
+                    <h3 style="margin: 0 0 8px; color: #1e40af; font-size: 18px; font-weight: 700;">Ya tienes una cuenta</h3>
+                    <p style="margin: 0 0 12px; color: #1d4ed8; font-size: 14px;">Este email ya esta registrado en BiteTrack.</p>
+
+                    <div style="background: #fff; border-radius: 12px; padding: 16px 20px; text-align: left; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                        <div>
+                            <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Email</span>
+                            <div id="existingEmail" style="color: #1f2937; font-size: 15px; font-weight: 600; margin-top: 2px;"></div>
+                        </div>
+                    </div>
+
+                    <p style="margin: 0 0 16px; color: #4b5563; font-size: 13px;">Ingresa con tu clave habitual para ver tu ficha y recetas.</p>
+
+                    <a href="/auth/login" style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; text-decoration: none; padding: 12px 32px; border-radius: 10px; font-size: 15px; font-weight: 600; transition: transform 0.2s;">
+                        <i class="fas fa-sign-in-alt" style="margin-right: 6px;"></i> Ingresar a mi portal
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
     {% endif %}
@@ -1440,10 +1517,26 @@
 
         const efcFrequencies = ['nunca', '1-3_mes', '1_sem', '2-4_sem', '5-6_sem', 'diario', '2_dia'];
 
+        function toggleTipoAlcohol(value) {
+            const wrapper = document.getElementById('tipoAlcoholWrapper');
+            if (wrapper) wrapper.style.display = (value && value !== 'nunca') ? 'block' : 'none';
+        }
+
         function toggleCigarrillos(value) {
             const wrapper = document.getElementById('cigarrillos_wrapper');
             if (wrapper) {
                 wrapper.style.display = (value === 'true') ? 'block' : 'none';
+            }
+        }
+
+        // RUT formatting helper (Chilean ID)
+        function formatRUT(input) {
+            let value = input.value.replace(/[^0-9kK]/g, '');
+            if (value.length > 1) {
+                const dv = value.slice(-1);
+                let body = value.slice(0, -1);
+                body = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                input.value = body + '-' + dv;
             }
         }
 
@@ -1567,11 +1660,23 @@
             const checkbox = pill.querySelector('input[type="checkbox"]');
             checkbox.addEventListener('change', function () {
                 pill.classList.toggle('selected', this.checked);
+                // Toggle GI triggers textarea visibility
+                if (this.name === 'sintomas_gi') {
+                    updateGITriggersVisibility();
+                }
             });
             if (checkbox.checked) {
                 pill.classList.add('selected');
             }
         });
+
+        function updateGITriggersVisibility() {
+            const wrapper = document.getElementById('giTriggersWrapper');
+            if (!wrapper) return;
+            const checked = document.querySelectorAll('input[name="sintomas_gi"]:checked');
+            const hasSymptoms = Array.from(checked).some(cb => cb.value !== 'ninguno');
+            wrapper.style.display = hasSymptoms ? 'block' : 'none';
+        }
 
         function updateProgress() {
             document.querySelectorAll('.progress-step').forEach((step, index) => {
@@ -1604,18 +1709,35 @@
             const currentSection = document.querySelector(`.form-section[data-step="${currentStep}"]`);
             const requiredFields = currentSection.querySelectorAll('[required]');
             let valid = true;
+            const missingLabels = [];
 
             requiredFields.forEach(field => {
                 if (!field.value.trim()) {
                     field.classList.add('is-invalid');
                     valid = false;
+                    // Find the label for this field
+                    const label = field.closest('.col-md-6, .col-md-4, .col-md-3, .col-12, .mb-3')?.querySelector('.form-label');
+                    if (label) missingLabels.push(label.textContent.replace('*', '').trim());
                 } else {
                     field.classList.remove('is-invalid');
                 }
             });
 
             if (!valid) {
-                alert('Por favor completa los campos requeridos');
+                const firstInvalid = currentSection.querySelector('.is-invalid');
+                if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Show inline notification with field names
+                let notification = document.getElementById('validationNotification');
+                if (!notification) {
+                    notification = document.createElement('div');
+                    notification.id = 'validationNotification';
+                    notification.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#ef4444;color:white;padding:12px 24px;border-radius:8px;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:90%;text-align:center;';
+                    document.body.appendChild(notification);
+                }
+                const fieldList = missingLabels.length > 0 ? ': ' + missingLabels.join(', ') : '';
+                notification.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Completa los campos requeridos${fieldList}`;
+                notification.style.display = 'block';
+                setTimeout(() => { notification.style.display = 'none'; }, 5000);
                 return;
             }
 
@@ -1732,6 +1854,9 @@
                         document.getElementById('credEmail').textContent = result.credentials.email;
                         document.getElementById('credPassword').textContent = result.credentials.password;
                         document.getElementById('credentialsBox').style.display = 'block';
+                    } else if (result.existing_account) {
+                        document.getElementById('existingEmail').textContent = result.existing_account.email;
+                        document.getElementById('existingAccountBox').style.display = 'block';
                     }
 
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1768,6 +1893,7 @@
             setField('sexo', 'Femenino');
             setField('ocupacion', 'Disenadora grafica');
             setField('direccion', 'Providencia, Santiago');
+            setField('rut', '17.654.321-8');
 
             // --- Step 2: Antecedentes de Salud ---
             checkPill('diagnosticos', 'hipotiroidismo');
@@ -1779,6 +1905,7 @@
             checkPill('antecedentes_familiares', 'hipertension');
             setField('alergias', 'Ninguna conocida');
             setField('intolerancias', 'Lactosa (parcial) - le produce hinchazon');
+            setField('alimentos_no_consume', 'Higado, betarraga, aceitunas');
 
             // --- Step 3: Estilo de Vida ---
             setField('horas_sueno', '6-7');

@@ -121,8 +121,10 @@
         data.fuma = document.getElementById('fuma').value === 'true';
 
         // Incluir datos JSON de registro 24h y frecuencia de consumo
-        // Usar funciones globales si están disponibles (de patient-intake.js)
-        if (typeof collect24hData === 'function') {
+        // R24H-004: Use ficha's own collector, fallback to intake.js or hidden input
+        if (typeof collectR24hDataFromFicha === 'function') {
+            data.registro_24h = collectR24hDataFromFicha();
+        } else if (typeof collect24hData === 'function') {
             data.registro_24h = collect24hData();
         } else {
             const registro24hInput = document.getElementById('registro_24h_data');
@@ -381,8 +383,8 @@
         
         const getValue = document.getElementById('getValue');
         const summaryGET = document.getElementById('summaryGET');
-        
-        if (getValue) getValue.textContent = get;
+
+        if (getValue) getValue.value = get;
         if (summaryGET) summaryGET.textContent = get;
         
         // Recalcular macros con nuevo GET
@@ -394,7 +396,7 @@
     
     window.calcularMacros = function() {
         const getEl = document.getElementById('getValue');
-        const get = parseFloat(getEl?.textContent);
+        const get = parseFloat(getEl?.value || getEl?.textContent);
         
         if (!get || isNaN(get)) return null;
         
@@ -477,7 +479,11 @@
         if (patient.porcentaje_grasa) document.getElementById('grasaValue').textContent = patient.porcentaje_grasa + '%';
         if (patient.indice_cintura_cadera) document.getElementById('iccValue').textContent = patient.indice_cintura_cadera;
         if (patient.geb_kcal) document.getElementById('gebValue').textContent = patient.geb_kcal;
-        if (patient.get_kcal) document.getElementById('getValue').textContent = patient.get_kcal;
+        if (patient.get_kcal) {
+            const getEl = document.getElementById('getValue');
+            if (getEl && getEl.tagName === 'INPUT') getEl.value = patient.get_kcal;
+            else if (getEl) getEl.textContent = patient.get_kcal;
+        }
     }
     
     function showLoading() {
@@ -653,7 +659,10 @@
                             <div class="tab-content mt-3" id="pautaTabContent">
                                 ${Object.entries(pauta.dias || {}).map(([dia, diaData], i) => `
                                     <div class="tab-pane fade ${i === 0 ? 'show active' : ''}" id="pane-${dia}" role="tabpanel">
-                                        ${Object.entries(diaData.tiempos || {}).map(([tiempo, tiempoData]) => `
+                                        ${Object.entries(diaData.tiempos || {}).sort(([a], [b]) => {
+                                            const order = ['desayuno','colacion_am','colacion1','almuerzo','colacion_pm','colacion2','once','cena'];
+                                            return (order.indexOf(a) === -1 ? 99 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 99 : order.indexOf(b));
+                                        }).map(([tiempo, tiempoData]) => `
                                             <div class="card mb-3">
                                                 <div class="card-header bg-light d-flex justify-content-between">
                                                     <strong>${tiempoData.nombre}</strong>
@@ -670,14 +679,15 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            ${(tiempoData.alimentos || []).map(a => {
+                                                            ${(tiempoData.alimentos || []).map((a, aIdx) => {
                                                                 const porcion = formatPautaPorcion(a.cantidad, a.medida_casera);
                                                                 return `
-                                                                <tr ${a.es_preferido ? 'class="table-success"' : ''}>
-                                                                    <td>${a.nombre} ${a.es_preferido ? '<i class="fas fa-star text-warning" title="Preferido del paciente"></i>' : ''}</td>
-                                                                    <td>${porcion}</td>
+                                                                <tr ${a.es_preferido ? 'class="table-success"' : ''} data-dia="${dia}" data-tiempo="${tiempo}" data-idx="${aIdx}">
+                                                                    <td><input type="text" class="form-control form-control-sm pauta-edit-field" value="${a.nombre}" style="display:none;" data-field="nombre"><span class="pauta-display">${a.nombre}</span> ${a.es_preferido ? '<i class="fas fa-star text-warning" title="Preferido del paciente"></i>' : ''}</td>
+                                                                    <td><input type="text" class="form-control form-control-sm pauta-edit-field" value="${porcion}" style="display:none;" data-field="porcion"><span class="pauta-display">${porcion}</span></td>
                                                                     <td class="text-end">${Math.round(a.kcal)}</td>
                                                                     <td class="text-end">${a.proteinas?.toFixed(1) || 0}g</td>
+                                                                    <td class="text-end"><button class="btn btn-sm btn-outline-danger pauta-edit-btn" onclick="this.closest('tr').remove()" style="display:none;" title="Eliminar"><i class="fas fa-times"></i></button></td>
                                                                 </tr>`;
                                                             }).join('')}
                                                         </tbody>
@@ -697,6 +707,9 @@
                             </div>
                         </div>
                         <div class="modal-footer">
+                            <button type="button" class="btn btn-warning" onclick="togglePautaEdit()">
+                                <i class="fas fa-edit me-2"></i>Editar Pauta
+                            </button>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                             <button type="button" class="btn btn-primary" onclick="guardarPauta(${JSON.stringify(pauta).replace(/"/g, '&quot;')})">
                                 <i class="fas fa-save me-2"></i>Guardar Pauta
@@ -720,6 +733,68 @@
         const modal = new bootstrap.Modal(document.getElementById('pautaModal'));
         modal.show();
     }
+
+    // BUG-004: Toggle edit mode for pauta (enhanced with food DB autocomplete)
+    window.togglePautaEdit = function() {
+        const modal = document.getElementById('pautaModal');
+        if (!modal) return;
+        const editing = modal.dataset.editing === 'true';
+        modal.dataset.editing = editing ? 'false' : 'true';
+        modal.querySelectorAll('.pauta-edit-field, .pauta-edit-btn').forEach(el => el.style.display = editing ? 'none' : '');
+        modal.querySelectorAll('.pauta-display').forEach(el => el.style.display = editing ? '' : 'none');
+
+        // Attach food autocomplete to nombre fields when entering edit mode
+        if (!editing) {
+            modal.querySelectorAll('.pauta-edit-field[data-field="nombre"]').forEach(input => {
+                if (input._pautaAutocomplete) return; // already attached
+                input._pautaAutocomplete = true;
+                const wrapper = input.parentElement;
+                wrapper.style.position = 'relative';
+                let dropdown = wrapper.querySelector('.pauta-food-dropdown');
+                if (!dropdown) {
+                    dropdown = document.createElement('div');
+                    dropdown.className = 'pauta-food-dropdown position-absolute w-100';
+                    dropdown.style.cssText = 'z-index:1060; display:none; max-height:200px; overflow-y:auto; background:#fff; border:1px solid #e2e8f0; border-radius:0 0 8px 8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); left:0; top:100%;';
+                    wrapper.appendChild(dropdown);
+                }
+                let timer;
+                input.addEventListener('input', function() {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => {
+                        if (typeof searchR24hFoods !== 'function' || !this.value || this.value.length < 2) {
+                            dropdown.style.display = 'none';
+                            return;
+                        }
+                        const results = searchR24hFoods(this.value);
+                        if (!results.length) { dropdown.style.display = 'none'; return; }
+                        dropdown.innerHTML = results.map(f => `
+                            <div class="px-3 py-2" style="cursor:pointer; border-bottom:1px solid #f1f5f9; font-size:0.85rem;"
+                                 data-nombre="${f.nombre}" data-kcal="${f.kcal}" data-medida="${f.medida_casera}">
+                                <div style="font-weight:500;">${f.nombre}</div>
+                                <div style="color:#94a3b8; font-size:0.7rem;">${f.grupo.replace(/_/g,' ')} · ${f.medida_casera} · ${f.kcal} kcal</div>
+                            </div>
+                        `).join('');
+                        dropdown.style.display = 'block';
+                        dropdown.querySelectorAll('[data-nombre]').forEach(item => {
+                            item.addEventListener('mousedown', (e) => {
+                                e.preventDefault();
+                                input.value = item.dataset.nombre;
+                                // Update porcion field in same row if exists
+                                const row = input.closest('tr');
+                                const porcionInput = row?.querySelector('.pauta-edit-field[data-field="porcion"]');
+                                if (porcionInput) porcionInput.value = item.dataset.medida;
+                                // Update kcal display
+                                const kcalCell = row?.children[2];
+                                if (kcalCell) kcalCell.textContent = Math.round(item.dataset.kcal);
+                                dropdown.style.display = 'none';
+                            });
+                        });
+                    }, 200);
+                });
+                input.addEventListener('blur', () => setTimeout(() => dropdown.style.display = 'none', 200));
+            });
+        }
+    };
 
     window.guardarPauta = async function(pauta) {
         const patientId = elements.patientId?.value;
@@ -807,4 +882,87 @@
         init();
     }
     
+    // PAUTA-004: Manual meal plan creation
+    window.abrirPautaManual = function() {
+        const TIEMPOS = ['desayuno', 'colacion_am', 'almuerzo', 'colacion_pm', 'cena'];
+        const NOMBRES = {desayuno:'Desayuno', colacion_am:'Colación AM', almuerzo:'Almuerzo', colacion_pm:'Colación PM', cena:'Cena'};
+
+        let tiemposHTML = TIEMPOS.map(t => `
+            <div class="card mb-3">
+                <div class="card-header bg-light"><strong>${NOMBRES[t]}</strong></div>
+                <div class="card-body p-2">
+                    <table class="table table-sm mb-0"><thead><tr><th>Alimento</th><th>Porción</th><th>Kcal</th><th>Prot (g)</th><th>Carbs (g)</th><th>Grasas (g)</th><th></th></tr></thead>
+                    <tbody id="manual-${t}"></tbody></table>
+                    <button type="button" class="btn btn-sm btn-outline-success mt-1" onclick="agregarAlimentoManual('${t}')"><i class="fas fa-plus me-1"></i>Agregar</button>
+                </div>
+            </div>`).join('');
+
+        const modalHtml = `
+            <div class="modal fade" id="pautaManualModal" tabindex="-1">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;">
+                            <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Crear Pauta Manual</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">${tiemposHTML}</div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="button" class="btn btn-info" onclick="alert('Función IA: Proyectar semana con variaciones basadas en esta pauta. Próximamente.')"><i class="fas fa-magic me-2"></i>Proyectar Semana (IA)</button>
+                            <button type="button" class="btn btn-primary" onclick="guardarPautaManual()"><i class="fas fa-save me-2"></i>Guardar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+        document.getElementById('pautaManualModal')?.remove();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        new bootstrap.Modal(document.getElementById('pautaManualModal')).show();
+    };
+
+    window.agregarAlimentoManual = function(tiempo) {
+        const tbody = document.getElementById(`manual-${tiempo}`);
+        tbody.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td><input type="text" class="form-control form-control-sm" placeholder="Nombre"></td>
+                <td><input type="text" class="form-control form-control-sm" placeholder="Ej: 1 taza"></td>
+                <td><input type="number" class="form-control form-control-sm" placeholder="0"></td>
+                <td><input type="number" class="form-control form-control-sm" placeholder="0"></td>
+                <td><input type="number" class="form-control form-control-sm" placeholder="0"></td>
+                <td><input type="number" class="form-control form-control-sm" placeholder="0"></td>
+                <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
+            </tr>`);
+    };
+
+    window.guardarPautaManual = async function() {
+        const patientId = elements.patientId?.value;
+        if (!patientId) return;
+        const TIEMPOS = ['desayuno', 'colacion_am', 'almuerzo', 'colacion_pm', 'cena'];
+        const pauta = { dias: { lunes: { tiempos: {} } }, requerimientos: {} };
+
+        TIEMPOS.forEach(t => {
+            const rows = document.querySelectorAll(`#manual-${t} tr`);
+            const alimentos = [];
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                if (inputs[0]?.value) {
+                    alimentos.push({
+                        nombre: inputs[0].value, medida_casera: inputs[1].value,
+                        kcal: parseFloat(inputs[2].value)||0, proteinas: parseFloat(inputs[3].value)||0,
+                        carbohidratos: parseFloat(inputs[4].value)||0, lipidos: parseFloat(inputs[5].value)||0
+                    });
+                }
+            });
+            if (alimentos.length > 0) {
+                const totKcal = alimentos.reduce((s,a) => s + a.kcal, 0);
+                pauta.dias.lunes.tiempos[t] = { nombre: t, alimentos, totales: { kcal: totKcal } };
+            }
+        });
+
+        try {
+            await guardarPauta(pauta);
+            bootstrap.Modal.getInstance(document.getElementById('pautaManualModal'))?.hide();
+        } catch(e) { console.error(e); }
+    };
+
 })();

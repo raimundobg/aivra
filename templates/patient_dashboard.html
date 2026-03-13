@@ -648,11 +648,18 @@
             tabsHTML += `<div class="pd-pauta-tab ${isActive}" onclick="showPautaDay(${idx})" data-day="${idx}">${dayName}</div>`;
 
             let mealsHTML = '';
-            const comidas = dayData.comidas || dayData;
+            const comidas = dayData.tiempos || dayData.comidas || dayData;
             let dayKcal = 0, dayProt = 0, dayCarbs = 0, dayGrasas = 0;
 
+            // BUG-005: Sort meals in logical order
+            const mealOrder = ['desayuno', 'colacion_am', 'colación_am', 'almuerzo', 'colacion_pm', 'colación_pm', 'once', 'cena'];
+
             if (typeof comidas === 'object') {
-                Object.entries(comidas).forEach(([mealKey, mealData]) => {
+                Object.entries(comidas).sort((a, b) => {
+                    const ia = mealOrder.indexOf(a[0].toLowerCase());
+                    const ib = mealOrder.indexOf(b[0].toLowerCase());
+                    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+                }).forEach(([mealKey, mealData]) => {
                     if (mealKey === 'total' || mealKey === 'resumen') return;
                     const mealName = mealNames[mealKey.toLowerCase()] || mealKey.replace(/_/g, ' ');
                     const icon = mealIcons[mealKey.toLowerCase()] || 'fa-utensils';

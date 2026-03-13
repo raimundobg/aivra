@@ -296,7 +296,7 @@
             <i class="fas fa-user-plus"></i>
         </div>
         <h3 class="bt-action-title">Ingresar un Paciente</h3>
-        <p class="bt-action-desc">Registrar nueva ficha con datos antropometricos</p>
+        <p class="bt-action-desc">Registrar nueva ficha con datos antropométricos</p>
     </a>
 
     <button type="button" class="bt-action-card" data-bs-toggle="modal" data-bs-target="#invitePatientModal"
@@ -881,7 +881,7 @@
                 if (result.email_sent) {
                     // Email was actually sent
                     titleEl.textContent = 'Invitacion Enviada!';
-                    msgEl.innerHTML = `El formulario ha sido enviado a <strong>${email}</strong>`;
+                    msgEl.innerHTML = `El formulario ha sido enviado a <strong>${email}</strong><br><small style="color:#f59e0b;"><i class="fas fa-info-circle me-1"></i>Si el paciente no encuentra el correo en su bandeja principal, recomiende revisar la carpeta de <strong>Spam</strong> o <strong>Promociones</strong>.</small>`;
                     iconEl.querySelector('div').style.background = 'linear-gradient(135deg, #10b981, #059669)';
                     iconEl.querySelector('i').className = 'fas fa-check text-white';
                     linkSection.style.display = 'none';

@@ -472,7 +472,7 @@ def update_patient(patient_id):
             'nombre', 'fecha_nacimiento', 'sexo', 'email', 'telefono', 
             'direccion', 'ocupacion', 'motivo_consulta', 'rut',
             'diagnosticos', 'medicamentos', 'suplementos', 'alergias',
-            'intolerancias', 'cirugias', 'antecedentes_familiares',
+            'intolerancias', 'alimentos_no_consume', 'cirugias', 'antecedentes_familiares',
             'horas_sueno', 'actividad_fisica', 'tipo_ejercicio',
             'frecuencia_ejercicio', 'duracion_ejercicio',
             'diagnostico_nutricional', 'objetivos_nutricionales',
@@ -483,10 +483,11 @@ def update_patient(patient_id):
             'horario_cena', 'quien_cocina', 'donde_come', 'con_quien_vive',
             'teletrabajo', 'profesion', 'menstruacion', 
             'reflujo', 'reflujo_alimento', 'hinchazon', 'hinchazon_alimento',
-            'tiene_alergias', 'alergias_alimento',
+            'tiene_alergias', 'alergias_alimento', 'gatillantes_gi',
             'consumo_bebidas_azucaradas', 'consumo_alcohol', 'tipo_alcohol',
             'observaciones_sueno', 'gatillantes_estres', 'manejo_estres',
-            'tabaco', 'drogas'
+            'tabaco', 'drogas',
+            'metodo_calculo'
         ]
         
         for campo in campos_texto:
@@ -536,7 +537,8 @@ def update_patient(patient_id):
             'hemoglobina', 'hematocrito', 'ferritina', 'vitamina_d',
             'vitamina_b12', 'acido_urico', 'creatinina', 'albumina', 'tsh',
             'consumo_agua_litros',
-            'proteinas_porcentaje', 'carbohidratos_porcentaje', 'grasas_porcentaje'
+            'proteinas_porcentaje', 'carbohidratos_porcentaje', 'grasas_porcentaje',
+            'factor_actividad_num', 'get_kcal', 'geb_kcal', 'get_kcal_ajustado'
         ]
         
         for campo in campos_float:
@@ -551,7 +553,8 @@ def update_patient(patient_id):
             'calidad_sueno', 'nivel_estres',
             'presion_sistolica', 'presion_diastolica', 'frecuencia_cardiaca',
             'comidas_por_dia', 'consumo_cafe_tazas', 'consumo_te_tazas',
-            'cigarrillos_dia', 'delivery_restaurante', 'percepcion_esfuerzo'
+            'cigarrillos_dia', 'delivery_restaurante', 'percepcion_esfuerzo',
+            'ajuste_calorico'
         ]
         
         for campo in campos_int:
@@ -942,6 +945,8 @@ def create_patient():
             email=data.get('email'),
             telefono=data.get('telefono'),
             rut=data.get('rut'),
+            direccion=data.get('direccion'),
+            alimentos_no_consume=data.get('alimentos_no_consume'),
             motivo_consulta=data.get('motivo_consulta'),
             objetivos=json.dumps(data.get('objetivos', [])) if isinstance(data.get('objetivos'), list) else data.get('objetivos', ''),
 
@@ -1008,6 +1013,7 @@ def create_patient():
 
             # Síntomas GI
             frecuencia_evacuacion=data.get('frecuencia_evacuacion'),
+            gatillantes_gi=data.get('gatillantes_gi'),
             reflujo='si' if to_bool(data.get('reflujo')) else 'no',
             reflujo_alimento=data.get('reflujo_alimento'),
             hinchazon='si' if to_bool(data.get('hinchazon')) else 'no',
@@ -1325,13 +1331,15 @@ def submit_public_intake(token):
 
         # --- Datos personales basicos ---
         campos_texto = [
-            'nombre', 'fecha_nacimiento', 'sexo', 'ocupacion', 'direccion',
+            'nombre', 'fecha_nacimiento', 'sexo', 'ocupacion', 'direccion', 'rut',
             'motivo_consulta', 'medicamentos', 'suplementos', 'cirugias',
             'alergias', 'intolerancias', 'otros_diagnosticos',
+            'alimentos_no_consume',
             'horas_sueno', 'tipo_ejercicio', 'frecuencia_ejercicio',
             'actividad_fisica', 'consumo_alcohol', 'tabaco',
             'horario_desayuno', 'horario_almuerzo', 'horario_cena',
-            'comidas_al_dia', 'consistencia_heces'
+            'comidas_al_dia', 'consistencia_heces',
+            'gatillantes_gi'
         ]
         for campo in campos_texto:
             if campo in data and data[campo]:
@@ -1418,6 +1426,7 @@ def submit_public_intake(token):
         patient_email = patient.email
         patient_password = None
         patient_user_created = False
+        existing_account = False
 
         if patient_email:
             patient_email_clean = patient_email.strip().lower()
@@ -1425,6 +1434,7 @@ def submit_public_intake(token):
 
             if existing_user:
                 patient.patient_user_id = existing_user.id
+                existing_account = True
                 log_debug(f"[SUBMIT-INTAKE] Linked existing user {existing_user.id} to patient {patient.id}")
             else:
                 alphabet = string.ascii_letters + string.digits
@@ -1483,6 +1493,14 @@ def submit_public_intake(token):
             response_data['message'] = (
                 'Tus datos han sido guardados exitosamente. '
                 'Hemos creado tu cuenta de paciente para que puedas ver tu ficha y generar recetas.'
+            )
+        elif existing_account:
+            response_data['existing_account'] = {
+                'email': patient_email_clean,
+            }
+            response_data['message'] = (
+                'Tus datos han sido guardados exitosamente. '
+                'Ya tienes una cuenta registrada con este email. Ingresa con tus credenciales habituales.'
             )
 
         return jsonify(response_data)
@@ -1758,8 +1776,12 @@ def get_alimentos():
             except:
                 return 0.0
 
+        # M5: Fix group name typos from xlsx
+        GRUPO_FIXES = {'AzúCares': 'Azúcares', 'azuCares': 'Azúcares', 'AzuCares': 'Azúcares'}
+
         for _, row in df.iterrows():
             grupo = clean_text(row.get('grupo', 'otros'))
+            grupo = GRUPO_FIXES.get(grupo, grupo)  # Fix typos
             subgrupo = clean_text(row.get('subgrupo', 'general'))
             nombre = clean_text(row.get('alimento', ''))
 
@@ -2427,6 +2449,10 @@ def migrate_database():
                 ('otros_diagnosticos', 'TEXT'),
                 ('comidas_al_dia', 'VARCHAR(20)'),
                 ('patient_user_id', 'INTEGER'),
+                ('factor_actividad_num', 'FLOAT'),
+                ('metodo_calculo', 'VARCHAR(30)'),
+                ('ajuste_calorico', 'INTEGER'),
+                ('get_kcal_ajustado', 'FLOAT'),
             ],
             'bookings': [
                 ('reminder_24h_sent', 'BOOLEAN DEFAULT FALSE'),
@@ -2889,8 +2915,8 @@ def generar_pauta_endpoint(patient_id):
 
         patient_data = {
             'id': patient.id,
-            'nombre': patient.nombre,
-            'sexo': patient.sexo,
+            'nombre': patient.nombre or 'Paciente',
+            'sexo': patient.sexo or '',
             'peso_kg': patient.peso_kg,
             'talla_m': patient.talla_m,
             'edad': edad,
@@ -2951,25 +2977,255 @@ def guardar_pauta_endpoint_post(patient_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/api/pauta/modificar-ia', methods=['POST'])
+@login_required
+def modificar_pauta_ia_endpoint():
+    """Modify or generate a pauta using AI natural language instructions."""
+    log_debug(f"[PAUTA-IA] START - user_id={current_user.id}")
+    try:
+        data = request.json
+        instruccion = data.get('instruccion', '').strip()
+        patient_id = data.get('patient_id')
+        pauta_actual = data.get('pauta_actual')  # None = generate from scratch
+
+        if not instruccion:
+            return jsonify({'success': False, 'error': 'Instruccion requerida'}), 400
+        if not patient_id:
+            return jsonify({'success': False, 'error': 'patient_id requerido'}), 400
+
+        patient = PatientFile.query.get_or_404(patient_id)
+
+        # Build patient_data context for AI
+        patient_data = {
+            'nombre': patient.nombre,
+            'sexo': patient.sexo,
+            'edad': patient.edad,
+            'peso_kg': patient.peso,
+            'talla_m': patient.talla,
+            'get_kcal': patient.get_kcal,
+            'proteinas_g': patient.proteinas_g,
+            'carbohidratos_g': patient.carbohidratos_g,
+            'grasas_g': patient.grasas_g,
+            'restricciones_alimentarias': patient.restricciones_alimentarias,
+            'alergias': patient.alergias,
+            'intolerancias': patient.intolerancias,
+            'objetivos': patient.objetivos,
+            'diagnosticos': patient.diagnosticos,
+        }
+
+        log_debug(f"[PAUTA-IA] Calling AI - mode={'modify' if pauta_actual else 'generate'}, patient='{patient.nombre}'")
+        result = modificar_pauta_ia(pauta_actual, instruccion, patient_data)
+
+        log_debug(f"[PAUTA-IA] OK - AI returned pauta with {len(result.get('dias', {}))} dias")
+        return jsonify({'success': True, 'pauta': result})
+
+    except Exception as e:
+        log_debug(f"[PAUTA-IA] ERROR - {str(e)}")
+        import traceback
+        log_debug(f"[PAUTA-IA] TRACEBACK: {traceback.format_exc()}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 # ============================================
 # GROQ AI - Alertas y Chatbot
 # ============================================
 
 # Intentar usar Gemini, si no está disponible usar Groq como fallback
 try:
-    from gemini_service import generar_alertas_paciente, chat_con_asistente, obtener_sugerencias_chat, ia_disponible
+    from gemini_service import generar_alertas_paciente, chat_con_asistente, obtener_sugerencias_chat, ia_disponible, modificar_pauta_ia
     print("[OK] Usando Gemini AI Service")
 except ImportError:
     try:
-        from groq_service import generar_alertas_paciente, chat_con_asistente, obtener_sugerencias_chat, ia_disponible
+        from groq_service import generar_alertas_paciente, chat_con_asistente, obtener_sugerencias_chat, ia_disponible, modificar_pauta_ia
         print("[OK] Usando Groq AI Service")
     except ImportError:
         # Fallback sin IA
         def generar_alertas_paciente(data): return []
         def chat_con_asistente(msg, ctx=None, hist=None): return "IA no disponible"
         def obtener_sugerencias_chat(ctx=None): return []
+        def modificar_pauta_ia(pauta, instr, data=None): raise RuntimeError("IA no disponible")
         def ia_disponible(): return False
         print("[WARNING] Ningun servicio de IA disponible")
+
+def generar_alertas_reglas(patient):
+    """Rule-based nutrition alerts from R24H, frecuencia consumo, and habits data"""
+    alertas = []
+
+    # --- Frecuencia de consumo alerts ---
+    freq = patient.frecuencia_consumo or {}
+
+    # Map frequency values (0-7 scale where 7=diario)
+    def freq_val(key):
+        v = freq.get(key)
+        if isinstance(v, (int, float)):
+            return v
+        freq_map = {'nunca': 0, '1-3_mes': 1, '1_sem': 1, '2-4_sem': 3, '5-6_sem': 5, 'diario': 7, '2_dia': 7}
+        return freq_map.get(str(v), 0) if v else 0
+
+    frutas = freq_val('frutas')
+    verduras = freq_val('verduras')
+    legumbres = freq_val('legumbres')
+    pescado = freq_val('pescados') or freq_val('pescado')
+    frituras = freq_val('frituras')
+    azucares = freq_val('azucares')
+    lacteos = freq_val('lacteos')
+
+    if verduras < 3:
+        alertas.append({
+            'tipo': 'warning',
+            'icono': 'leaf',
+            'titulo': 'Bajo consumo de verduras',
+            'mensaje': f'Consume verduras solo {verduras}x/semana. Recomendado: diario. Considerar incluir al menos 1 porcion de verdura en almuerzo y cena.'
+        })
+
+    if frutas < 3:
+        alertas.append({
+            'tipo': 'warning',
+            'icono': 'apple-alt',
+            'titulo': 'Bajo consumo de frutas',
+            'mensaje': f'Consume frutas solo {frutas}x/semana. Incluir 2-3 porciones diarias de fruta como colaciones.'
+        })
+
+    if frituras >= 4:
+        alertas.append({
+            'tipo': 'danger',
+            'icono': 'fire',
+            'titulo': 'Alto consumo de frituras',
+            'mensaje': f'Reporta frituras {frituras}x/semana. Sugerir alternativas al horno, plancha o vapor.'
+        })
+
+    if azucares >= 4:
+        alertas.append({
+            'tipo': 'danger',
+            'icono': 'candy-cane',
+            'titulo': 'Alto consumo de azucares',
+            'mensaje': f'Azucares/golosinas {azucares}x/semana. Reemplazar con frutas, frutos secos o yogurt natural.'
+        })
+
+    if pescado < 1:
+        alertas.append({
+            'tipo': 'info',
+            'icono': 'fish',
+            'titulo': 'Sin consumo de pescado',
+            'mensaje': 'No consume pescado regularmente. Considerar 2 porciones semanales para omega-3.'
+        })
+
+    if legumbres < 2:
+        alertas.append({
+            'tipo': 'info',
+            'icono': 'seedling',
+            'titulo': 'Bajo consumo de legumbres',
+            'mensaje': f'Legumbres solo {legumbres}x/semana. Recomendar 2-3 veces por semana como fuente de fibra y proteina vegetal.'
+        })
+
+    # --- Hydration ---
+    agua = 0
+    if hasattr(patient, 'consumo_agua_litros') and patient.consumo_agua_litros:
+        agua = float(patient.consumo_agua_litros) if patient.consumo_agua_litros else 0
+    elif isinstance(freq, dict):
+        agua = float(freq.get('agua_litros', 0) or 0)
+
+    if agua < 1.5:
+        alertas.append({
+            'tipo': 'warning',
+            'icono': 'tint',
+            'titulo': 'Hidratacion insuficiente',
+            'mensaje': f'Reporta {agua}L de agua/dia. Recomendado: minimo 1.5-2L diarios. Sugerir llevar botella y establecer recordatorios.'
+        })
+
+    # --- Sleep ---
+    sueno = None
+    if hasattr(patient, 'calidad_sueno') and patient.calidad_sueno:
+        try:
+            sueno = int(patient.calidad_sueno)
+        except (TypeError, ValueError):
+            pass
+    if sueno is not None and sueno <= 4:
+        alertas.append({
+            'tipo': 'warning',
+            'icono': 'bed',
+            'titulo': 'Mala calidad de sueno',
+            'mensaje': f'Calidad de sueno {sueno}/10. Afecta regulacion del apetito y metabolismo. Revisar higiene del sueno.'
+        })
+
+    # --- Stress ---
+    estres = None
+    if hasattr(patient, 'nivel_estres') and patient.nivel_estres:
+        try:
+            estres = int(patient.nivel_estres)
+        except (TypeError, ValueError):
+            pass
+    if estres is not None and estres >= 7:
+        alertas.append({
+            'tipo': 'warning',
+            'icono': 'brain',
+            'titulo': 'Estres elevado',
+            'mensaje': f'Nivel de estres {estres}/10. El estres cronico puede promover alimentacion emocional y acumulacion de grasa visceral.'
+        })
+
+    # --- GI symptoms ---
+    if patient.reflujo:
+        alertas.append({
+            'tipo': 'info',
+            'icono': 'heartbeat',
+            'titulo': 'Reflujo gastroesofagico',
+            'mensaje': 'Presenta reflujo. Evitar comidas abundantes, grasas y acostarse despues de comer. Considerar fraccionamiento.'
+        })
+
+    if patient.hinchazon:
+        alertas.append({
+            'tipo': 'info',
+            'icono': 'stomach',
+            'titulo': 'Hinchazon abdominal',
+            'mensaje': 'Reporta hinchazon. Evaluar tolerancia a lacteos, legumbres y FODMAPs. Considerar diario de sintomas.'
+        })
+
+    # --- R24H analysis ---
+    r24h = patient.registro_24h
+    if r24h and isinstance(r24h, dict):
+        all_foods = []
+        for meal, items in r24h.items():
+            if isinstance(items, list):
+                for item in items:
+                    if isinstance(item, dict):
+                        all_foods.append(item)
+
+        # Check if any vegetables in R24H
+        has_verdura = any('verdura' in str(f.get('grupo', '')).lower() or
+                         'ensalada' in str(f.get('alimento', '') + f.get('alimento_nombre', '')).lower() or
+                         'verdura' in str(f.get('grupo', '')).lower()
+                         for f in all_foods)
+        if all_foods and not has_verdura:
+            alertas.append({
+                'tipo': 'danger',
+                'icono': 'exclamation-triangle',
+                'titulo': 'Sin verduras en R24H',
+                'mensaje': 'El registro 24 horas no incluye verduras. Priorizar agregar vegetales en almuerzo y cena.'
+            })
+
+        # Total kcal from R24H
+        total_kcal = sum(float(f.get('kcal', 0)) for f in all_foods)
+        if total_kcal > 0 and total_kcal < 1200:
+            alertas.append({
+                'tipo': 'warning',
+                'icono': 'fire',
+                'titulo': 'Ingesta calorica baja en R24H',
+                'mensaje': f'Solo {int(total_kcal)} kcal registradas. Verificar si es habitual o sub-reporte.'
+            })
+
+    # --- Bebidas azucaradas ---
+    bebidas = getattr(patient, 'consumo_bebidas_azucaradas', None) or ''
+    if bebidas and bebidas.lower() not in ('nunca', 'no', ''):
+        if bebidas.lower() in ('diario', 'frecuente', '3_o_mas'):
+            alertas.append({
+                'tipo': 'danger',
+                'icono': 'glass-whiskey',
+                'titulo': 'Alto consumo de bebidas azucaradas',
+                'mensaje': 'Consume bebidas azucaradas frecuentemente. Reemplazar por agua, infusiones o agua saborizada natural.'
+            })
+
+    return alertas
+
 
 @app.route('/api/patient/<int:patient_id>/alertas', methods=['GET'])
 @login_required
@@ -3006,7 +3262,12 @@ def get_patient_alertas(patient_id):
             'fuma': patient.fuma,
         }
 
+        # Try AI-powered alerts first
         alertas = generar_alertas_paciente(patient_data)
+
+        # Add rule-based nutrition insights from R24H + frecuencia consumo + habits
+        alertas_reglas = generar_alertas_reglas(patient)
+        alertas = alertas + alertas_reglas
 
         log_debug(f"[ALERTAS-IA] OK - {len(alertas)} alertas generated for patient_id={patient_id}")
         return jsonify({
@@ -3587,6 +3848,10 @@ if AUTH_ENABLED:
                     ('email', 'VARCHAR(120)'),
                     ('telefono', 'VARCHAR(20)'),
                     ('consistencia_heces', 'VARCHAR(50)'),
+                    ('factor_actividad_num', 'FLOAT'),
+                    ('metodo_calculo', 'VARCHAR(30)'),
+                    ('ajuste_calorico', 'INTEGER'),
+                    ('get_kcal_ajustado', 'FLOAT'),
                 ],
                 'users': [
                     ('bio', 'TEXT'),

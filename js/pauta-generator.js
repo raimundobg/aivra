@@ -467,7 +467,7 @@ console.log('📦 pauta-generator.js v3.0 SEMANAL cargado');
                     </div>
                     <div class="resumen-stat">
                         <span class="resumen-value">${pauta.resumen_semanal?.cumplimiento_promedio || 0}%</span>
-                        <span class="resumen-label">Cumplimiento</span>
+                        <span class="resumen-label" title="Porcentaje de adecuación calórica: kcal promedio de la pauta vs GET del paciente. 100% = pauta cubre exactamente el requerimiento.">Cumplimiento <i class="fas fa-info-circle" style="font-size:10px;opacity:0.6;"></i></span>
                     </div>
                     <div class="resumen-stat">
                         <span class="resumen-value">${pauta.resumen_semanal?.total_semanal?.kcal || 0}</span>
@@ -476,10 +476,47 @@ console.log('📦 pauta-generator.js v3.0 SEMANAL cargado');
                 </div>
             </div>
         `;
-        
+
+        // AI Modification Panel
+        html += `
+            <div class="pauta-ia-panel">
+                <div class="pauta-ia-header" onclick="document.querySelector('.pauta-ia-body').classList.toggle('collapsed')">
+                    <h6><i class="fas fa-robot me-2"></i>Modificar con IA</h6>
+                    <i class="fas fa-chevron-down pauta-ia-chevron"></i>
+                </div>
+                <div class="pauta-ia-body">
+                    <p class="pauta-ia-hint">Escribe una instruccion en lenguaje natural para modificar la pauta o generar una nueva.</p>
+                    <div class="pauta-ia-examples">
+                        <button class="pauta-ia-chip" onclick="window._pautaIA.setEjemplo('Reemplaza las colaciones por opciones mas altas en proteina')">
+                            <i class="fas fa-drumstick-bite"></i> Mas proteina en colaciones
+                        </button>
+                        <button class="pauta-ia-chip" onclick="window._pautaIA.setEjemplo('Agrega una porcion de fruta en cada desayuno y colacion AM')">
+                            <i class="fas fa-apple-alt"></i> Agregar frutas
+                        </button>
+                        <button class="pauta-ia-chip" onclick="window._pautaIA.setEjemplo('Reduce las calorias totales en un 15% manteniendo proteinas')">
+                            <i class="fas fa-fire"></i> Reducir calorias
+                        </button>
+                        <button class="pauta-ia-chip" onclick="window._pautaIA.setEjemplo('Genera una pauta nueva para bajar grasa corporal respetando el GET del paciente')">
+                            <i class="fas fa-magic"></i> Generar nueva pauta
+                        </button>
+                    </div>
+                    <textarea id="pautaIAInstruccion" class="pauta-ia-textarea" rows="3" placeholder="Ej: 'Cambia el almuerzo del lunes por una ensalada con pollo' o 'Crea una pauta hipocalorica de 1500 kcal'"></textarea>
+                    <div class="pauta-ia-actions">
+                        <button class="btn btn-sm pauta-ia-btn-modify" onclick="window._pautaIA.aplicar(true)">
+                            <i class="fas fa-edit me-1"></i>Modificar pauta actual
+                        </button>
+                        <button class="btn btn-sm pauta-ia-btn-generate" onclick="window._pautaIA.aplicar(false)">
+                            <i class="fas fa-wand-magic-sparkles me-1"></i>Generar desde cero
+                        </button>
+                    </div>
+                    <div id="pautaIAStatus" class="pauta-ia-status" style="display:none;"></div>
+                </div>
+            </div>
+        `;
+
         container.innerHTML = html;
     }
-    
+
     function renderDia(dia) {
         const pauta = state.pauta;
         if (!pauta || !pauta.dias || !pauta.dias[dia]) {
@@ -609,13 +646,16 @@ console.log('📦 pauta-generator.js v3.0 SEMANAL cargado');
                         <strong>${pauta.resumen_semanal?.promedio_diario?.proteinas || 0}g</strong>
                     </div>
                     <div class="summary-row">
-                        <span><i class="fas fa-bullseye me-2"></i>Cumplimiento:</span>
+                        <span><i class="fas fa-bullseye me-2"></i>Adecuación calórica:</span>
                         <strong style="color: ${pauta.resumen_semanal?.cumplimiento_promedio >= 95 ? '#10b981' : '#f59e0b'};">
                             ${pauta.resumen_semanal?.cumplimiento_promedio || 0}%
                         </strong>
                     </div>
+                    <p style="font-size:11px;color:#6b7280;margin:4px 0 0;">
+                        <i class="fas fa-info-circle me-1"></i>Adecuación = kcal promedio de la pauta ÷ GET del paciente × 100
+                    </p>
                 </div>
-                
+
                 <div class="alert alert-info mt-3">
                     <i class="fas fa-info-circle me-2"></i>
                     La pauta quedará guardada en la ficha del paciente y podrá visualizarse desde la lista de pacientes.
@@ -693,6 +733,69 @@ console.log('📦 pauta-generator.js v3.0 SEMANAL cargado');
         }
     };
     
+    // ============================================
+    // AI PAUTA MODIFICATION
+    // ============================================
+    window._pautaIA = {
+        setEjemplo: function(texto) {
+            const ta = document.getElementById('pautaIAInstruccion');
+            if (ta) ta.value = texto;
+        },
+        aplicar: async function(modificar) {
+            const ta = document.getElementById('pautaIAInstruccion');
+            const statusEl = document.getElementById('pautaIAStatus');
+            const instruccion = ta ? ta.value.trim() : '';
+
+            if (!instruccion) {
+                alert('Escribe una instruccion para la IA.');
+                return;
+            }
+            if (!state.selectedPatient) {
+                alert('No hay paciente seleccionado.');
+                return;
+            }
+
+            // Show loading
+            statusEl.style.display = 'block';
+            statusEl.className = 'pauta-ia-status loading';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>La IA esta procesando tu instruccion... (puede tomar 15-30 segundos)';
+
+            // Disable buttons
+            document.querySelectorAll('.pauta-ia-btn-modify, .pauta-ia-btn-generate').forEach(b => b.disabled = true);
+
+            try {
+                const payload = {
+                    instruccion: instruccion,
+                    patient_id: state.selectedPatient,
+                    pauta_actual: modificar ? state.pauta : null
+                };
+
+                const resp = await fetch('/api/pauta/modificar-ia', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await resp.json();
+
+                if (data.success && data.pauta) {
+                    state.pauta = data.pauta;
+                    renderPautaSemanal();
+                    statusEl.className = 'pauta-ia-status success';
+                    statusEl.innerHTML = '<i class="fas fa-check-circle me-2"></i>Pauta ' + (modificar ? 'modificada' : 'generada') + ' exitosamente por IA. Revisa los cambios y guarda cuando estes conforme.';
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+            } catch (err) {
+                console.error('Error IA pauta:', err);
+                statusEl.className = 'pauta-ia-status error';
+                statusEl.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Error: ' + err.message;
+            } finally {
+                document.querySelectorAll('.pauta-ia-btn-modify, .pauta-ia-btn-generate').forEach(b => b.disabled = false);
+            }
+        }
+    };
+
     // Inicializar cuando DOM esté listo
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);

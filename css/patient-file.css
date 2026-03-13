@@ -168,11 +168,46 @@
     background: #f9fafb;
     border-radius: 0.75rem;
     transition: all 0.2s;
+    position: relative;
 }
 
 .summary-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Formula tooltip on hover */
+.formula-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: #e2e8f0;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    white-space: nowrap;
+    z-index: 200;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    text-align: left;
+    pointer-events: none;
+}
+
+.formula-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1e293b;
+}
+
+.summary-item:hover .formula-tooltip {
+    display: block;
 }
 
 .summary-value {
@@ -450,21 +485,114 @@
     .ficha-header,
     .quick-nav,
     .btn-ficha,
-    .save-status {
+    .save-status,
+    .chatbot-container,
+    .chatbot-fab,
+    .loading-overlay {
         display: none !important;
     }
-    
+
     .accordion-content {
         display: block !important;
         height: auto !important;
     }
-    
+
     .patient-summary {
         break-inside: avoid;
     }
-    
+
     .section-accordion {
         break-inside: avoid;
+    }
+
+    /* Pauta Modal Print Styles */
+    body.modal-open > *:not(.modal) {
+        display: none !important;
+    }
+
+    #pautaModal,
+    #pautaModal .modal-dialog,
+    #pautaModal .modal-content {
+        position: static !important;
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+        background: white !important;
+    }
+
+    #pautaModal .modal-backdrop,
+    #pautaModal .modal-footer,
+    .modal-backdrop {
+        display: none !important;
+    }
+
+    #pautaModal .modal-header {
+        background: #166534 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        padding: 1rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    #pautaModal .modal-body {
+        padding: 0.5rem !important;
+    }
+
+    #pautaModal .card {
+        break-inside: avoid !important;
+        margin-bottom: 0.5rem !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    #pautaModal .card-header {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    #pautaModal .table {
+        font-size: 0.8rem !important;
+    }
+
+    #pautaModal .badge {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    #pautaModal .nav-tabs {
+        display: none !important;
+    }
+
+    #pautaModal .tab-pane {
+        display: block !important;
+        opacity: 1 !important;
+        page-break-before: always;
+    }
+
+    #pautaModal .tab-pane:first-child {
+        page-break-before: avoid;
+    }
+
+    #pautaModal .alert-secondary {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        break-inside: avoid !important;
+    }
+
+    /* Hide edit mode elements in print */
+    .pauta-edit-field,
+    .pauta-edit-btn {
+        display: none !important;
+    }
+
+    .pauta-display {
+        display: inline !important;
     }
 }
 

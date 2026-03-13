@@ -149,6 +149,18 @@
             <div class="ficha-field-value">{{ pf.ocupacion or pf.profesion }}</div>
         </div>
         {% endif %}
+        {% if pf.rut %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">RUT</div>
+            <div class="ficha-field-value">{{ pf.rut }}</div>
+        </div>
+        {% endif %}
+        {% if pf.direccion %}
+        <div class="ficha-field">
+            <div class="ficha-field-label">Dirección</div>
+            <div class="ficha-field-value">{{ pf.direccion }}</div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -326,6 +338,13 @@
         <p style="margin: 6px 0 0;">{{ pf.intolerancias }}</p>
     </div>
     {% endif %}
+
+    {% if pf.alimentos_no_consume %}
+    <div class="ficha-text-block" style="margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Alimentos que No Consume</strong>
+        <p style="margin: 6px 0 0;">{{ pf.alimentos_no_consume }}</p>
+    </div>
+    {% endif %}
 </div>
 {% endif %}
 
@@ -387,6 +406,27 @@
         </div>
         {% endif %}
     </div>
+
+    {% if pf.observaciones_sueno %}
+    <div class="ficha-text-block" style="margin-top: 14px; margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Observaciones sobre Sueno</strong>
+        <p style="margin: 6px 0 0;">{{ pf.observaciones_sueno }}</p>
+    </div>
+    {% endif %}
+
+    {% if pf.gatillantes_estres %}
+    <div class="ficha-text-block" style="margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Gatillantes de Estres</strong>
+        <p style="margin: 6px 0 0;">{{ pf.gatillantes_estres }}</p>
+    </div>
+    {% endif %}
+
+    {% if pf.manejo_estres %}
+    <div class="ficha-text-block" style="margin-bottom: 12px;">
+        <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--bt-fg-muted);">Manejo del Estres</strong>
+        <p style="margin: 6px 0 0;">{{ pf.manejo_estres }}</p>
+    </div>
+    {% endif %}
 </div>
 {% endif %}
 

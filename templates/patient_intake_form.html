@@ -154,6 +154,26 @@
                         data-objetivo="proteina"><i class="fas fa-drumstick-bite me-1"></i> Proteína</button>
                     <button type="button" class="btn btn-outline-primary btn-sm rounded-pill pill-btn"
                         data-objetivo="peso"><i class="fas fa-weight-scale me-1"></i> Control de Peso</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill pill-btn"
+                        data-objetivo="bajar_peso"><i class="fas fa-weight me-1"></i> Bajar de Peso</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill pill-btn"
+                        data-objetivo="subir_peso"><i class="fas fa-dumbbell me-1"></i> Subir de Peso</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill pill-btn"
+                        data-objetivo="ganar_masa"><i class="fas fa-dumbbell me-1"></i> Ganar Masa Muscular</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill pill-btn"
+                        data-objetivo="bajar_grasa"><i class="fas fa-fire me-1"></i> Bajar Grasa Corporal</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill pill-btn"
+                        data-objetivo="mejorar_salud"><i class="fas fa-heart me-1"></i> Mejorar Salud General</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill pill-btn"
+                        data-objetivo="energia"><i class="fas fa-bolt me-1"></i> Tener Mas Energia</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill pill-btn"
+                        data-objetivo="digestion"><i class="fas fa-stomach me-1"></i> Mejorar Digestion</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill pill-btn"
+                        data-objetivo="rendimiento"><i class="fas fa-running me-1"></i> Rendimiento Deportivo</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill pill-btn"
+                        data-objetivo="habitos"><i class="fas fa-utensils me-1"></i> Mejorar Habitos</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill pill-btn"
+                        data-objetivo="condicion"><i class="fas fa-notes-medical me-1"></i> Manejar Condicion Medica</button>
                 </div>
                 <input type="hidden" id="objetivos" name="objetivos">
             </div>
@@ -495,6 +515,7 @@
                 <label class="form-label fw-medium text-secondary" for="consumo_agua_litros">Agua (litros/dia)</label>
                 <input type="number" class="form-control bg-light border-0" id="consumo_agua_litros"
                     name="consumo_agua_litros" step="0.1" min="0" max="10" placeholder="1.5">
+                <small class="text-muted">Min. recomendado: 2L (8 vasos)</small>
             </div>
             <div class="col-md-3">
                 <label class="form-label fw-medium text-secondary" for="consumo_cafe_tazas">Cafe (tazas/dia)</label>
@@ -517,8 +538,15 @@
             </div>
             <div class="col-md-6" id="tipoAlcoholContainer" style="display: none;">
                 <label class="form-label fw-medium text-secondary" for="tipo_alcohol">Tipo de Alcohol</label>
-                <input type="text" class="form-control bg-light border-0" id="tipo_alcohol" name="tipo_alcohol"
-                    placeholder="Ej: Vino, Cerveza, Pisco">
+                <select class="form-select bg-light border-0" id="tipo_alcohol" name="tipo_alcohol">
+                    <option value="">Seleccionar...</option>
+                    <option value="vino">Vino</option>
+                    <option value="cerveza">Cerveza</option>
+                    <option value="pisco">Pisco</option>
+                    <option value="coctel">Cóctel</option>
+                    <option value="destilado">Destilado (Vodka, Ron, etc)</option>
+                    <option value="otro">Otro</option>
+                </select>
             </div>
             <div class="col-md-6">
                 <label class="form-label fw-medium text-secondary" for="consumo_bebidas_azucaradas">Bebidas Azucaradas</label>
@@ -907,6 +935,17 @@
             </div>
         </div>
 
+        <!-- Food Search Bar -->
+        <div class="mb-3 position-relative">
+            <label class="form-label small fw-bold"><i class="fas fa-search me-1"></i> Buscar Alimento Rapido</label>
+            <input type="text" class="form-control" id="r24hFoodSearch"
+                placeholder="Escriba para buscar alimentos... ej: pan, leche, arroz, pollo" autocomplete="off"
+                style="border: 2px solid #e2e8f0; border-radius: 10px; padding: 0.6rem 1rem;">
+            <div id="r24hSearchResults" class="position-absolute w-100"
+                style="z-index: 1050; display: none; max-height: 300px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 0 0 8px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
+            <small class="text-muted">Busque y seleccione un alimento. Se agregara automaticamente a la comida activa.</small>
+        </div>
+
         <ul class="nav nav-pills mb-3" id="mealTabs" role="tablist"
             style="background: rgba(0,0,0,0.05); padding: 0.5rem; border-radius: 1rem;">
             <li class="nav-item" role="presentation">
@@ -1262,20 +1301,132 @@
         </div>
 
         <div class="row g-4">
-            <!-- Caloric Requirements -->
-            <div class="col-md-6">
-                <div class="bg-light rounded-3 p-3 text-center">
-                    <h6 class="text-muted mb-2">GEB (Gasto Energetico Basal)</h6>
-                    <span id="gebValue" class="fw-bold fs-3 text-primary">-</span>
-                    <span class="text-muted">kcal</span>
+            <!-- Método de Cálculo selector -->
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Metodo de Calculo</label>
+                <select class="form-select" name="metodo_calculo" id="metodo_calculo" onchange="toggleMetodoCalculo()">
+                    <option value="tmb_fa" selected>Harris-Benedict (GEB x FA)</option>
+                    <option value="factorial">Metodo Factorial (kcal/kg)</option>
+                    <option value="calorimetria">Calorimetria (manual)</option>
+                </select>
+            </div>
+
+            <!-- ====== MÉTODO 1: Harris-Benedict ====== -->
+            <div id="metodoHarrisBenedict" class="col-md-9">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <div class="bg-light rounded-3 p-2 text-center position-relative" style="cursor: help;" id="gebContainer">
+                            <small class="text-muted d-block">GEB (kcal)</small>
+                            <span id="gebValue" class="fw-bold fs-4 text-primary">-</span>
+                            <!-- Formula tooltip -->
+                            <div class="formula-popup" id="gebFormulaPopup" style="display:none; position:absolute; bottom:105%; left:50%; transform:translateX(-50%); z-index:1000; background:#1e293b; color:#fff; padding:12px 16px; border-radius:10px; font-size:0.75rem; white-space:nowrap; box-shadow:0 4px 15px rgba(0,0,0,0.3); pointer-events:none;">
+                                <div style="font-weight:700; margin-bottom:4px; color:#38bdf8;">Harris-Benedict (1990)</div>
+                                <div>&#9794; = 88.36 + 13.4 x Peso(kg) + 4.8 x Talla(cm) - 5.7 x Edad</div>
+                                <div>&#9792; = 447.6 + 9.2 x Peso(kg) + 3.1 x Talla(cm) - 4.3 x Edad</div>
+                                <div style="margin-top:6px; color:#94a3b8;">GET = GEB x Factor Actividad</div>
+                                <div style="position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:6px solid #1e293b;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-1 text-center" style="font-size:1.5rem; color:#64748b; padding-bottom:0.5rem;">x</div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold" style="cursor:help;" title="1.2=Sedentario, 1.375=Ligero, 1.55=Moderado, 1.725=Activo, 1.9=Muy activo">
+                            Factor Actividad <i class="fas fa-info-circle text-muted" style="font-size:0.7rem;"></i>
+                        </label>
+                        <input type="number" class="form-control" id="factor_actividad_num" name="factor_actividad_num"
+                            value="1.2" min="1.0" max="2.5" step="0.05"
+                            onchange="calcularGETdesdeFA()" style="font-weight:700; font-size:1.1rem; text-align:center; border:2px solid #10b981;">
+                        <div class="d-flex justify-content-between mt-1" style="font-size:0.6rem; color:#94a3b8;">
+                            <span>1.2 Sed</span><span>1.375 Lig</span><span>1.55 Mod</span><span>1.725 Act</span>
+                        </div>
+                    </div>
+                    <div class="col-md-1 text-center" style="font-size:1.5rem; color:#64748b; padding-bottom:0.5rem;">=</div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">GET (kcal)</label>
+                        <input type="number" class="form-control" id="getValue" name="get_kcal"
+                            value="" step="10" placeholder="Auto"
+                            onchange="onGetManualChange()" style="font-weight:800; font-size:1.2rem; text-align:center; border:2px solid #3b82f6; color:#3b82f6;">
+                    </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="bg-light rounded-3 p-3 text-center">
-                    <h6 class="text-muted mb-2">GET (Gasto Energetico Total)</h6>
-                    <span id="getValue" class="fw-bold fs-3 text-success">-</span>
-                    <span class="text-muted">kcal</span>
+
+            <!-- ====== MÉTODO 2: Factorial (kcal/kg) ====== -->
+            <div id="metodoFactorial" class="col-md-9" style="display:none;">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Objetivo</label>
+                        <select class="form-select" id="factorial_objetivo" onchange="calcularGETfactorial()">
+                            <option value="25">Bajar peso (25 kcal/kg)</option>
+                            <option value="30" selected>Mantener (30 kcal/kg)</option>
+                            <option value="35">Subir peso (35 kcal/kg)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold">kcal/kg</label>
+                        <input type="number" class="form-control text-center" id="factorial_kcalkg" value="30"
+                            min="20" max="50" step="1" onchange="calcularGETfactorial()" style="font-weight:700;">
+                    </div>
+                    <div class="col-md-1 text-center" style="font-size:1.5rem; color:#64748b; padding-bottom:0.5rem;">x</div>
+                    <div class="col-md-2">
+                        <div class="bg-light rounded-3 p-2 text-center">
+                            <span class="fw-bold" id="factorialPeso">-</span>
+                            <small class="d-block text-muted">Peso (kg)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-1 text-center" style="font-size:1.5rem; color:#64748b; padding-bottom:0.5rem;">=</div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">GET (kcal)</label>
+                        <input type="number" class="form-control" id="getValueFactorial"
+                            value="" step="10" placeholder="Auto"
+                            onchange="onGetManualChange()" style="font-weight:800; font-size:1.2rem; text-align:center; border:2px solid #3b82f6; color:#3b82f6;">
+                    </div>
                 </div>
+                <div class="mt-2 p-2 rounded" style="background:#fef3c7; font-size:0.75rem; color:#92400e;">
+                    <i class="fas fa-info-circle me-1"></i>
+                    <strong>Metodo Factorial (ADA):</strong> 25 kcal/kg para bajar peso, 30 para mantener, 35 para subir. Para deportistas usar factores mayores.
+                </div>
+            </div>
+
+            <!-- ====== MÉTODO 3: Calorimetría (manual) ====== -->
+            <div id="metodoCalorimetria" class="col-md-9" style="display:none;">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">GET Medido por Calorimetria (kcal)</label>
+                        <input type="number" class="form-control" id="getValueCalorimetria"
+                            value="" step="10" placeholder="Ingrese GET medido"
+                            onchange="onGetManualChange()" style="font-weight:800; font-size:1.2rem; text-align:center; border:2px solid #3b82f6; color:#3b82f6;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ajuste y GET Final (shared across methods) -->
+            <div class="col-md-6">
+                <div class="row g-2 align-items-end">
+                    <div class="col-5">
+                        <label class="form-label small fw-bold">Ajuste (kcal)</label>
+                        <input type="number" class="form-control text-center" name="ajuste_calorico" id="ajuste_calorico"
+                            value="0" step="50" placeholder="-300 o +500"
+                            onchange="actualizarGetAjustado()" style="font-weight:600;">
+                        <div class="d-flex justify-content-between mt-1" style="font-size:0.6rem; color:#94a3b8;">
+                            <span>-500 deficit</span><span>0</span><span>+500 superavit</span>
+                        </div>
+                    </div>
+                    <div class="col-1 text-center" style="font-size:1.2rem; color:#64748b; padding-bottom:0.5rem;">=</div>
+                    <div class="col-5">
+                        <div style="border:2px solid #10b981; border-radius:8px; padding:0.5rem; text-align:center;">
+                            <div class="fw-bold fs-4" id="getAjustadoValue" style="color:#166534;">-</div>
+                            <div class="small fw-bold" style="color:#166534;">GET Final (kcal)</div>
+                        </div>
+                        <input type="hidden" name="get_kcal_ajustado" id="getAjustadoHidden" value="">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex align-items-end gap-2">
+                <button type="button" class="btn btn-primary btn-sm"
+                    onclick="calcularRequerimientos()" title="Recalcular todo">
+                    <i class="fas fa-sync-alt me-1"></i> Recalcular
+                </button>
+                <small class="text-muted">Recalcula GEB, GET y macros</small>
             </div>
 
             <!-- Macronutrient Distribution -->
@@ -1285,20 +1436,26 @@
                     <div class="col-md-3">
                         <label class="form-label small">Proteinas (%)</label>
                         <input type="number" class="form-control form-control-sm bg-light border-0"
-                            id="proteinas_porcentaje" name="proteinas_porcentaje" value="20" min="10" max="40">
+                            id="proteinas_porcentaje" name="proteinas_porcentaje" value="20" min="10" max="40"
+                            onchange="calcularMacros()">
                         <small class="text-muted"><span id="proteinasG">-</span></small>
+                        <small class="text-primary d-block" id="protGrKg">- gr/kg</small>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small">Carbohidratos (%)</label>
                         <input type="number" class="form-control form-control-sm bg-light border-0"
-                            id="carbohidratos_porcentaje" name="carbohidratos_porcentaje" value="50" min="30" max="70">
+                            id="carbohidratos_porcentaje" name="carbohidratos_porcentaje" value="50" min="30" max="70"
+                            onchange="calcularMacros()">
                         <small class="text-muted"><span id="carbohidratosG">-</span></small>
+                        <small class="text-info d-block" id="carbsGrKg">- gr/kg</small>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small">Grasas (%)</label>
                         <input type="number" class="form-control form-control-sm bg-light border-0"
-                            id="grasas_porcentaje" name="grasas_porcentaje" value="30" min="15" max="45">
+                            id="grasas_porcentaje" name="grasas_porcentaje" value="30" min="15" max="45"
+                            onchange="calcularMacros()">
                         <small class="text-muted"><span id="grasasG">-</span></small>
+                        <small class="text-warning d-block" id="grasasGrKg">- gr/kg</small>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small">Total</label>
