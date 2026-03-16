@@ -1886,6 +1886,101 @@ def search_alimentos():
             'error': str(e)
         }), 500
 
+@app.route('/api/barcode/<barcode>', methods=['GET'])
+@login_required
+def barcode_lookup(barcode):
+    """Lookup food product by barcode via Open Food Facts API."""
+    log_debug(f"[BARCODE] Lookup barcode={barcode}")
+    try:
+        import requests as http_requests
+        resp = http_requests.get(
+            f'https://world.openfoodfacts.org/api/v2/product/{barcode}.json',
+            headers={'User-Agent': 'BiteTrack/1.0 (nutritionist-tool)'},
+            timeout=8
+        )
+        data = resp.json()
+
+        if data.get('status') != 1 or not data.get('product'):
+            return jsonify({'success': False, 'found': False, 'error': 'Producto no encontrado en Open Food Facts'})
+
+        p = data['product']
+        nuts = p.get('nutriments', {})
+
+        product = {
+            'barcode': barcode,
+            'nombre': p.get('product_name') or p.get('product_name_es') or 'Sin nombre',
+            'marca': p.get('brands', ''),
+            'imagen': p.get('image_front_small_url') or p.get('image_url', ''),
+            'ingredientes': p.get('ingredients_text_es') or p.get('ingredients_text', ''),
+            'alergenos': p.get('allergens_tags', []),
+            'categorias': p.get('categories', ''),
+            'porcion_g': float(p.get('serving_quantity') or 100),
+            'nutri_score': p.get('nutriscore_grade', ''),
+            'nova_group': p.get('nova_group', ''),
+            'por_100g': {
+                'kcal': float(nuts.get('energy-kcal_100g', 0)),
+                'proteinas': float(nuts.get('proteins_100g', 0)),
+                'carbohidratos': float(nuts.get('carbohydrates_100g', 0)),
+                'lipidos': float(nuts.get('fat_100g', 0)),
+                'fibra': float(nuts.get('fiber_100g', 0)),
+                'azucares': float(nuts.get('sugars_100g', 0)),
+                'sodio_mg': float(nuts.get('sodium_100g', 0)) * 1000,
+                'grasas_saturadas': float(nuts.get('saturated-fat_100g', 0)),
+            }
+        }
+
+        log_debug(f"[BARCODE] Found: {product['nombre']} ({product['marca']})")
+        return jsonify({'success': True, 'found': True, 'product': product})
+
+    except Exception as e:
+        log_debug(f"[BARCODE] ERROR: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/barcode/save', methods=['POST'])
+@login_required
+def barcode_save_to_db():
+    """Save a scanned product to the local food database (Excel)."""
+    log_debug(f"[BARCODE-SAVE] user_id={current_user.id}")
+    try:
+        import pandas as pd
+
+        data = request.json
+        nombre = data.get('nombre', '').strip()
+        if not nombre:
+            return jsonify({'success': False, 'error': 'Nombre requerido'}), 400
+
+        excel_path = 'data/base_alimentos_porciones.xlsx'
+        df = pd.read_excel(excel_path)
+
+        # Check if already exists
+        if nombre.lower() in df['Alimento'].str.lower().values:
+            return jsonify({'success': False, 'error': f'"{nombre}" ya existe en la base de datos'})
+
+        new_row = {
+            'Grupo': data.get('grupo', 'Productos envasados'),
+            'Subgrupo': data.get('subgrupo', 'Escaneado'),
+            'Alimento': nombre,
+            'Gramos_por_porción': data.get('gramos', 100),
+            'Medida_casera': data.get('medida_casera', '1 porcion'),
+            'Kcal_por_porción': data.get('kcal', 0),
+            'Proteínas_g': data.get('proteinas', 0),
+            'Lípidos_g': data.get('lipidos', 0),
+            'Carbohidratos_g': data.get('carbohidratos', 0),
+            'Comentario': f"Escaneado barcode:{data.get('barcode', '')} marca:{data.get('marca', '')}"
+        }
+
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        df.to_excel(excel_path, index=False)
+
+        log_debug(f"[BARCODE-SAVE] Saved '{nombre}' to food DB")
+        return jsonify({'success': True, 'message': f'"{nombre}" guardado en base de datos'})
+
+    except Exception as e:
+        log_debug(f"[BARCODE-SAVE] ERROR: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/check-recipe-limit', methods=['GET'])
 @login_required
 def check_recipe_limit():

@@ -46,6 +46,48 @@
         border-color: transparent;
         color: white;
     }
+    /* Barcode Scanner */
+    .barcode-product-card {
+        background: var(--glass-bg-light, rgba(248,250,252,0.9));
+        border: 1px solid rgba(99,102,241,0.15);
+        border-radius: 14px;
+        padding: 1.25rem;
+    }
+    .barcode-macros-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+    }
+    .barcode-macro-item {
+        text-align: center;
+        padding: 0.625rem 0.25rem;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--macro-color) 8%, transparent);
+        border: 1px solid color-mix(in srgb, var(--macro-color) 18%, transparent);
+    }
+    .barcode-macro-item .macro-value {
+        display: block;
+        font-size: 1.125rem;
+        font-weight: 800;
+        color: var(--macro-color);
+        line-height: 1.2;
+    }
+    .barcode-macro-item .macro-label {
+        display: block;
+        font-size: 0.625rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    [data-theme="dark"] .barcode-product-card {
+        background: rgba(15,23,42,0.8);
+        border-color: rgba(99,102,241,0.25);
+    }
+    [data-theme="dark"] .barcode-macro-item .macro-label {
+        color: #94a3b8;
+    }
+
     .pauta-panel {
         display: none;
     }
@@ -227,6 +269,11 @@
     <span class="nav-icon"><i class="fas fa-utensils"></i></span>
     <span class="nav-label">Pauta Alimentaria</span>
     <span class="nav-badge">IA</span>
+</button>
+<button class="bt-nav-item" data-bs-toggle="modal" data-bs-target="#barcodeScannerModal">
+    <span class="nav-icon"><i class="fas fa-barcode"></i></span>
+    <span class="nav-label">Escaner Alimentos</span>
+    <span class="nav-badge" style="background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;">Nuevo</span>
 </button>
 {% endblock %}
 
@@ -907,5 +954,321 @@
             btn.disabled = false;
         }
     }
+</script>
+
+<!-- Barcode Scanner Modal -->
+<div class="modal fade" id="barcodeScannerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius:20px;overflow:hidden;">
+      <div class="modal-header" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;padding:1rem 1.5rem;">
+        <h5 class="modal-title text-white" style="font-weight:700;font-size:1rem;">
+          <i class="fas fa-barcode me-2"></i>Escaner de Alimentos
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:1.5rem;">
+        <!-- Input mode -->
+        <div class="barcode-input-section">
+          <label style="font-weight:600;font-size:0.8125rem;margin-bottom:0.5rem;display:block;">Codigo de barras</label>
+          <div style="display:flex;gap:0.5rem;">
+            <input type="text" id="barcodeInput" class="form-control" placeholder="Ej: 7802800712345" style="border-radius:10px;font-size:0.875rem;" autofocus>
+            <button class="btn btn-primary" onclick="barcodeScanner.lookup()" style="border-radius:10px;white-space:nowrap;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;font-weight:600;">
+              <i class="fas fa-search me-1"></i>Buscar
+            </button>
+          </div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.5rem;align-items:center;">
+            <button class="btn btn-sm btn-outline-secondary" onclick="barcodeScanner.startCamera()" style="border-radius:8px;font-size:0.75rem;">
+              <i class="fas fa-camera me-1"></i>Usar camara
+            </button>
+            <span style="font-size:0.7rem;color:#94a3b8;">Escanea con la camara de tu dispositivo</span>
+          </div>
+        </div>
+
+        <!-- Camera preview -->
+        <div id="barcodeCameraBox" style="display:none;margin-top:1rem;">
+          <div style="position:relative;border-radius:12px;overflow:hidden;background:#000;">
+            <video id="barcodeVideo" style="width:100%;max-height:280px;object-fit:cover;" playsinline></video>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:70%;height:40%;border:2px solid rgba(99,102,241,0.7);border-radius:8px;pointer-events:none;"></div>
+          </div>
+          <button class="btn btn-sm btn-outline-danger mt-2" onclick="barcodeScanner.stopCamera()" style="border-radius:8px;font-size:0.75rem;">
+            <i class="fas fa-times me-1"></i>Cerrar camara
+          </button>
+        </div>
+
+        <!-- Loading -->
+        <div id="barcodeLoading" style="display:none;text-align:center;padding:2rem;">
+          <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;color:#6366f1;"></i>
+          <p style="margin-top:0.5rem;font-size:0.8125rem;color:#64748b;">Buscando producto...</p>
+        </div>
+
+        <!-- Product result -->
+        <div id="barcodeResult" style="display:none;margin-top:1rem;">
+          <div class="barcode-product-card">
+            <div style="display:flex;gap:1rem;align-items:flex-start;">
+              <img id="barcodeProductImg" src="" alt="" style="width:80px;height:80px;object-fit:contain;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;">
+              <div style="flex:1;">
+                <h6 id="barcodeProductName" style="margin:0;font-weight:700;font-size:0.9375rem;"></h6>
+                <p id="barcodeProductBrand" style="margin:0;font-size:0.75rem;color:#64748b;"></p>
+                <div id="barcodeProductScores" style="display:flex;gap:0.375rem;margin-top:0.375rem;"></div>
+              </div>
+            </div>
+
+            <!-- Macros grid -->
+            <div class="barcode-macros-grid" style="margin-top:1rem;">
+              <div class="barcode-macro-item" style="--macro-color:#f59e0b;">
+                <span class="macro-value" id="barcodeKcal">0</span>
+                <span class="macro-label">kcal</span>
+              </div>
+              <div class="barcode-macro-item" style="--macro-color:#ef4444;">
+                <span class="macro-value" id="barcodeProt">0g</span>
+                <span class="macro-label">Proteinas</span>
+              </div>
+              <div class="barcode-macro-item" style="--macro-color:#3b82f6;">
+                <span class="macro-value" id="barcodeCarbs">0g</span>
+                <span class="macro-label">Carbohidratos</span>
+              </div>
+              <div class="barcode-macro-item" style="--macro-color:#10b981;">
+                <span class="macro-value" id="barcodeFat">0g</span>
+                <span class="macro-label">Grasas</span>
+              </div>
+            </div>
+
+            <!-- Extra nutrition details -->
+            <div id="barcodeExtraInfo" style="margin-top:0.75rem;font-size:0.75rem;color:#64748b;"></div>
+
+            <!-- Ingredients -->
+            <div id="barcodeIngredients" style="margin-top:0.75rem;display:none;">
+              <strong style="font-size:0.75rem;">Ingredientes:</strong>
+              <p id="barcodeIngredientsText" style="font-size:0.7rem;color:#64748b;margin:0.25rem 0 0;"></p>
+            </div>
+
+            <!-- Allergens -->
+            <div id="barcodeAllergens" style="margin-top:0.5rem;display:none;">
+              <strong style="font-size:0.75rem;color:#ef4444;">Alergenos:</strong>
+              <span id="barcodeAllergensText" style="font-size:0.7rem;color:#ef4444;"></span>
+            </div>
+
+            <!-- Actions -->
+            <div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <button class="btn btn-sm" onclick="barcodeScanner.saveToDb()" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:8px;font-weight:600;font-size:0.75rem;">
+                <i class="fas fa-plus me-1"></i>Agregar a base de datos
+              </button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="barcodeScanner.reset()" style="border-radius:8px;font-size:0.75rem;">
+                <i class="fas fa-redo me-1"></i>Escanear otro
+              </button>
+            </div>
+            <div id="barcodeSaveStatus" style="display:none;margin-top:0.5rem;font-size:0.75rem;padding:0.375rem 0.625rem;border-radius:6px;"></div>
+          </div>
+        </div>
+
+        <!-- Not found -->
+        <div id="barcodeNotFound" style="display:none;text-align:center;padding:1.5rem;">
+          <i class="fas fa-box-open" style="font-size:2rem;color:#94a3b8;"></i>
+          <p style="margin-top:0.5rem;font-size:0.875rem;font-weight:600;color:#64748b;">Producto no encontrado</p>
+          <p style="font-size:0.75rem;color:#94a3b8;">Este codigo de barras no esta en Open Food Facts. Puedes ingresar los datos manualmente.</p>
+          <button class="btn btn-sm btn-outline-primary" onclick="barcodeScanner.reset()" style="border-radius:8px;">Intentar otro</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const barcodeScanner = {
+    stream: null,
+    currentProduct: null,
+    detectorSupported: ('BarcodeDetector' in window),
+
+    async lookup() {
+        const code = document.getElementById('barcodeInput').value.trim();
+        if (!code) return;
+
+        this.showSection('barcodeLoading');
+
+        try {
+            const resp = await fetch(`/api/barcode/${encodeURIComponent(code)}`);
+            const data = await resp.json();
+
+            if (data.success && data.found) {
+                this.currentProduct = data.product;
+                this.renderProduct(data.product);
+            } else {
+                this.showSection('barcodeNotFound');
+            }
+        } catch (err) {
+            console.error('Barcode lookup error:', err);
+            this.showSection('barcodeNotFound');
+        }
+    },
+
+    renderProduct(p) {
+        document.getElementById('barcodeProductName').textContent = p.nombre;
+        document.getElementById('barcodeProductBrand').textContent = p.marca || 'Marca desconocida';
+
+        const img = document.getElementById('barcodeProductImg');
+        if (p.imagen) { img.src = p.imagen; img.style.display = 'block'; }
+        else { img.style.display = 'none'; }
+
+        // Scores
+        const scoresEl = document.getElementById('barcodeProductScores');
+        let scoresHtml = '';
+        if (p.nutri_score) {
+            const colors = {a:'#10b981',b:'#22c55e',c:'#f59e0b',d:'#f97316',e:'#ef4444'};
+            scoresHtml += `<span style="background:${colors[p.nutri_score]||'#94a3b8'};color:#fff;font-size:0.625rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:4px;">Nutri-Score ${p.nutri_score.toUpperCase()}</span>`;
+        }
+        if (p.nova_group) {
+            scoresHtml += `<span style="background:#64748b;color:#fff;font-size:0.625rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:4px;">NOVA ${p.nova_group}</span>`;
+        }
+        scoresEl.innerHTML = scoresHtml;
+
+        // Macros (per 100g)
+        const n = p.por_100g;
+        document.getElementById('barcodeKcal').textContent = Math.round(n.kcal);
+        document.getElementById('barcodeProt').textContent = n.proteinas.toFixed(1) + 'g';
+        document.getElementById('barcodeCarbs').textContent = n.carbohidratos.toFixed(1) + 'g';
+        document.getElementById('barcodeFat').textContent = n.lipidos.toFixed(1) + 'g';
+
+        // Extra info
+        const extras = [];
+        if (n.fibra) extras.push(`Fibra: ${n.fibra.toFixed(1)}g`);
+        if (n.azucares) extras.push(`Azucares: ${n.azucares.toFixed(1)}g`);
+        if (n.sodio_mg) extras.push(`Sodio: ${Math.round(n.sodio_mg)}mg`);
+        if (n.grasas_saturadas) extras.push(`G. Sat: ${n.grasas_saturadas.toFixed(1)}g`);
+        document.getElementById('barcodeExtraInfo').innerHTML = extras.length
+            ? '<span style="font-weight:600;">Por 100g:</span> ' + extras.join(' · ')
+            : '';
+
+        // Ingredients
+        const ingredientsEl = document.getElementById('barcodeIngredients');
+        if (p.ingredientes) {
+            ingredientsEl.style.display = 'block';
+            document.getElementById('barcodeIngredientsText').textContent = p.ingredientes;
+        } else {
+            ingredientsEl.style.display = 'none';
+        }
+
+        // Allergens
+        const allergensEl = document.getElementById('barcodeAllergens');
+        if (p.alergenos && p.alergenos.length) {
+            allergensEl.style.display = 'block';
+            document.getElementById('barcodeAllergensText').textContent = p.alergenos.map(a => a.replace('en:', '')).join(', ');
+        } else {
+            allergensEl.style.display = 'none';
+        }
+
+        document.getElementById('barcodeSaveStatus').style.display = 'none';
+        this.showSection('barcodeResult');
+    },
+
+    async saveToDb() {
+        if (!this.currentProduct) return;
+        const p = this.currentProduct;
+        const statusEl = document.getElementById('barcodeSaveStatus');
+
+        try {
+            const resp = await fetch('/api/barcode/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    nombre: `${p.nombre}${p.marca ? ' (' + p.marca + ')' : ''}`,
+                    barcode: p.barcode,
+                    marca: p.marca,
+                    grupo: 'Productos envasados',
+                    subgrupo: p.categorias ? p.categorias.split(',')[0].trim() : 'Escaneado',
+                    gramos: p.porcion_g || 100,
+                    medida_casera: p.porcion_g ? p.porcion_g + 'g' : '100g',
+                    kcal: Math.round(p.por_100g.kcal * (p.porcion_g || 100) / 100),
+                    proteinas: +(p.por_100g.proteinas * (p.porcion_g || 100) / 100).toFixed(1),
+                    lipidos: +(p.por_100g.lipidos * (p.porcion_g || 100) / 100).toFixed(1),
+                    carbohidratos: +(p.por_100g.carbohidratos * (p.porcion_g || 100) / 100).toFixed(1)
+                })
+            });
+            const data = await resp.json();
+
+            statusEl.style.display = 'block';
+            if (data.success) {
+                statusEl.style.background = 'rgba(16,185,129,0.1)';
+                statusEl.style.color = '#059669';
+                statusEl.innerHTML = '<i class="fas fa-check-circle me-1"></i>' + data.message;
+            } else {
+                statusEl.style.background = 'rgba(239,68,68,0.1)';
+                statusEl.style.color = '#dc2626';
+                statusEl.innerHTML = '<i class="fas fa-info-circle me-1"></i>' + (data.error || 'Error');
+            }
+        } catch (err) {
+            statusEl.style.display = 'block';
+            statusEl.style.background = 'rgba(239,68,68,0.1)';
+            statusEl.style.color = '#dc2626';
+            statusEl.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>' + err.message;
+        }
+    },
+
+    async startCamera() {
+        try {
+            this.stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
+            });
+            const video = document.getElementById('barcodeVideo');
+            video.srcObject = this.stream;
+            video.play();
+            document.getElementById('barcodeCameraBox').style.display = 'block';
+
+            if (this.detectorSupported) {
+                this.scanLoop(video);
+            }
+        } catch (err) {
+            alert('No se pudo acceder a la camara: ' + err.message);
+        }
+    },
+
+    async scanLoop(video) {
+        const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+        const scan = async () => {
+            if (!this.stream) return;
+            try {
+                const barcodes = await detector.detect(video);
+                if (barcodes.length > 0) {
+                    const code = barcodes[0].rawValue;
+                    document.getElementById('barcodeInput').value = code;
+                    this.stopCamera();
+                    this.lookup();
+                    return;
+                }
+            } catch (e) { /* retry */ }
+            if (this.stream) requestAnimationFrame(scan);
+        };
+        requestAnimationFrame(scan);
+    },
+
+    stopCamera() {
+        if (this.stream) {
+            this.stream.getTracks().forEach(t => t.stop());
+            this.stream = null;
+        }
+        document.getElementById('barcodeCameraBox').style.display = 'none';
+    },
+
+    reset() {
+        this.currentProduct = null;
+        document.getElementById('barcodeInput').value = '';
+        this.showSection(null);
+    },
+
+    showSection(id) {
+        ['barcodeLoading', 'barcodeResult', 'barcodeNotFound'].forEach(s => {
+            document.getElementById(s).style.display = s === id ? 'block' : 'none';
+        });
+    }
+};
+
+// Stop camera when modal closes
+document.getElementById('barcodeScannerModal')?.addEventListener('hidden.bs.modal', () => {
+    barcodeScanner.stopCamera();
+});
+
+// Enter key triggers search
+document.getElementById('barcodeInput')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') barcodeScanner.lookup();
+});
 </script>
 {% endblock %}
