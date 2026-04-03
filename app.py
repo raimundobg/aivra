@@ -3639,38 +3639,21 @@ def api_public_slots(nutri_id):
 
         all_slots = schedule.get_time_slots()
 
-        # Remove already booked slots with duration-aware overlap detection
+        # Remove already booked slots
         existing = Booking.query.filter_by(
             nutritionist_id=nutri_id, booking_date=booking_date
         ).filter(Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED])).all()
 
-        # Convert booked times to datetime for overlap checking
-        def time_to_minutes(time_str):
-            """Convert 'HH:MM' to minutes since midnight"""
-            h, m = map(int, time_str.split(':'))
-            return h * 60 + m
-
-        booked_minutes = set()
-        slot_duration = schedule.slot_duration or 60  # Default 60 minutes if not set
-
+        # Get set of booked times
+        booked_times = set()
         for booking in existing:
-            booked_start = time_to_minutes(booking.booking_time)
-            booked_end = booked_start + slot_duration
-            # Block all time ranges that overlap with this booking
-            for minute in range(booked_start, booked_end):
-                booked_minutes.add(minute)
+            if booking.booking_time:
+                booked_times.add(booking.booking_time)
 
-        # Filter slots: keep only those that don't overlap with bookings
-        available = []
-        for slot in all_slots:
-            slot_start = time_to_minutes(slot)
-            slot_end = slot_start + slot_duration
-            # Check if any minute in this slot is booked
-            is_blocked = any(m in booked_minutes for m in range(slot_start, slot_end))
-            if not is_blocked:
-                available.append(slot)
+        # Filter out booked slots
+        available = [s for s in all_slots if s not in booked_times]
 
-        log_debug(f"[PUBLIC-SLOTS] OK - {len(available)} available slots (total={len(all_slots)}, booked={len(existing)}, duration={slot_duration}min)")
+        log_debug(f"[PUBLIC-SLOTS] OK - {len(available)} available slots (total={len(all_slots)}, booked={len(existing)})")
         return jsonify({'success': True, 'slots': available, 'date': date_str})
 
     except Exception as e:
