@@ -3627,50 +3627,55 @@ def api_public_slots(nutri_id):
     except ValueError:
         return jsonify({'success': False, 'error': 'Formato de fecha invalido (YYYY-MM-DD)'}), 400
 
-    day_of_week = booking_date.weekday()  # 0=Monday
+    try:
+        day_of_week = booking_date.weekday()  # 0=Monday
 
-    schedule = NutritionistSchedule.query.filter_by(
-        nutritionist_id=nutri_id, day_of_week=day_of_week, is_active=True
-    ).first()
+        schedule = NutritionistSchedule.query.filter_by(
+            nutritionist_id=nutri_id, day_of_week=day_of_week, is_active=True
+        ).first()
 
-    if not schedule:
-        return jsonify({'success': True, 'slots': [], 'message': 'Sin horario para este dia'})
+        if not schedule:
+            return jsonify({'success': True, 'slots': [], 'message': 'Sin horario para este dia'})
 
-    all_slots = schedule.get_time_slots()
+        all_slots = schedule.get_time_slots()
 
-    # Remove already booked slots with duration-aware overlap detection
-    existing = Booking.query.filter_by(
-        nutritionist_id=nutri_id, booking_date=booking_date
-    ).filter(Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED])).all()
+        # Remove already booked slots with duration-aware overlap detection
+        existing = Booking.query.filter_by(
+            nutritionist_id=nutri_id, booking_date=booking_date
+        ).filter(Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED])).all()
 
-    # Convert booked times to datetime for overlap checking
-    def time_to_minutes(time_str):
-        """Convert 'HH:MM' to minutes since midnight"""
-        h, m = map(int, time_str.split(':'))
-        return h * 60 + m
+        # Convert booked times to datetime for overlap checking
+        def time_to_minutes(time_str):
+            """Convert 'HH:MM' to minutes since midnight"""
+            h, m = map(int, time_str.split(':'))
+            return h * 60 + m
 
-    booked_minutes = set()
-    slot_duration = schedule.slot_duration or 60  # Default 60 minutes if not set
+        booked_minutes = set()
+        slot_duration = schedule.slot_duration or 60  # Default 60 minutes if not set
 
-    for booking in existing:
-        booked_start = time_to_minutes(booking.booking_time)
-        booked_end = booked_start + slot_duration
-        # Block all time ranges that overlap with this booking
-        for minute in range(booked_start, booked_end):
-            booked_minutes.add(minute)
+        for booking in existing:
+            booked_start = time_to_minutes(booking.booking_time)
+            booked_end = booked_start + slot_duration
+            # Block all time ranges that overlap with this booking
+            for minute in range(booked_start, booked_end):
+                booked_minutes.add(minute)
 
-    # Filter slots: keep only those that don't overlap with bookings
-    available = []
-    for slot in all_slots:
-        slot_start = time_to_minutes(slot)
-        slot_end = slot_start + slot_duration
-        # Check if any minute in this slot is booked
-        is_blocked = any(m in booked_minutes for m in range(slot_start, slot_end))
-        if not is_blocked:
-            available.append(slot)
+        # Filter slots: keep only those that don't overlap with bookings
+        available = []
+        for slot in all_slots:
+            slot_start = time_to_minutes(slot)
+            slot_end = slot_start + slot_duration
+            # Check if any minute in this slot is booked
+            is_blocked = any(m in booked_minutes for m in range(slot_start, slot_end))
+            if not is_blocked:
+                available.append(slot)
 
-    log_debug(f"[PUBLIC-SLOTS] OK - {len(available)} available slots (total={len(all_slots)}, booked={len(existing)}, duration={slot_duration}min)")
-    return jsonify({'success': True, 'slots': available, 'date': date_str})
+        log_debug(f"[PUBLIC-SLOTS] OK - {len(available)} available slots (total={len(all_slots)}, booked={len(existing)}, duration={slot_duration}min)")
+        return jsonify({'success': True, 'slots': available, 'date': date_str})
+
+    except Exception as e:
+        log_error(f"[PUBLIC-SLOTS] Error: {e}")
+        return jsonify({'success': False, 'error': 'Error al obtener horarios disponibles', 'details': str(e)}), 500
 
 @app.route('/api/public/book', methods=['POST'])
 def api_public_book():

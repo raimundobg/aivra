@@ -313,14 +313,19 @@ class NutritionistSchedule(db.Model):
     def get_time_slots(self):
         """Generate list of available time slot start times"""
         slots = []
+        # Handle NULL slot_duration from old database records
+        slot_duration = self.slot_duration or 60
+        if slot_duration <= 0:
+            slot_duration = 60  # Safety check to prevent infinite loops
+
         start_h, start_m = map(int, self.start_time.split(':'))
         end_h, end_m = map(int, self.end_time.split(':'))
         current = start_h * 60 + start_m
         end = end_h * 60 + end_m
-        while current + self.slot_duration <= end:
+        while current + slot_duration <= end:
             h, m = divmod(current, 60)
             slots.append(f'{h:02d}:{m:02d}')
-            current += self.slot_duration
+            current += slot_duration
         return slots
 
     def __repr__(self):

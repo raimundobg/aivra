@@ -375,13 +375,31 @@ async function loadSlots(dateStr) {
 
     try {
         const res = await fetch('/api/public/nutritionist/' + selectedNutri.id + '/slots?date=' + dateStr);
-        const data = await res.json();
 
-        if (!data.slots || data.slots.length === 0) {
-            area.innerHTML = '<p class="empty-state" style="padding:1rem;"><i class="fas fa-calendar-xmark"></i><br>Sin horarios disponibles este dia</p>';
+        // Check response status
+        if (!res.ok) {
+            console.error('[loadSlots] API error:', res.status, res.statusText);
+            const errorData = await res.json();
+            area.innerHTML = '<p class="empty-state" style="padding:1rem;"><i class="fas fa-exclamation-circle"></i><br>Error al cargar horarios:<br>' + (errorData.error || 'Error desconocido') + '</p>';
             return;
         }
 
+        const data = await res.json();
+        console.log('[loadSlots] API response:', data);
+
+        if (!data.success) {
+            console.error('[loadSlots] API returned success=false:', data);
+            area.innerHTML = '<p class="empty-state" style="padding:1rem;"><i class="fas fa-exclamation-circle"></i><br>' + (data.error || 'Error desconocido') + '</p>';
+            return;
+        }
+
+        if (!data.slots || data.slots.length === 0) {
+            console.log('[loadSlots] No slots available for date:', dateStr);
+            area.innerHTML = '<p class="empty-state" style="padding:1rem;"><i class="fas fa-calendar-xmark"></i><br>Sin horarios disponibles este dia' + (data.message ? ' (' + data.message + ')' : '') + '</p>';
+            return;
+        }
+
+        console.log('[loadSlots] Rendering', data.slots.length, 'slots:', data.slots);
         const grid = document.createElement('div');
         grid.className = 'slots-grid';
         data.slots.forEach(function(slot) {
@@ -400,7 +418,8 @@ async function loadSlots(dateStr) {
         area.innerHTML = '';
         area.appendChild(grid);
     } catch(e) {
-        area.innerHTML = '<p class="empty-state" style="padding:1rem;">Error cargando horarios</p>';
+        console.error('[loadSlots] Exception caught:', e);
+        area.innerHTML = '<p class="empty-state" style="padding:1rem;"><i class="fas fa-exclamation-triangle"></i><br>Error cargando horarios:<br>' + e.message + '</p>';
     }
 }
 
