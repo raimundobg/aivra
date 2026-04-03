@@ -2,7 +2,7 @@
 auth.py - Sistema de Autenticación
 Registro simplificado con campos obligatorios
 """
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from models import db, User, UserType, SubscriptionPlan, NUTRITIONIST_SPECIALTIES, PasswordResetToken
 from email_validator import validate_email, EmailNotValidError
@@ -312,7 +312,14 @@ def reset_password(token):
         user = token_obj.user
         user.set_password(password)
         token_obj.used = True
-        db.session.commit()
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error al actualizar contraseña: {e}")
+            flash('Error al actualizar la contraseña. Por favor intenta de nuevo.', 'danger')
+            return render_template('reset_password.html', token=token)
 
         flash('Contraseña actualizada. Ya puedes iniciar sesión.', 'success')
         return redirect(url_for('auth.login'))

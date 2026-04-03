@@ -1,0 +1,218 @@
+# ============================================
+# TABLERO SENCE API - Serverless Configuration
+# ============================================
+#
+# Tabla DynamoDB independiente para el Tablero SENCE.
+# Almacena las 69 columnas del Excel BBDD 2025.
+#
+# PARA ELIMINAR TODO:
+#   serverless remove --stage dev
+#
+# Esto eliminara:
+#   - Lambda functions
+#   - API Gateway
+#   - DynamoDB table
+#   - CloudWatch logs
+#
+# ============================================
+
+service: tablero-sence-api
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-2  # Ohio - same as existing SENCE Lambda
+  stage: ${opt:stage, 'dev'}
+  timeout: 30
+  memorySize: 256
+
+  environment:
+    TABLERO_SENCE_TABLE: ${self:service}-${sls:stage}
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
+
+  iam:
+    role:
+      statements:
+        # DynamoDB permissions
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:BatchWriteItem
+            - dynamodb:BatchGetItem
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.TABLERO_SENCE_TABLE}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.TABLERO_SENCE_TABLE}/index/*
+
+functions:
+  # Main API handler
+  api:
+    handler: dist/handlers/tableroApi.handler
+    description: Tablero SENCE REST API
+    events:
+      # Root endpoint
+      - http:
+          path: /tablero
+          method: get
+          cors: true
+
+      - http:
+          path: /tablero
+          method: post
+          cors: true
+
+      # Health check
+      - http:
+          path: /tablero/health
+          method: get
+          cors: true
+
+      # Statistics
+      - http:
+          path: /tablero/stats
+          method: get
+          cors: true
+
+      # Search
+      - http:
+          path: /tablero/search
+          method: get
+          cors: true
+
+      # Query by course
+      - http:
+          path: /tablero/course/{codSence}
+          method: get
+          cors: true
+
+      # Query by client
+      - http:
+          path: /tablero/client/{idCliente}
+          method: get
+          cors: true
+
+      # Query by participant (RUT)
+      - http:
+          path: /tablero/participant/{rut}
+          method: get
+          cors: true
+
+      # Single record CRUD
+      - http:
+          path: /tablero/{codSence}/{rut}
+          method: get
+          cors: true
+
+      - http:
+          path: /tablero/{codSence}/{rut}
+          method: put
+          cors: true
+
+      - http:
+          path: /tablero/{codSence}/{rut}
+          method: delete
+          cors: true
+
+      # Batch update (for sync bot)
+      - http:
+          path: /tablero/batch-update
+          method: post
+          cors: true
+
+      # CORS preflight
+      - http:
+          path: /{proxy+}
+          method: options
+          cors: true
+
+resources:
+  Resources:
+    # DynamoDB Table
+    TableroSenceTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Delete  # IMPORTANT: Allows deletion with serverless remove
+      Properties:
+        TableName: ${self:provider.environment.TABLERO_SENCE_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+          - AttributeName: gsi1pk
+            AttributeType: S
+          - AttributeName: gsi1sk
+            AttributeType: S
+          - AttributeName: gsi2pk
+            AttributeType: S
+          - AttributeName: gsi2sk
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          # GSI1: Query by Client
+          - IndexName: gsi1-client
+            KeySchema:
+              - AttributeName: gsi1pk
+                KeyType: HASH
+              - AttributeName: gsi1sk
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          # GSI2: Query by RUT (participant)
+          - IndexName: gsi2-rut
+            KeySchema:
+              - AttributeName: gsi2pk
+                KeyType: HASH
+              - AttributeName: gsi2sk
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        Tags:
+          - Key: Project
+            Value: tablero-sence
+          - Key: Environment
+            Value: ${sls:stage}
+
+  Outputs:
+    TableName:
+      Description: DynamoDB table name
+      Value: !Ref TableroSenceTable
+      Export:
+        Name: ${self:service}-${sls:stage}-table-name
+
+    ApiUrl:
+      Description: API Gateway URL
+      Value:
+        Fn::Join:
+          - ''
+          - - 'https://'
+            - !Ref ApiGatewayRestApi
+            - '.execute-api.${aws:region}.amazonaws.com/${sls:stage}'
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 3001
+    noPrependStageInUrl: true
+
+package:
+  individually: true
+  patterns:
+    - '!node_modules/**'
+    - '!src/**'
+    - '!scripts/**'
+    - '!tests/**'
+    - '!*.md'
+    - 'dist/**'

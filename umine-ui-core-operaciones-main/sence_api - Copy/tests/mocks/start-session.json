@@ -1,0 +1,11 @@
+{
+    "RutOtec": "11222333-4",
+    "Token": "5EEBF607-25A9-4DB2-A4DD-5D31BDAE3220",
+    "CodSence": "1234567890",
+    "CodigoCurso": "COURSE-001",
+    "LineaCapacitacion": "3",
+    "RunAlumno": "99888777-6",
+    "IdSesionAlumno": "SESSION-101",
+    "UrlRetoma": "https://otec.com/success",
+    "UrlError": "https://otec.com/error"
+}

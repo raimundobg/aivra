@@ -1,0 +1,116 @@
+service: sence-sync-bot
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-1
+  timeout: 300  # 5 minutos
+  memorySize: 512
+
+  environment:
+    SENCE_API_FUNCTION: operaciones-core-internal-extract-data-user-sence
+    S3_BUCKET: ${self:service}-${sls:stage}-data
+    DYNAMODB_TABLE: ${self:service}-${sls:stage}-results
+
+  iam:
+    role:
+      statements:
+        # Invocar otra Lambda
+        - Effect: Allow
+          Action:
+            - lambda:InvokeFunction
+          Resource:
+            - arn:aws:lambda:${aws:region}:${aws:accountId}:function:operaciones-core-internal-extract-data-user-sence
+        # DynamoDB
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:BatchWriteItem
+            - dynamodb:GetItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.DYNAMODB_TABLE}
+        # S3
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource:
+            - arn:aws:s3:::${self:provider.environment.S3_BUCKET}/*
+
+functions:
+  syncBot:
+    handler: handler.handler
+    description: Sincroniza datos SENCE cada 2 horas
+    events:
+      # Trigger cada 2 horas
+      - schedule:
+          rate: rate(2 hours)
+          enabled: true
+          input:
+            source: scheduled
+            id_sences:
+              - "6744840"  # Del Google Sheet COPIA Tablero SENCE
+              - "6749253"
+              - "6628203"
+              # Agregar más IDs según tu spreadsheet
+
+      # También puede ser invocado manualmente o por API
+      - http:
+          path: sync
+          method: post
+          cors: true
+
+      - http:
+          path: sync/{id_sence}
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    # DynamoDB Table
+    SyncResultsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+
+    # S3 Bucket para backups
+    DataBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.S3_BUCKET}
+        LifecycleConfiguration:
+          Rules:
+            - Id: DeleteOldFiles
+              Status: Enabled
+              ExpirationInDays: 30
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: false
+    slim: true
+    layer: true
+
+package:
+  individually: true
+  patterns:
+    - '!node_modules/**'
+    - '!.git/**'
+    - '!tests/**'

@@ -1,0 +1,34 @@
+{
+    "rutOtec": "11222333-4",
+    "idSistema": 1350,
+    "token": "5EEBF607-25A9-4DB2-A4DD-5D31BDAE3220",
+    "codigoOferta": "COD-CUR-000333222",
+    "codigoGrupo": "COD-SEC-000333222",
+    "codigoEnvio": "TEST-ENV-001",
+    "listaAlumnos": [
+        {
+            "rutAlumno": 17118181,
+            "dvAlumno": "k",
+            "tiempoConectividad": 45,
+            "estado": 1,
+            "porcentajeAvance": 10,
+            "fechaInicio": "2026-02-01 10:00:00",
+            "fechaFin": "2026-02-01 11:30:00",
+            "listaModulos": [
+                {
+                    "codigoModulo": "COD-MOD-000555444",
+                    "tiempoConectividad": 60,
+                    "porcentajeAvance": 55,
+                    "estado": 1,
+                    "fechaInicio": "2026-02-01 10:00:00",
+                    "fechaFin": "2026-02-01 11:00:00",
+                    "listaActividades": [
+                        {
+                            "codigoActividad": "Tarea 1"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
