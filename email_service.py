@@ -330,6 +330,71 @@ def send_booking_reminder(booking, nutritionist, is_patient=True, time_label='en
         return {'success': False, 'error': str(e)}
 
 
+def send_password_reset_email(user, reset_url):
+    """
+    Send password reset email with a one-time link.
+
+    Args:
+        user: User object (debe tener .email, .first_name)
+        reset_url: Full URL string including token
+
+    Returns:
+        dict with 'success' (bool) and 'error' (str, if any)
+    """
+    if not user.email:
+        return {'success': False, 'error': 'El usuario no tiene email registrado'}
+
+    try:
+        subject = 'Recuperación de contraseña - BiteTrack'
+
+        html = f"""
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"></head>
+<body style="font-family: Arial, sans-serif; background:#f4f4f4; padding:20px;">
+  <div style="max-width:520px; margin:auto; background:#fff; border-radius:8px; padding:32px;">
+    <h2 style="color:#2d6a4f;">Recuperar contraseña</h2>
+    <p>Hola <strong>{user.first_name}</strong>,</p>
+    <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en BiteTrack.</p>
+    <p>Haz clic en el botón para crear una nueva contraseña:</p>
+    <p style="text-align:center; margin:28px 0;">
+      <a href="{reset_url}"
+         style="background:#2d6a4f; color:#fff; padding:12px 28px;
+                border-radius:6px; text-decoration:none; font-weight:bold;">
+        Restablecer contraseña
+      </a>
+    </p>
+    <p style="color:#666; font-size:13px;">
+      Este enlace expira en <strong>1 hora</strong>.<br>
+      Si no solicitaste este cambio, ignora este mensaje.
+    </p>
+    <hr style="border:none; border-top:1px solid #eee; margin:24px 0;">
+    <p style="color:#aaa; font-size:12px; text-align:center;">
+      BiteTrack &mdash; Sistema de Nutrición
+    </p>
+  </div>
+</body>
+</html>"""
+
+        text = (
+            f"Hola {user.first_name},\n\n"
+            f"Recibimos una solicitud para restablecer tu contraseña en BiteTrack.\n\n"
+            f"Usa el siguiente enlace (válido por 1 hora):\n{reset_url}\n\n"
+            f"Si no solicitaste este cambio, ignora este mensaje.\n\n"
+            f"Saludos,\nEquipo BiteTrack"
+        )
+
+        return _send_email(user.email, subject, html, text)
+
+    except Exception as e:
+        try:
+            from flask import current_app
+            current_app.logger.error(f"Error enviando reset email a {user.email}: {str(e)}")
+        except:
+            pass
+        return {'success': False, 'error': str(e)}
+
+
 def is_mail_configured():
     """Check if any email backend is configured."""
     resend_key = os.environ.get('RESEND_API_KEY', '')

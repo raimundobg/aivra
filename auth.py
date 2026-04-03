@@ -4,9 +4,10 @@ Registro simplificado con campos obligatorios
 """
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
-from models import db, User, UserType, SubscriptionPlan, NUTRITIONIST_SPECIALTIES
+from models import db, User, UserType, SubscriptionPlan, NUTRITIONIST_SPECIALTIES, PasswordResetToken
 from email_validator import validate_email, EmailNotValidError
-from datetime import datetime
+from datetime import datetime, timedelta
+import secrets
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -227,3 +228,93 @@ def logout():
     logout_user()
     flash('Has cerrado sesión', 'info')
     return redirect(url_for('index'))
+
+
+# ============================================
+# PASSWORD RECOVERY ENDPOINTS
+# ============================================
+
+@auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    """Solicitar enlace de recuperación de contraseña."""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+
+        if not email:
+            flash('Ingresa tu email.', 'danger')
+            return render_template('forgot_password.html')
+
+        # Validar email format
+        try:
+            validate_email(email, check_deliverability=False)
+        except EmailNotValidError:
+            flash('Email inválido.', 'danger')
+            return render_template('forgot_password.html')
+
+        # Respuesta genérica siempre (no revelar si email existe)
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            # Invalidar tokens anteriores no usados
+            old_tokens = PasswordResetToken.query.filter_by(
+                user_id=user.id, used=False
+            ).all()
+            for t in old_tokens:
+                t.used = True
+
+            token_obj = PasswordResetToken(user_id=user.id)
+            db.session.add(token_obj)
+            db.session.commit()
+
+            base_url = request.host_url.rstrip('/')
+            reset_url = f"{base_url}/auth/reset-password/{token_obj.token}"
+
+            # Enviar email
+            import email_service
+            email_service.send_password_reset_email(user, reset_url)
+
+        flash(
+            'Si ese email existe en nuestra base de datos, recibirás un enlace para recuperar tu contraseña.',
+            'info'
+        )
+        return render_template('forgot_password.html')
+
+    return render_template('forgot_password.html')
+
+
+@auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """Establecer nueva contraseña con token válido."""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+
+    token_obj = PasswordResetToken.query.filter_by(token=token).first()
+
+    if not token_obj or not token_obj.is_valid():
+        flash('El enlace es inválido o ha expirado. Solicita uno nuevo.', 'danger')
+        return redirect(url_for('auth.forgot_password'))
+
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        confirm = request.form.get('confirm_password', '')
+
+        if len(password) < 6:
+            flash('La contraseña debe tener al menos 6 caracteres.', 'danger')
+            return render_template('reset_password.html', token=token)
+
+        if password != confirm:
+            flash('Las contraseñas no coinciden.', 'danger')
+            return render_template('reset_password.html', token=token)
+
+        user = token_obj.user
+        user.set_password(password)
+        token_obj.used = True
+        db.session.commit()
+
+        flash('Contraseña actualizada. Ya puedes iniciar sesión.', 'success')
+        return redirect(url_for('auth.login'))
+
+    return render_template('reset_password.html', token=token)

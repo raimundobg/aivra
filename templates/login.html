@@ -111,8 +111,10 @@
             </form>
 
             <div class="bt-auth-divider">
-                <p>¿No tienes cuenta? <a href="{{ url_for('auth.register') }}" class="bt-auth-link">Regístrate aquí</a>
+                <p style="margin-bottom: 0.5rem;">
+                    <a href="{{ url_for('auth.forgot_password') }}" class="bt-auth-link">¿Olvidaste tu contraseña?</a>
                 </p>
+                <p>¿No tienes cuenta? <a href="{{ url_for('auth.register') }}" class="bt-auth-link">Regístrate aquí</a></p>
             </div>
         </div>
     </div>

@@ -1035,3 +1035,40 @@ class PatientFile(db.Model):
     
     def __repr__(self):
         return f'<PatientFile #{self.ficha_numero} - {self.nombre}>'
+
+
+# ============================================
+# PASSWORD RESET TOKEN MODEL
+# ============================================
+
+class PasswordResetToken(db.Model):
+    __tablename__ = 'password_reset_tokens'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    token = db.Column(db.String(128), unique=True, nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.utcnow(), nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used = db.Column(db.Boolean, default=False, nullable=False)
+
+    user = db.relationship('User', backref=db.backref('reset_tokens', lazy='dynamic'))
+
+    def __init__(self, user_id):
+        import secrets
+        self.user_id = user_id
+        self.token = secrets.token_urlsafe(48)
+        self.created_at = datetime.utcnow()
+        from datetime import timedelta
+        self.expires_at = datetime.utcnow() + timedelta(hours=1)
+        self.used = False
+
+    def is_valid(self):
+        """Check if token is still valid (not used and not expired)."""
+        return not self.used and datetime.utcnow() < self.expires_at
+
+    def mark_as_used(self):
+        """Mark token as consumed."""
+        self.used = True
+
+    def __repr__(self):
+        return f'<PasswordResetToken user_id={self.user_id} used={self.used}>'
