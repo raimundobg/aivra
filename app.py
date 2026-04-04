@@ -3958,16 +3958,12 @@ if AUTH_ENABLED:
                     ('metodo_calculo', 'VARCHAR(30)'),
                     ('ajuste_calorico', 'INTEGER'),
                     ('get_kcal_ajustado', 'FLOAT'),
-                    ('alimentos_no_consume', 'TEXT'),
                 ],
                 'users': [
                     ('bio', 'TEXT'),
                     ('consulta_precio', 'INTEGER'),
                     ('consulta_duracion', 'INTEGER DEFAULT 60'),
                     ('banco_info', 'TEXT'),
-                ],
-                'bookings': [
-                    ('reschedule_token', 'VARCHAR(64) UNIQUE'),
                 ]
             }
 
@@ -3982,21 +3978,6 @@ if AUTH_ENABLED:
                             except:
                                 pass
                     db.session.commit()
-
-            # Crear índices para columnas nuevas
-            indexes_to_create = [
-                ('bookings', 'idx_bookings_reschedule_token', 'reschedule_token'),
-            ]
-
-            for table_name, index_name, column_name in indexes_to_create:
-                try:
-                    existing_indexes = [idx['name'] for idx in inspector.get_indexes(table_name)]
-                    if index_name not in existing_indexes:
-                        db.session.execute(text(f'CREATE INDEX {index_name} ON {table_name}({column_name})'))
-                        print(f"  + Índice creado: {table_name}.{index_name}")
-                except:
-                    pass
-            db.session.commit()
 
         except Exception as e:
             print(f"[WARNING] DB init: {e}")
