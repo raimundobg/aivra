@@ -3983,18 +3983,18 @@ if AUTH_ENABLED:
                                 pass
                     db.session.commit()
 
-            # Crear índices para columnas nuevas
+            # Crear índices para columnas nuevas (PostgreSQL)
             indexes_to_create = [
                 ('bookings', 'idx_bookings_reschedule_token', 'reschedule_token'),
             ]
 
             for table_name, index_name, column_name in indexes_to_create:
                 try:
-                    existing_indexes = [idx['name'] for idx in inspector.get_indexes(table_name)]
-                    if index_name not in existing_indexes:
-                        db.session.execute(text(f'CREATE INDEX {index_name} ON {table_name}({column_name})'))
-                        print(f"  + Índice creado: {table_name}.{index_name}")
-                except:
+                    # Use CREATE INDEX IF NOT EXISTS (PostgreSQL 9.5+)
+                    db.session.execute(text(f'CREATE INDEX IF NOT EXISTS {index_name} ON {table_name}({column_name})'))
+                    print(f"  + Índice creado/verificado: {table_name}.{index_name}")
+                except Exception as idx_err:
+                    # Index might already exist, that's ok
                     pass
             db.session.commit()
 
