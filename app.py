@@ -125,6 +125,68 @@ except ImportError as e:
     AUTH_ENABLED = False
 
 # ============================================
+# JINJA2 TEMPLATE FILTERS
+# ============================================
+
+# Label maps for JSON-stored fields
+LABEL_MAPS = {
+    'objetivos': {
+        'bajar_peso': 'Bajar de peso', 'subir_peso': 'Subir de peso',
+        'ganar_masa_muscular': 'Ganar masa muscular', 'bajar_grasa_corporal': 'Bajar grasa corporal',
+        'mejorar_salud_general': 'Mejorar salud general', 'tener_mas_energia': 'Tener más energía',
+        'mejorar_digestion': 'Mejorar digestión', 'mejorar_rendimiento_deportivo': 'Mejorar rendimiento deportivo',
+        'mejorar_habitos_alimenticios': 'Mejorar hábitos alimenticios', 'manejar_condicion_medica': 'Manejar condición médica',
+        'fraccionamiento': 'Mejorar fraccionamiento', 'agua': 'Aumentar consumo de agua',
+        'consciente': 'Alimentación consciente', 'proteina': 'Aumentar proteína', 'peso': 'Control de peso',
+    },
+    'diagnosticos': {
+        'colesterol_alto': 'Colesterol Alto', 'depresion': 'Depresión', 'diabetes': 'Diabetes',
+        'estrenimiento': 'Estreñimiento Crónico', 'hipertension': 'Hipertensión',
+        'hipotiroidismo': 'Hipotiroidismo', 'hipertiroidismo': 'Hipertiroidismo',
+        'ingesta_emocional': 'Ingesta Emocional', 'sarcopenia': 'Sarcopenia',
+        'colon_irritable': 'Colon Irritable', 'anemia': 'Anemia', 'tca': 'TCA', 'otros': 'Otros',
+    },
+    'medicamentos': {
+        'ansiolitico': 'Ansiolítico', 'antidepresivo': 'Antidepresivo', 'diabetes': 'Diabetes',
+        'dolor_cronico': 'Dolor Crónico', 'enfermedades_cronicas': 'Enfermedades Crónicas',
+        'hipertension': 'Hipertensión', 'otros': 'Otros',
+    },
+    'suplementos': {
+        'ashwaganda': 'Ashwaganda', 'betadanina': 'Betadanina', 'b12': 'Vitamina B12',
+        'c': 'Vitamina C', 'cordyceps': 'Cordyceps', 'creatina': 'Creatina',
+        'd': 'Vitamina D', 'e': 'Vitamina E', 'hierro': 'Hierro', 'magnesio': 'Magnesio',
+        'melena_leon': 'Melena de León', 'omega3': 'Omega 3',
+        'proteina_polvo': 'Proteína en Polvo', 'reishi': 'Reishi', 'zinc': 'Zinc',
+    },
+}
+
+@app.template_filter('format_labels')
+def format_labels_filter(value, field_name=''):
+    """Convert JSON array string or comma-separated keys to human-readable labels."""
+    if not value:
+        return ''
+    import json as _json
+    # Try to parse as JSON array
+    items = None
+    if isinstance(value, str):
+        try:
+            parsed = _json.loads(value)
+            if isinstance(parsed, list):
+                items = parsed
+        except (ValueError, TypeError):
+            pass
+        # If not JSON, try comma-separated
+        if items is None:
+            items = [v.strip() for v in value.split(',') if v.strip()]
+    elif isinstance(value, list):
+        items = value
+    else:
+        return str(value)
+
+    label_map = LABEL_MAPS.get(field_name, {})
+    return ', '.join(label_map.get(item, item.replace('_', ' ').title()) for item in items)
+
+# ============================================
 # VARIABLES GLOBALES
 # ============================================
 

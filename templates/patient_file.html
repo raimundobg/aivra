@@ -225,7 +225,7 @@
                                     <i class="fas fa-bullseye"></i> Objetivos
                                 </label>
                                 <textarea class="form-control" id="objetivos" name="objetivos"
-                                    rows="3">{{ patient.objetivos or '' }}</textarea>
+                                    rows="3">{{ (patient.objetivos or '')|format_labels('objetivos') }}</textarea>
                                 <div id="objetivos_display" class="mt-1" style="display:none;"></div>
                             </div>
 
@@ -238,7 +238,7 @@
                                     <i class="fas fa-stethoscope"></i> Diagnósticos Médicos
                                 </label>
                                 <textarea class="form-control" id="diagnosticos" name="diagnosticos"
-                                    rows="2">{{ patient.diagnosticos or '' }}</textarea>
+                                    rows="2">{{ (patient.diagnosticos or '')|format_labels('diagnosticos') }}</textarea>
                                 <div id="diagnosticos_display" class="mt-1" style="display:none;"></div>
                             </div>
 
@@ -247,7 +247,7 @@
                                     <i class="fas fa-pills"></i> Medicamentos Actuales
                                 </label>
                                 <textarea class="form-control" id="medicamentos" name="medicamentos"
-                                    rows="2">{{ patient.medicamentos or '' }}</textarea>
+                                    rows="2">{{ (patient.medicamentos or '')|format_labels('medicamentos') }}</textarea>
                             </div>
 
                             <div class="col-md-4">
@@ -255,7 +255,7 @@
                                     <i class="fas fa-capsules"></i> Suplementos
                                 </label>
                                 <textarea class="form-control" id="suplementos" name="suplementos"
-                                    rows="2">{{ patient.suplementos or '' }}</textarea>
+                                    rows="2">{{ (patient.suplementos or '')|format_labels('suplementos') }}</textarea>
                             </div>
 
                             <div class="col-md-4">

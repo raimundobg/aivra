@@ -1125,7 +1125,27 @@
     }
 
     function printPauta() {
-        const content = document.getElementById('pautaContent').innerHTML;
+        // Show ALL days for printing (they are hidden with display:none by tabs)
+        const container = document.getElementById('pautaContent');
+        const hiddenDays = container.querySelectorAll('[id^="viewDayContent_"]');
+        hiddenDays.forEach(el => el.style.display = 'block');
+        // Hide day tab buttons in print (not needed when all days shown)
+        const dayTabs = container.querySelector('.pauta-view-days');
+        if (dayTabs) dayTabs.style.display = 'none';
+
+        const content = container.innerHTML;
+
+        // Restore original display states
+        hiddenDays.forEach((el, i) => el.style.display = i === 0 ? 'block' : 'none');
+        // Re-show the active tab based on which has .active class
+        container.querySelectorAll('.pauta-day-tab').forEach(tab => {
+            if (tab.classList.contains('active')) {
+                const dia = tab.id.replace('viewDayTab_', '');
+                hiddenDays.forEach(el => el.style.display = el.id === `viewDayContent_${dia}` ? 'block' : 'none');
+            }
+        });
+        if (dayTabs) dayTabs.style.display = '';
+
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
             <!DOCTYPE html>
@@ -1158,7 +1178,15 @@
                     .pauta-meal-table td:nth-child(3) { text-align: right; font-weight: 600; }
                     .pauta-meal-table td:nth-child(4) { text-align: right; }
                     .pauta-day-total { background: #f1f5f9; padding: 6px 12px; border-radius: 6px; margin-top: 6px; font-size: 0.8rem; }
-                    @media print { body { padding: 0.5rem; } .pauta-day-tab { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .pauta-meal-header .meal-kcal { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+                    @media print {
+                        body { padding: 0.5rem; }
+                        .pauta-day-tab { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        .pauta-meal-header .meal-kcal { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        .pauta-view-days { display: none !important; }
+                        [id^="viewDayContent_"] { display: block !important; page-break-after: always; border-top: 2px solid #10b981; padding-top: 1rem; margin-top: 1rem; }
+                        [id^="viewDayContent_"]:last-child { page-break-after: avoid; }
+                        .pauta-meal-section { page-break-inside: avoid; }
+                    }
                 </style>
             </head>
             <body>

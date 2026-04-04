@@ -381,6 +381,15 @@
     pointer-events: none;
 }
 
+/* R24 Horas: always interactive even in view-mode */
+.view-mode #registro24hContainer .form-control,
+.view-mode #registro24hContainer .btn,
+.view-mode #r24hFoodSearch {
+    pointer-events: auto;
+    background: white;
+    border-color: #e5e7eb;
+}
+
 /* ============================================
    QUICK NAVIGATION
    ============================================ */

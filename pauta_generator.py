@@ -577,7 +577,7 @@ class PautaInteligente:
             'alternativas_proteicas_vegetales': 'proteina',
         }
         
-        grupo_lower = grupo.lower().strip()
+        grupo_lower = (grupo or '').lower().strip()
         grupo_norm = grupo_map.get(grupo_lower)
         if not grupo_norm:
             grupo_espacios = grupo_lower.replace('_', ' ')
@@ -687,7 +687,7 @@ class PautaInteligente:
 
     def _detectar_dieta(self, tipo_dieta: str) -> bool:
         """Detecta si el paciente sigue una dieta específica (vegano, vegetariano)"""
-        tipo_lower = tipo_dieta.lower()
+        tipo_lower = (tipo_dieta or '').lower()
 
         # Buscar en restricciones_alimentarias
         for restriccion in self.restricciones:
@@ -1280,7 +1280,7 @@ class PautaInteligente:
         has_pan = any('pan' in a.nombre.lower() for a in alimentos)
         protein_fat_keywords = ('proteina', 'grasas', 'lacteos', 'carne', 'pescado', 'huevo', 'aceite', 'palta')
         has_protein_or_fat = any(
-            any(kw in a.grupo.lower() for kw in protein_fat_keywords)
+            any(kw in (a.grupo_normalizado or '').lower() for kw in protein_fat_keywords)
             for a in alimentos
         )
         if has_pan and not has_protein_or_fat and len(alimentos) < 4:
