@@ -987,11 +987,11 @@
                         <label class="form-label">Horas de sueno promedio</label>
                         <select class="form-select" name="horas_sueno">
                             <option value="">Seleccionar...</option>
-                            <option value="menos_5">Menos de 5 horas</option>
+                            <option value="3-5">Menos de 5 horas</option>
                             <option value="5-6">5-6 horas</option>
                             <option value="6-7">6-7 horas</option>
                             <option value="7-8">7-8 horas</option>
-                            <option value="mas_8">Mas de 8 horas</option>
+                            <option value="+8">Mas de 8 horas</option>
                         </select>
                     </div>
 
@@ -1491,28 +1491,28 @@
 
         // EFC food items
         const efcItems = [
-            { name: 'Frutas', icon: 'fas fa-apple-alt' },
-            { name: 'Verduras y ensaladas', icon: 'fas fa-carrot' },
-            { name: 'Leche / yogur', icon: 'fas fa-glass-whiskey' },
-            { name: 'Queso', icon: 'fas fa-cheese' },
-            { name: 'Carnes rojas (vacuno, cerdo)', icon: 'fas fa-drumstick-bite' },
-            { name: 'Pollo / pavo', icon: 'fas fa-drumstick-bite' },
-            { name: 'Pescados / mariscos', icon: 'fas fa-fish' },
-            { name: 'Huevos', icon: 'fas fa-egg' },
-            { name: 'Legumbres (porotos, lentejas, garbanzos)', icon: 'fas fa-seedling' },
-            { name: 'Pan', icon: 'fas fa-bread-slice' },
-            { name: 'Arroz / pasta / fideos', icon: 'fas fa-utensils' },
-            { name: 'Cereales / avena / granola', icon: 'fas fa-wheat-awn' },
-            { name: 'Papas / tuberculos', icon: 'fas fa-utensils' },
-            { name: 'Frutos secos (nueces, almendras)', icon: 'fas fa-tree' },
-            { name: 'Aceite de oliva / palta', icon: 'fas fa-oil-can' },
-            { name: 'Mantequilla / margarina', icon: 'fas fa-cube' },
-            { name: 'Embutidos / fiambres', icon: 'fas fa-bacon' },
-            { name: 'Snacks / galletas / papas fritas', icon: 'fas fa-cookie-bite' },
-            { name: 'Dulces / chocolate / postres', icon: 'fas fa-candy-cane' },
-            { name: 'Bebidas azucaradas / jugos envasados', icon: 'fas fa-glass-cheers' },
-            { name: 'Cafe / te', icon: 'fas fa-mug-hot' },
-            { name: 'Comida rapida / delivery', icon: 'fas fa-hamburger' }
+            { name: 'Frutas', key: 'frutas', icon: 'fas fa-apple-alt' },
+            { name: 'Verduras y ensaladas', key: 'verduras', icon: 'fas fa-carrot' },
+            { name: 'Leche / yogur', key: 'lacteos', icon: 'fas fa-glass-whiskey' },
+            { name: 'Queso', key: 'queso', icon: 'fas fa-cheese' },
+            { name: 'Carnes rojas (vacuno, cerdo)', key: 'carnes_rojas', icon: 'fas fa-drumstick-bite' },
+            { name: 'Pollo / pavo', key: 'pollo_pavo', icon: 'fas fa-drumstick-bite' },
+            { name: 'Pescados / mariscos', key: 'pescados_mariscos', icon: 'fas fa-fish' },
+            { name: 'Huevos', key: 'huevos', icon: 'fas fa-egg' },
+            { name: 'Legumbres (porotos, lentejas, garbanzos)', key: 'legumbres', icon: 'fas fa-seedling' },
+            { name: 'Pan', key: 'pan', icon: 'fas fa-bread-slice' },
+            { name: 'Arroz / pasta / fideos', key: 'arroz_pasta', icon: 'fas fa-utensils' },
+            { name: 'Cereales / avena / granola', key: 'cereales', icon: 'fas fa-wheat-awn' },
+            { name: 'Papas / tuberculos', key: 'papas_tuberculos', icon: 'fas fa-utensils' },
+            { name: 'Frutos secos (nueces, almendras)', key: 'frutos_secos', icon: 'fas fa-tree' },
+            { name: 'Aceite de oliva / palta', key: 'aceite_palta', icon: 'fas fa-oil-can' },
+            { name: 'Mantequilla / margarina', key: 'mantequilla', icon: 'fas fa-cube' },
+            { name: 'Embutidos / fiambres', key: 'embutidos', icon: 'fas fa-bacon' },
+            { name: 'Snacks / galletas / papas fritas', key: 'snacks', icon: 'fas fa-cookie-bite' },
+            { name: 'Dulces / chocolate / postres', key: 'dulces', icon: 'fas fa-candy-cane' },
+            { name: 'Bebidas azucaradas / jugos envasados', key: 'bebidas_azucaradas', icon: 'fas fa-glass-cheers' },
+            { name: 'Cafe / te', key: 'cafe_te', icon: 'fas fa-mug-hot' },
+            { name: 'Comida rapida / delivery', key: 'comida_rapida', icon: 'fas fa-hamburger' }
         ];
 
         const efcFrequencies = ['nunca', '1-3_mes', '1_sem', '2-4_sem', '5-6_sem', 'diario', '2_dia'];
@@ -1798,7 +1798,7 @@
             efcItems.forEach((item, idx) => {
                 const checked = document.querySelector(`input[name="efc_${idx}"]:checked`);
                 if (checked) {
-                    frecuencia_consumo[item.name] = checked.value;
+                    frecuencia_consumo[item.key] = checked.value;
                 }
             });
             // Collect 24h Record

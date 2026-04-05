@@ -212,6 +212,22 @@
                                     value="{{ patient.ocupacion or '' }}">
                             </div>
 
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    <i class="fas fa-id-card"></i> RUT
+                                </label>
+                                <input type="text" class="form-control" id="rut" name="rut"
+                                    value="{{ patient.rut or '' }}" placeholder="12.345.678-9">
+                            </div>
+
+                            <div class="col-md-5">
+                                <label class="form-label">
+                                    <i class="fas fa-map-marker-alt"></i> Dirección
+                                </label>
+                                <input type="text" class="form-control" id="direccion" name="direccion"
+                                    value="{{ patient.direccion or '' }}" placeholder="Calle, número, comuna...">
+                            </div>
+
                             <div class="col-md-6">
                                 <label class="form-label">
                                     <i class="fas fa-comment-medical"></i> Motivo de Consulta
@@ -296,6 +312,42 @@
                                 <textarea class="form-control" id="otros_antecedentes" name="otros_antecedentes"
                                     rows="2" placeholder="Cirugias previas, trastornos de conducta alimentaria, depresion, antecedentes familiares relevantes...">{{ patient.otros_antecedentes or '' }}</textarea>
                             </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-procedures"></i> Cirugías Previas
+                                </label>
+                                <textarea class="form-control" id="cirugias" name="cirugias"
+                                    rows="2">{{ patient.cirugias or '' }}</textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-dna"></i> Antecedentes Familiares
+                                </label>
+                                <textarea class="form-control" id="antecedentes_familiares" name="antecedentes_familiares"
+                                    rows="2">{{ (patient.antecedentes_familiares or '')|format_labels('diagnosticos') }}</textarea>
+                            </div>
+
+                            {% if patient.otros_diagnosticos %}
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-file-medical-alt"></i> Otros Diagnósticos (del formulario)
+                                </label>
+                                <textarea class="form-control" id="otros_diagnosticos" name="otros_diagnosticos"
+                                    rows="2" readonly style="background: #f1f5f9;">{{ patient.otros_diagnosticos or '' }}</textarea>
+                            </div>
+                            {% endif %}
+
+                            {% if patient.sintomas_gi %}
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-stomach"></i> Síntomas GI Reportados
+                                </label>
+                                <textarea class="form-control" id="sintomas_gi_display" name="sintomas_gi"
+                                    rows="2" style="background: #fef2f2; border-color: #fca5a5;">{{ (patient.sintomas_gi or '')|format_labels('diagnosticos') }}</textarea>
+                            </div>
+                            {% endif %}
 
                             <!-- Observaciones Section 1 -->
                             <div class="col-12 mt-3">
@@ -1347,19 +1399,30 @@
                             'verduras': '🥦 Verduras',
                             'cereales': '🌾 Cereales y Granos',
                             'lacteos': '🥛 Lácteos',
+                            'queso': '🧀 Queso',
+                            'carnes_rojas': '🥩 Carnes Rojas',
                             'carnes': '🥩 Carnes Rojas',
+                            'pollo_pavo': '🍗 Pollo/Pavo',
                             'pollo': '🍗 Pollo/Aves',
+                            'pescados_mariscos': '🐟 Pescados/Mariscos',
                             'pescado': '🐟 Pescado/Mariscos',
                             'legumbres': '🫘 Legumbres',
                             'huevos': '🥚 Huevos',
-                            'frituras': '🍟 Frituras',
-                            'snacks': '🍿 Snacks/Golosinas',
-                            'bebidas_azucaradas': '🥤 Bebidas Azucaradas',
-                            'comida_rapida': '🍔 Comida Rápida',
-                            'embutidos': '🌭 Embutidos',
-                            'agua': '💧 Agua',
                             'pan': '🍞 Pan',
-                            'aceite': '🫒 Aceite/Grasas'
+                            'arroz_pasta': '🍚 Arroz/Pasta/Fideos',
+                            'papas_tuberculos': '🥔 Papas/Tubérculos',
+                            'frutos_secos': '🥜 Frutos Secos',
+                            'aceite_palta': '🫒 Aceite/Palta',
+                            'aceite': '🫒 Aceite/Grasas',
+                            'mantequilla': '🧈 Mantequilla/Margarina',
+                            'embutidos': '🌭 Embutidos',
+                            'snacks': '🍿 Snacks/Galletas',
+                            'dulces': '🍫 Dulces/Chocolate',
+                            'bebidas_azucaradas': '🥤 Bebidas Azucaradas',
+                            'cafe_te': '☕ Café/Té',
+                            'comida_rapida': '🍔 Comida Rápida',
+                            'frituras': '🍟 Frituras',
+                            'agua': '💧 Agua'
                             } %}
                             {% set freq_values = {
                             'nunca': 'Nunca',
@@ -1945,30 +2008,42 @@
             const actividadVal = actividadSelect?.value || 'sedentario';
             const actividad = actividadMap[actividadVal.toLowerCase()] || 2;
 
-            // BUG-007: Frutas y Verduras from frecuencia_consumo data
+            // Frutas y Verduras from frecuencia_consumo data
+            // Keys can be short ("frutas") or full names ("Frutas") depending on data source
             const freqData = JSON.parse(document.getElementById('frecuenciaConsumoContainer')?.dataset?.freq || '{}');
             const freqScoreMap = {'nunca': 0, '1-3_mes': 1, '1_sem': 2, '2-4_sem': 4, '5-6_sem': 6, 'diario': 7, '2_dia': 10};
-            const frutasScore = freqScoreMap[freqData.frutas] || freqScoreMap[freqData.frutas_raw] || 0;
-            const verdurasScore = freqScoreMap[freqData.verduras] || freqScoreMap[freqData.verduras_raw] || 0;
+            // Helper: find value by trying short key, then full name, then case-insensitive partial match
+            function getFreqVal(shortKey, ...altKeys) {
+                if (freqData[shortKey]) return freqData[shortKey];
+                for (const k of altKeys) { if (freqData[k]) return freqData[k]; }
+                // Fallback: search all keys case-insensitive
+                const lk = shortKey.toLowerCase();
+                for (const [k, v] of Object.entries(freqData)) {
+                    if (k.toLowerCase().startsWith(lk)) return v;
+                }
+                return null;
+            }
+            const frutasScore = freqScoreMap[getFreqVal('frutas', 'Frutas')] || 0;
+            const verdurasScore = freqScoreMap[getFreqVal('verduras', 'Verduras y ensaladas', 'Verduras')] || 0;
             const frutasVerduras = Math.min(10, (frutasScore + verdurasScore) / 2);
 
             // Digestion: based on GI symptoms, fiber intake (legumbres), evacuation frequency, Bristol scale
             let digestion = 7; // base score, good if no issues
 
-            // Penalize for GI symptoms
-            const sintomasGI = document.querySelector('[name="sintomas_gi"]');
-            const sintomasVal = sintomasGI?.value?.toLowerCase() || '';
+            // Penalize for GI symptoms — check the display textarea or hidden data
+            const sintomasGIEl = document.getElementById('sintomas_gi_display') || document.querySelector('[name="sintomas_gi"]');
+            const sintomasVal = sintomasGIEl?.value?.toLowerCase() || '';
             if (sintomasVal && sintomasVal !== 'ninguno' && sintomasVal !== 'no' && sintomasVal.length > 3) {
                 digestion -= 2; // has GI symptoms
             }
-            // Penalize for reflux/bloating
+            // Penalize for reflux/bloating — these are <select> elements, check .value not .checked
             const reflujoEl = document.getElementById('reflujo');
             const hinchazonEl = document.getElementById('hinchazon');
-            if (reflujoEl?.checked) digestion -= 1.5;
-            if (hinchazonEl?.checked) digestion -= 1.5;
+            if (reflujoEl?.value === 'si' || reflujoEl?.value === 'Si') digestion -= 1.5;
+            if (hinchazonEl?.value === 'si' || hinchazonEl?.value === 'Si') digestion -= 1.5;
 
             // Bonus for fiber sources (legumbres from frecuencia consumo)
-            const legumbresScore = freqScoreMap[freqData.legumbres] || 0;
+            const legumbresScore = freqScoreMap[getFreqVal('legumbres', 'Legumbres (porotos, lentejas, garbanzos)', 'Legumbres')] || 0;
             if (legumbresScore >= 4) digestion += 1; // eats legumbres regularly
             if (legumbresScore >= 6) digestion += 0.5;
 

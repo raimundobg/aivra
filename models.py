@@ -1028,6 +1028,13 @@ class PatientFile(db.Model):
             'metas_largo_plazo': self.metas_largo_plazo,
             'fecha_proxima_cita': str(self.fecha_proxima_cita) if self.fecha_proxima_cita else None,
 
+            # Campos que faltaban en to_dict
+            'cirugias': self.cirugias,
+            'antecedentes_familiares': self.antecedentes_familiares,
+            'otros_diagnosticos': self.otros_diagnosticos,
+            'comidas_al_dia': self.comidas_al_dia,
+            'direccion': self.direccion,
+
             # Nuevos campos Abril 2026
             'otros_antecedentes': self.otros_antecedentes,
             'red_de_apoyo': self.red_de_apoyo,

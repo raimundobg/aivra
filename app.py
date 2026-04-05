@@ -534,7 +534,7 @@ def update_patient(patient_id):
             'nombre', 'fecha_nacimiento', 'sexo', 'email', 'telefono', 
             'direccion', 'ocupacion', 'motivo_consulta', 'rut',
             'diagnosticos', 'medicamentos', 'suplementos', 'alergias',
-            'intolerancias', 'alimentos_no_consume', 'cirugias', 'antecedentes_familiares',
+            'intolerancias', 'alimentos_no_consume', 'antecedentes_familiares',
             'horas_sueno', 'actividad_fisica', 'tipo_ejercicio',
             'frecuencia_ejercicio', 'duracion_ejercicio',
             'diagnostico_nutricional', 'objetivos_nutricionales',
@@ -550,13 +550,14 @@ def update_patient(patient_id):
             'observaciones_sueno', 'gatillantes_estres', 'manejo_estres',
             'tabaco', 'drogas',
             'metodo_calculo',
-            'otros_antecedentes', 'red_de_apoyo', 'anticonceptivos'
+            'otros_antecedentes', 'red_de_apoyo', 'anticonceptivos',
+            'otros_diagnosticos', 'comidas_al_dia', 'cirugias'
         ]
-        
+
         for campo in campos_texto:
             if campo in data:
                 setattr(patient, campo, data[campo])
-        
+
         # Campos JSON Objeto (db.JSON - NO serializar manual)
         campos_json_obj = [
             'actividad_fisica', 'restricciones_alimentarias', 'registro_24h', 'frecuencia_consumo', 'sintomas_gi'
@@ -1414,10 +1415,11 @@ def submit_public_intake(token):
             'alergias', 'intolerancias', 'otros_diagnosticos',
             'alimentos_no_consume',
             'horas_sueno', 'tipo_ejercicio', 'frecuencia_ejercicio',
-            'actividad_fisica', 'consumo_alcohol', 'tabaco',
+            'actividad_fisica', 'consumo_alcohol', 'tipo_alcohol', 'tabaco',
             'horario_desayuno', 'horario_almuerzo', 'horario_cena',
             'comidas_al_dia', 'consistencia_heces',
-            'gatillantes_gi'
+            'gatillantes_gi',
+            'observaciones_sueno', 'gatillantes_estres', 'manejo_estres'
         ]
         for campo in campos_texto:
             if campo in data and data[campo]:
@@ -1435,6 +1437,14 @@ def submit_public_intake(token):
             except (ValueError, TypeError):
                 pass
 
+        # --- Campos float adicionales ---
+        for campo_f in ['consumo_agua_litros']:
+            if campo_f in data and data[campo_f] is not None:
+                try:
+                    setattr(patient, campo_f, float(data[campo_f]))
+                except (ValueError, TypeError):
+                    pass
+
         # Calcular IMC automaticamente si hay peso y talla
         if patient.peso_kg and patient.talla_m and patient.talla_m > 0:
             patient.imc = round(patient.peso_kg / (patient.talla_m ** 2), 1)
@@ -1449,7 +1459,9 @@ def submit_public_intake(token):
                     pass
 
         # --- Campos booleanos ---
-        for campo_bool in ['fuma', 'pica_entre_comidas', 'come_frente_tv', 'come_rapido']:
+        # Only save booleans that are explicitly true (intake JS sends false for
+        # commented-out fields, which would overwrite nutritionist-set values)
+        for campo_bool in ['fuma']:
             if campo_bool in data:
                 val = data[campo_bool]
                 if isinstance(val, bool):
@@ -1458,6 +1470,11 @@ def submit_public_intake(token):
                     setattr(patient, campo_bool, val.lower() in ('true', '1', 'on', 'si'))
                 else:
                     setattr(patient, campo_bool, bool(val))
+        # pica_entre_comidas, come_frente_tv, come_rapido: only save if explicitly true
+        # (these are commented out in the intake form and always send false)
+        for campo_bool in ['pica_entre_comidas', 'come_frente_tv', 'come_rapido']:
+            if campo_bool in data and data[campo_bool] is True:
+                setattr(patient, campo_bool, True)
 
         # --- Campos JSON array (checkbox groups) ---
         # Usar 'in data' en vez de 'if data.get()' para que [] tambien se guarde
