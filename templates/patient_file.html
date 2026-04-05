@@ -253,9 +253,30 @@
                                 <label class="form-label">
                                     <i class="fas fa-stethoscope"></i> Diagnósticos Médicos
                                 </label>
-                                <textarea class="form-control" id="diagnosticos" name="diagnosticos"
-                                    rows="2">{{ (patient.diagnosticos or '')|format_labels('diagnosticos') }}</textarea>
-                                <div id="diagnosticos_display" class="mt-1" style="display:none;"></div>
+                                <div class="d-flex flex-wrap gap-2 mb-1" id="diagnosticosPillsContainer">
+                                    {% set diag_options = [
+                                        ('diabetes', 'fas fa-syringe', 'Diabetes'),
+                                        ('hipertension', 'fas fa-heartbeat', 'Hipertensión'),
+                                        ('colesterol_alto', 'fas fa-tint', 'Colesterol/TG'),
+                                        ('obesidad', 'fas fa-weight', 'Obesidad'),
+                                        ('hipotiroidismo', 'fas fa-thermometer-half', 'Hipotiroidismo'),
+                                        ('hipertiroidismo', 'fas fa-thermometer-full', 'Hipertiroidismo'),
+                                        ('colon_irritable', 'fas fa-procedures', 'Colon Irritable'),
+                                        ('anemia', 'fas fa-vials', 'Anemia'),
+                                        ('tca', 'fas fa-brain', 'TCA'),
+                                        ('depresion', 'fas fa-cloud-rain', 'Depresión'),
+                                        ('ingesta_emocional', 'fas fa-heart-broken', 'Ingesta Emocional'),
+                                        ('otros', 'fas fa-ellipsis-h', 'Otros')
+                                    ] %}
+                                    {% for key, icon, label in diag_options %}
+                                    <button type="button" class="btn btn-sm rounded-pill pill-btn {{ 'active' if key in (patient.diagnosticos or '') }}"
+                                        data-diag="{{ key }}" style="font-size: 0.78rem;">
+                                        <i class="{{ icon }} me-1"></i>{{ label }}
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                                <input type="hidden" id="diagnosticos" name="diagnosticos"
+                                    value="{{ patient.diagnosticos or '' }}">
                             </div>
 
                             <div class="col-md-6">
@@ -557,7 +578,9 @@
                                         <i class="fas fa-plus me-1"></i> Agregar Medición
                                     </button>
                                 </div>
-                                <canvas id="pesoEvolutionChart" height="120" class="mt-2"></canvas>
+                                <div style="position: relative; height: 220px;" class="mt-3">
+                                    <canvas id="pesoEvolutionChart"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1238,8 +1261,19 @@
                                 <label class="form-label">
                                     <i class="fas fa-wine-glass-alt"></i> Alcohol
                                 </label>
-                                <input type="text" class="form-control" id="consumo_alcohol_view" name="consumo_alcohol"
-                                    value="{{ patient.consumo_alcohol or '' }}">
+                                <select class="form-select" id="consumo_alcohol_view" name="consumo_alcohol"
+                                    onchange="checkAlcoholAlert(this.value)">
+                                    <option value="">No especificado</option>
+                                    <option value="nunca" {{ 'selected' if patient.consumo_alcohol == 'nunca' }}>Nunca</option>
+                                    <option value="ocasional" {{ 'selected' if patient.consumo_alcohol == 'ocasional' }}>Ocasional</option>
+                                    <option value="moderado" {{ 'selected' if patient.consumo_alcohol == 'moderado' }}>Moderado</option>
+                                    <option value="frecuente" {{ 'selected' if patient.consumo_alcohol == 'frecuente' }}>Frecuente (3-6/sem)</option>
+                                    <option value="diario" {{ 'selected' if patient.consumo_alcohol == 'diario' }}>Diario</option>
+                                </select>
+                                <div id="alcoholAlert" class="alert alert-danger mt-1 py-1 px-2"
+                                    style="font-size: 0.75rem; border-radius: 8px; display: {{ 'block' if patient.consumo_alcohol in ['frecuente', 'diario'] else 'none' }};">
+                                    <i class="fas fa-exclamation-circle me-1"></i> <strong>Alerta:</strong> Consumo de riesgo. Considerar en plan nutricional.
+                                </div>
                             </div>
                             {% if patient.tipo_alcohol %}
                             <div class="col-md-4">
@@ -1740,6 +1774,42 @@
                                 <textarea class="form-control" id="notas_seguimiento" name="notas_seguimiento"
                                     rows="3">{{ patient.notas_seguimiento or '' }}</textarea>
                             </div>
+
+                            <!-- U11: Tipo de Intervención -->
+                            <div class="col-12 mt-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-route me-2" style="color: #6366f1;"></i> Tipo de Intervención
+                                </label>
+                                <div class="d-flex flex-wrap gap-3" id="tipoIntervencionContainer">
+                                    <button type="button" class="btn btn-outline-success rounded-pill px-4 py-2 intervencion-btn {{ 'active' if (patient.tipo_intervencion or 'pauta') == 'pauta' }}"
+                                        data-tipo="pauta" onclick="selectIntervencion(this)">
+                                        <i class="fas fa-utensils me-2"></i>Pauta Alimentaria
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary rounded-pill px-4 py-2 intervencion-btn {{ 'active' if patient.tipo_intervencion == 'guias' }}"
+                                        data-tipo="guias" onclick="selectIntervencion(this)">
+                                        <i class="fas fa-book-open me-2"></i>Guías Educativas
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning rounded-pill px-4 py-2 intervencion-btn {{ 'active' if patient.tipo_intervencion == 'tareas' }}"
+                                        data-tipo="tareas" onclick="selectIntervencion(this)">
+                                        <i class="fas fa-tasks me-2"></i>Tareas / Metas
+                                    </button>
+                                </div>
+                                <input type="hidden" name="tipo_intervencion" id="tipo_intervencion"
+                                    value="{{ patient.tipo_intervencion or 'pauta' }}">
+                                <div id="intervPauta" class="mt-2 p-3 rounded-3" style="background:#f0fdf4; border-left: 4px solid #10b981; display: {{ 'block' if (patient.tipo_intervencion or 'pauta') == 'pauta' else 'none' }};">
+                                    <i class="fas fa-utensils text-success me-2"></i>
+                                    <strong>Pauta Alimentaria:</strong> Plan nutricional estructurado con distribución de macronutrientes.
+                                </div>
+                                <div id="intervGuias" class="mt-2 p-3 rounded-3" style="background:#eff6ff; border-left: 4px solid #3b82f6; display: {{ 'block' if patient.tipo_intervencion == 'guias' else 'none' }};">
+                                    <i class="fas fa-book-open text-primary me-2"></i>
+                                    <strong>Guías Educativas:</strong> Recomendaciones, material psicoeducativo y guías de compra.
+                                </div>
+                                <div id="intervTareas" class="mt-2 p-3 rounded-3" style="background:#fffbeb; border-left: 4px solid #f59e0b; display: {{ 'block' if patient.tipo_intervencion == 'tareas' else 'none' }};">
+                                    <i class="fas fa-tasks text-warning me-2"></i>
+                                    <strong>Tareas / Metas:</strong> Objetivos conductuales específicos entre consultas.
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -1905,10 +1975,116 @@
         const _diagL = {'diabetes':'Diabetes','hipertension':'Hipertensión','colesterol':'Colesterol/Triglicéridos','cancer':'Cáncer','obesidad':'Obesidad','corazon':'Enf. del Corazón','tiroides':'Tiroides','renal':'Enf. Renal','colon_irritable':'Colon Irritable','anemia':'Anemia','tca':'TCA'};
         function _fmtJson(id, labels) { const ta=document.getElementById(id); if(!ta)return; try{const v=ta.value.trim();if(v.startsWith('[')){ta.value=JSON.parse(v).map(x=>labels[x]||x.replace(/_/g,' ')).join(', ');}}catch(e){} }
 
+        // F24: Alcohol alert
+        function checkAlcoholAlert(val) {
+            const alert = document.getElementById('alcoholAlert');
+            if (alert) alert.style.display = (val === 'frecuente' || val === 'diario') ? 'block' : 'none';
+        }
+
+        // U11: Intervention selector
+        function selectIntervencion(btn) {
+            if (document.querySelector('#patientFileForm.view-mode')) return;
+            document.querySelectorAll('.intervencion-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const tipo = btn.dataset.tipo;
+            document.getElementById('tipo_intervencion').value = tipo;
+            document.getElementById('intervPauta').style.display = tipo === 'pauta' ? 'block' : 'none';
+            document.getElementById('intervGuias').style.display = tipo === 'guias' ? 'block' : 'none';
+            document.getElementById('intervTareas').style.display = tipo === 'tareas' ? 'block' : 'none';
+        }
+
+        // U7: Diagnosticos pills
+        function initDiagnosticosPills() {
+            const hidden = document.getElementById('diagnosticos');
+            if (!hidden) return;
+            let saved = [];
+            try { saved = JSON.parse(hidden.value || '[]'); } catch(e) { saved = []; }
+            document.querySelectorAll('#diagnosticosPillsContainer .pill-btn').forEach(btn => {
+                const key = btn.dataset.diag;
+                if (saved.includes(key)) btn.classList.add('active');
+                btn.addEventListener('click', function() {
+                    if (document.querySelector('#patientFileForm.view-mode')) return;
+                    this.classList.toggle('active');
+                    const selected = [...document.querySelectorAll('#diagnosticosPillsContainer .pill-btn.active')]
+                        .map(b => b.dataset.diag);
+                    hidden.value = JSON.stringify(selected);
+                });
+            });
+        }
+
+        // F7: Peso/IMC evolution chart
+        function initPesoEvolutionChart() {
+            const ctx = document.getElementById('pesoEvolutionChart');
+            if (!ctx) return;
+            const rows = document.querySelectorAll('#historialAntroBody tr');
+            const labels = [], pesoData = [], imcData = [];
+            rows.forEach(tr => {
+                const cells = tr.querySelectorAll('td');
+                if (cells.length >= 4) {
+                    labels.push(cells[0].textContent.trim());
+                    pesoData.push(parseFloat(cells[1].textContent) || null);
+                    imcData.push(parseFloat(cells[3].textContent) || null);
+                }
+            });
+            if (labels.length === 0) {
+                ctx.parentElement.innerHTML = '<div class="text-center text-muted py-3" style="font-size:0.8rem;"><i class="fas fa-chart-line me-2"></i>Agregue mediciones para ver el gráfico de evolución</div>';
+                return;
+            }
+            if (window._pesoChart) window._pesoChart.destroy();
+            window._pesoChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Peso (kg)',
+                            data: pesoData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16,185,129,0.08)',
+                            yAxisID: 'yPeso',
+                            tension: 0.3,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#10b981',
+                            fill: true,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'IMC',
+                            data: imcData,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'transparent',
+                            yAxisID: 'yIMC',
+                            tension: 0.3,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#3b82f6',
+                            borderDash: [5, 3],
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: true, position: 'top', labels: { font: { size: 11, family: 'Inter' }, usePointStyle: true } },
+                        tooltip: { callbacks: {
+                            label: function(ctx) { return ctx.dataset.yAxisID === 'yPeso' ? 'Peso: ' + ctx.raw + ' kg' : 'IMC: ' + ctx.raw; }
+                        }}
+                    },
+                    scales: {
+                        yPeso: { type: 'linear', position: 'left', title: { display: true, text: 'kg', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        yIMC: { type: 'linear', position: 'right', title: { display: true, text: 'IMC', font: { size: 10 } }, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             _fmtJson('objetivos', _objL);
-            _fmtJson('diagnosticos', _diagL);
+            initDiagnosticosPills();
             initHabitosRadarChart();
+            initPesoEvolutionChart();
         });
 
         function initHabitosRadarChart() {

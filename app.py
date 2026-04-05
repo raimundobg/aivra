@@ -551,7 +551,8 @@ def update_patient(patient_id):
             'tabaco', 'drogas',
             'metodo_calculo',
             'otros_antecedentes', 'red_de_apoyo', 'anticonceptivos',
-            'otros_diagnosticos', 'comidas_al_dia', 'cirugias'
+            'otros_diagnosticos', 'comidas_al_dia', 'cirugias',
+            'tipo_intervencion'
         ]
 
         for campo in campos_texto:
@@ -1226,7 +1227,8 @@ def save_patient_draft():
             'tabaco', 'drogas', 'reflujo_alimento', 'hinchazon_alimento',
             'alergias_alimento', 'alergias', 'intolerancias',
             'reflujo', 'hinchazon', 'tiene_alergias',
-            'otros_antecedentes', 'red_de_apoyo', 'anticonceptivos'
+            'otros_antecedentes', 'red_de_apoyo', 'anticonceptivos',
+            'tipo_intervencion'
         ]
 
         for campo in campos_texto:
@@ -4173,6 +4175,7 @@ if AUTH_ENABLED:
                     ('otros_antecedentes', 'TEXT'),
                     ('red_de_apoyo', 'TEXT'),
                     ('hambre_emocional', 'BOOLEAN DEFAULT FALSE'),
+                    ('tipo_intervencion', "VARCHAR(20) DEFAULT 'pauta'"),
                     ('historial_antropometria', 'TEXT'),
                     ('historial_bioquimico', 'TEXT'),
                     ('archivos_examenes', 'TEXT'),

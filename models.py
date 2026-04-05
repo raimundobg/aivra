@@ -630,6 +630,9 @@ class PatientFile(db.Model):
     metas_mediano_plazo = db.Column(db.Text)
     metas_largo_plazo = db.Column(db.Text)
     
+    # ===== 9.1 TIPO DE INTERVENCION =====
+    tipo_intervencion = db.Column(db.String(20), default='pauta')  # pauta, guias, tareas
+
     # ===== 10. SEGUIMIENTO =====
     fecha_proxima_cita = db.Column(db.DateTime)
     notas_seguimiento = db.Column(db.Text)
@@ -1036,6 +1039,7 @@ class PatientFile(db.Model):
             'direccion': self.direccion,
 
             # Nuevos campos Abril 2026
+            'tipo_intervencion': self.tipo_intervencion,
             'otros_antecedentes': self.otros_antecedentes,
             'red_de_apoyo': self.red_de_apoyo,
             'hambre_emocional': self.hambre_emocional,
