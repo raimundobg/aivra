@@ -201,6 +201,11 @@ class PautaInteligente:
         self.intolerancias = self._extraer_lista_paciente('intolerancias')
         self.restricciones = self._extraer_lista_paciente('restricciones_alimentarias')
 
+        # 5b. Extraer alimentos que NO consume (por gusto u otros motivos)
+        self.alimentos_no_consume = self._extraer_lista_paciente('alimentos_no_consume')
+        if self.alimentos_no_consume:
+            print(f"   🚫 No consume (gusto): {self.alimentos_no_consume}")
+
         # 6. Detectar dieta especial (vegano, vegetariano)
         self.es_vegano = self._detectar_dieta('vegano')
         self.es_vegetariano = self._detectar_dieta('vegetariano') or self.es_vegano
@@ -847,6 +852,11 @@ class PautaInteligente:
             for keyword in keywords:
                 if keyword in nombre_lower:
                     return True
+
+        # Check "alimentos que NO consume" (por gusto u otros motivos)
+        for no_consume in self.alimentos_no_consume:
+            if no_consume.lower() in nombre_lower or nombre_lower in no_consume.lower():
+                return True
 
         return False
 

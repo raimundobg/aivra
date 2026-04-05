@@ -979,6 +979,7 @@
                             <div class="pauta-meal-header">
                                 <span class="meal-name"><i class="fas ${tc.icon}" style="color: ${tc.color}; margin-right: 6px;"></i>${tiempo.nombre || tc.nombre}</span>
                                 <span class="meal-kcal" style="background: ${tc.color};">${tiempo.totales?.kcal || 0} kcal</span>
+                                <span style="font-size: 0.65rem; color: #64748b; margin-left: 6px;">P:${tiempo.totales?.proteinas || 0}g C:${tiempo.totales?.carbohidratos || 0}g G:${tiempo.totales?.lipidos || 0}g</span>
                             </div>
                             <table class="pauta-meal-table">
                                 <thead><tr><th>Alimento</th><th>Porción</th><th>Kcal</th><th>Prot</th></tr></thead>

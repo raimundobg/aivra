@@ -573,8 +573,14 @@ class PatientFile(db.Model):
 
     # ===== 6.1 CAMPOS ADICIONALES ESTILO DE VIDA =====
     menstruacion = db.Column(db.String(50))  # regular/irregular/menopausia/no_aplica
+    anticonceptivos = db.Column(db.String(100))  # tipo de anticonceptivo si aplica
     restricciones_alimentarias = db.Column(db.JSON)  # ["vegetariano", "vegano", "sin_gluten", "sin_lactosa", "kosher", "halal"]
     delivery_restaurante = db.Column(db.Integer)  # 0-7 veces/semana
+
+    # ===== 6.5 NUEVOS CAMPOS (ABRIL 2026) =====
+    otros_antecedentes = db.Column(db.Text)  # Cirugías, TCA, depresión, antecedentes familiares (texto libre)
+    red_de_apoyo = db.Column(db.Text)  # Red de apoyo del paciente
+    hambre_emocional = db.Column(db.Boolean, default=False)  # Trigger alerta derivación psicológica
     
     # ===== 6.2 EXPANDED ANTHROPOMETRY (FICHA-007) =====
     masa_muscular_kg = db.Column(db.Float)      # Masa muscular en kg
@@ -1021,6 +1027,12 @@ class PatientFile(db.Model):
             'metas_mediano_plazo': self.metas_mediano_plazo,
             'metas_largo_plazo': self.metas_largo_plazo,
             'fecha_proxima_cita': str(self.fecha_proxima_cita) if self.fecha_proxima_cita else None,
+
+            # Nuevos campos Abril 2026
+            'otros_antecedentes': self.otros_antecedentes,
+            'red_de_apoyo': self.red_de_apoyo,
+            'hambre_emocional': self.hambre_emocional,
+            'anticonceptivos': self.anticonceptivos,
 
             # Delivery/Restaurant
             'delivery_restaurante': self.delivery_restaurante,

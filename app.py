@@ -549,7 +549,8 @@ def update_patient(patient_id):
             'consumo_bebidas_azucaradas', 'consumo_alcohol', 'tipo_alcohol',
             'observaciones_sueno', 'gatillantes_estres', 'manejo_estres',
             'tabaco', 'drogas',
-            'metodo_calculo'
+            'metodo_calculo',
+            'otros_antecedentes', 'red_de_apoyo', 'anticonceptivos'
         ]
         
         for campo in campos_texto:
@@ -628,7 +629,8 @@ def update_patient(patient_id):
         
         # Campos booleanos
         campos_bool = [
-            'fuma', 'pica_entre_comidas', 'come_frente_tv', 'come_rapido'
+            'fuma', 'pica_entre_comidas', 'come_frente_tv', 'come_rapido',
+            'hambre_emocional'
         ]
         
         for campo in campos_bool:
@@ -941,6 +943,19 @@ def patient_file_view(patient_id):
         return redirect(url_for('patient_list'))
 
     log_debug(f"[PATIENT-FILE-VIEW] OK - '{patient.nombre}' (ID: {patient.id})")
+
+    # Fix TEXT vs JSON column mismatch: ensure JSON fields are dicts, not strings
+    import json as _json
+    for json_field in ('registro_24h', 'frecuencia_consumo', 'sintomas_gi', 'actividad_fisica',
+                       'actividades_detalladas', 'historial_antropometria', 'historial_bioquimico',
+                       'archivos_examenes', 'restricciones_alimentarias'):
+        val = getattr(patient, json_field, None)
+        if val and isinstance(val, str):
+            try:
+                setattr(patient, json_field, _json.loads(val))
+            except (ValueError, TypeError):
+                pass
+
     return render_template('patient_file.html', patient=patient)
 
 
@@ -1209,7 +1224,8 @@ def save_patient_draft():
             'notas_seguimiento', 'observaciones_sueno', 'gatillantes_estres', 'manejo_estres',
             'tabaco', 'drogas', 'reflujo_alimento', 'hinchazon_alimento',
             'alergias_alimento', 'alergias', 'intolerancias',
-            'reflujo', 'hinchazon', 'tiene_alergias'
+            'reflujo', 'hinchazon', 'tiene_alergias',
+            'otros_antecedentes', 'red_de_apoyo', 'anticonceptivos'
         ]
 
         for campo in campos_texto:
@@ -1271,7 +1287,7 @@ def save_patient_draft():
                     pass
 
         # Campos booleanos
-        campos_bool = ['fuma', 'pica_entre_comidas', 'come_frente_tv', 'come_rapido']
+        campos_bool = ['fuma', 'pica_entre_comidas', 'come_frente_tv', 'come_rapido', 'hambre_emocional']
         for campo in campos_bool:
             if campo in data:
                 value = data[campo]
@@ -4135,6 +4151,11 @@ if AUTH_ENABLED:
                     ('menstruacion', 'VARCHAR(50)'),
                     ('restricciones_alimentarias', 'TEXT'),
                     ('delivery_restaurante', 'INTEGER'),
+                    # NUEVOS CAMPOS ABRIL 2026
+                    ('anticonceptivos', 'VARCHAR(100)'),
+                    ('otros_antecedentes', 'TEXT'),
+                    ('red_de_apoyo', 'TEXT'),
+                    ('hambre_emocional', 'BOOLEAN DEFAULT FALSE'),
                     ('historial_antropometria', 'TEXT'),
                     ('historial_bioquimico', 'TEXT'),
                     ('archivos_examenes', 'TEXT'),

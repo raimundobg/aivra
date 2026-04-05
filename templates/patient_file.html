@@ -276,10 +276,25 @@
 
                             <div class="col-md-4">
                                 <label class="form-label">
-                                    <i class="fas fa-times-circle"></i> Alimentos que No Consume
+                                    <i class="fas fa-times-circle text-danger"></i> Alimentos que No Consume
                                 </label>
                                 <textarea class="form-control" id="alimentos_no_consume" name="alimentos_no_consume"
-                                    rows="2">{{ patient.alimentos_no_consume or '' }}</textarea>
+                                    rows="2" style="{% if patient.alimentos_no_consume %}border-color: #ef4444; background: #fef2f2;{% endif %}">{{ patient.alimentos_no_consume or '' }}</textarea>
+                                {% if patient.alimentos_no_consume %}
+                                <div class="alert alert-warning mt-1 py-1 px-2" style="font-size: 0.75rem; border-radius: 8px;">
+                                    <i class="fas fa-exclamation-triangle me-1"></i> <strong>Alerta planificacion:</strong> Estos alimentos no deben incluirse en la pauta.
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- F19: Otros antecedentes (cirugias, TCA, depresion, antecedentes familiares) -->
+                            <div class="col-12">
+                                <label class="form-label">
+                                    <i class="fas fa-notes-medical"></i> Otros Antecedentes
+                                    <span style="font-size: 0.7rem; color: #94a3b8;">(cirugias, TCA, depresion, antecedentes familiares)</span>
+                                </label>
+                                <textarea class="form-control" id="otros_antecedentes" name="otros_antecedentes"
+                                    rows="2" placeholder="Cirugias previas, trastornos de conducta alimentaria, depresion, antecedentes familiares relevantes...">{{ patient.otros_antecedentes or '' }}</textarea>
                             </div>
 
                             <!-- Observaciones Section 1 -->
@@ -880,15 +895,68 @@
                                 </div>
                             </div>
 
-                            {% if patient.menstruacion %}
+                            <!-- F21: Hambre Emocional -->
                             <div class="col-md-4">
-                                <label class="form-label">
-                                    <i class="fas fa-venus"></i> Menstruación
-                                </label>
-                                <input type="text" class="form-control" id="menstruacion" name="menstruacion"
-                                    value="{{ patient.menstruacion or '' }}">
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="hambre_emocional"
+                                        name="hambre_emocional" value="true" {{ 'checked' if patient.hambre_emocional }}
+                                        onchange="document.getElementById('alertaHambreEmocional').style.display = this.checked ? 'block' : 'none';">
+                                    <label class="form-check-label" for="hambre_emocional">
+                                        <i class="fas fa-heart-broken text-danger me-1"></i> Hambre Emocional
+                                    </label>
+                                </div>
+                                <div id="alertaHambreEmocional" class="alert alert-danger mt-1 py-1 px-2" style="font-size: 0.75rem; border-radius: 8px; display: {{ 'block' if patient.hambre_emocional else 'none' }};">
+                                    <i class="fas fa-exclamation-circle me-1"></i> <strong>Derivacion sugerida:</strong> Evaluar derivacion a psicologia para manejo de conducta alimentaria.
+                                </div>
                             </div>
-                            {% endif %}
+
+                            <!-- F20: Red de Apoyo -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="fas fa-users"></i> Red de Apoyo
+                                </label>
+                                <input type="text" class="form-control" id="red_de_apoyo" name="red_de_apoyo"
+                                    placeholder="Familia, amigos, pareja, profesionales..."
+                                    value="{{ patient.red_de_apoyo or '' }}">
+                            </div>
+
+                            <!-- F22: Ciclo Menstrual + Anticonceptivos (solo mujeres) -->
+                            <div id="seccionFemenina" style="display: {{ 'contents' if patient.sexo == 'Femenino' else 'none' }};" class="col-md-6">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label">
+                                            <i class="fas fa-venus"></i> Ciclo Menstrual
+                                        </label>
+                                        <select class="form-select" id="menstruacion" name="menstruacion">
+                                            <option value="">Seleccionar...</option>
+                                            <option value="regular" {{ 'selected' if patient.menstruacion == 'regular' }}>Regular</option>
+                                            <option value="irregular" {{ 'selected' if patient.menstruacion == 'irregular' }}>Irregular</option>
+                                            <option value="menopausia" {{ 'selected' if patient.menstruacion == 'menopausia' }}>Menopausia</option>
+                                            <option value="amenorrea" {{ 'selected' if patient.menstruacion == 'amenorrea' }}>Amenorrea</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">
+                                            <i class="fas fa-pills"></i> Anticonceptivos
+                                        </label>
+                                        <input type="text" class="form-control" id="anticonceptivos" name="anticonceptivos"
+                                            placeholder="Tipo (si aplica)..."
+                                            value="{{ patient.anticonceptivos or '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <script>
+                                // Show/hide female-only section based on sex select
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const sexo = document.getElementById('sexo');
+                                    const secFem = document.getElementById('seccionFemenina');
+                                    if (sexo && secFem) {
+                                        sexo.addEventListener('change', function() {
+                                            secFem.style.display = this.value === 'Femenino' ? 'contents' : 'none';
+                                        });
+                                    }
+                                });
+                            </script>
 
                             {% if patient.restricciones_alimentarias %}
                             <div class="col-12">
