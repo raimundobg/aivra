@@ -829,10 +829,15 @@ class PatientFile(db.Model):
         """
         Calcular Gasto Energético Total
         GET = GEB × Factor Actividad × Factor Estrés
+        Respeta metodo_calculo: si es 'calorimetria' o 'factorial', no sobreescribir GET manual
         """
+        # If user chose calorimetria or factorial, their GET is entered manually — don't overwrite
+        if self.metodo_calculo in ('calorimetria', 'factorial') and self.get_kcal:
+            return self.get_kcal
+
         if not self.geb_kcal:
             self.calcular_geb()
-        
+
         if not self.geb_kcal:
             return None
         

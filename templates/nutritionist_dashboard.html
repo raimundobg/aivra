@@ -206,8 +206,8 @@
         font-size: 0.625rem;
         padding: 0.15rem 0.5rem;
         border-radius: 9999px;
-        background: rgba(139, 92, 246, 0.1);
-        color: #8b5cf6;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
     }
     .objetivo-badge.more {
         background: rgba(0,0,0,0.05);
@@ -273,7 +273,7 @@
 <button class="bt-nav-item" data-bs-toggle="modal" data-bs-target="#barcodeScannerModal">
     <span class="nav-icon"><i class="fas fa-barcode"></i></span>
     <span class="nav-label">Escaner Alimentos</span>
-    <span class="nav-badge" style="background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;">Nuevo</span>
+    <span class="nav-badge" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;">Nuevo</span>
 </button>
 {% endblock %}
 
@@ -348,23 +348,25 @@
 
     <button type="button" class="bt-action-card" data-bs-toggle="modal" data-bs-target="#invitePatientModal"
         style="border: none; text-align: left; cursor: pointer;">
-        <div class="bt-action-icon purple" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+        <div class="bt-action-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
             <i class="fas fa-envelope"></i>
         </div>
         <h3 class="bt-action-title">Invitar Paciente</h3>
         <p class="bt-action-desc">Enviar formulario previo por email</p>
-        <span class="badge bg-purple text-white"
-            style="position: absolute; top: 12px; right: 12px; font-size: 0.65rem;">PRE-CONSULTA</span>
+        <span class="badge text-white"
+            style="background: #10b981; position: absolute; top: 12px; right: 12px; font-size: 0.65rem;">PRE-CONSULTA</span>
     </button>
 
     <a href="{{ url_for('patient_list') }}" class="bt-action-card">
         <div class="bt-action-icon blue">
             <i class="fas fa-folder-open"></i>
         </div>
-        <h3 class="bt-action-title">Abrir Ficha Paciente</h3>
+        <h3 class="bt-action-title">Mis Pacientes</h3>
         <p class="bt-action-desc">Ver historial y plan nutricional</p>
     </a>
 
+    <!-- M8: Crear Pauta card removed from dashboard (accessible via sidebar) -->
+    <!--
     <div class="bt-action-card" data-bs-toggle="modal" data-bs-target="#pautaGeneratorModal">
         <div class="bt-action-icon purple">
             <i class="fas fa-utensils"></i>
@@ -372,6 +374,7 @@
         <h3 class="bt-action-title">Crear Pauta de Alimentación</h3>
         <p class="bt-action-desc">Plan semanal con lista de supermercado</p>
     </div>
+    -->
 
     <div class="bt-action-card" data-bs-toggle="modal" data-bs-target="#recipeGeneratorModal">
         <div class="bt-action-icon amber">
@@ -746,7 +749,7 @@
 <div class="modal fade" id="invitePatientModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header text-white border-0" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+            <div class="modal-header text-white border-0" style="background: linear-gradient(135deg, #10b981, #059669);">
                 <h5 class="modal-title">
                     <i class="fas fa-envelope me-2"></i>
                     Invitar Paciente
@@ -803,7 +806,7 @@
                     Cancelar
                 </button>
                 <button type="button" class="btn text-white" onclick="enviarInvitacion()"
-                    style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                    style="background: linear-gradient(135deg, #10b981, #059669);">
                     <i class="fas fa-paper-plane me-2"></i>
                     Enviar Invitacion
                 </button>

@@ -56,7 +56,8 @@
             {% if messages %}
             {% for category, message in messages %}
             <div class="alert alert-{{ category }}"
-                style="border-radius: var(--bt-radius-lg); border:none; font-size:0.875rem; margin-bottom:1.25rem;">
+                style="border-radius: var(--bt-radius-lg); border:none; font-size:0.875rem; margin-bottom:1.25rem;
+                            {% if category == 'danger' %}background: #f8d7da; color: #721c24; font-weight: bold;{% elif category == 'success' %}background: var(--bt-status-success-bg); color: var(--bt-status-success);{% endif %}">
                 <i
                     class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
                 {{ message }}

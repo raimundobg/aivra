@@ -44,3 +44,5 @@ nul
 # Temporary
 *.tmp
 *.temp
+_pdf_pages/
+listabugsmarzoabril.pdf

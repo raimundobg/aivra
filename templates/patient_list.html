@@ -604,10 +604,10 @@
                             title="${hasPauta ? 'Ver Pauta' : 'Sin pauta generada'}">
                             <i class="fas fa-file-medical"></i>
                         </button>
-                        <button class="bt-btn-secondary" style="padding: 0.4rem; width: 2rem; height: 2rem; border-radius: 50%;" onclick="event.stopPropagation(); window.location.href='/dashboard/nutritionist/patient/${patient.id}'">
+                        <button class="bt-btn-secondary" style="padding: 0.4rem; width: 2rem; height: 2rem; border-radius: 50%;" onclick="event.stopPropagation(); window.location.href='/dashboard/nutritionist/patient/${patient.id}'" title="Ver Ficha del Paciente">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="bt-btn-secondary" style="padding: 0.4rem; width: 2rem; height: 2rem; border-radius: 50%; color: var(--bt-status-error);" onclick="event.stopPropagation(); showDeleteModal(${patient.id}, '${escapeHtml(patient.nombre)}')">
+                        <button class="bt-btn-secondary" style="padding: 0.4rem; width: 2rem; height: 2rem; border-radius: 50%; color: var(--bt-status-error);" onclick="event.stopPropagation(); showDeleteModal(${patient.id}, '${escapeHtml(patient.nombre)}')" title="Eliminar Paciente">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>

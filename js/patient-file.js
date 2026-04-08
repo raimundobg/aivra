@@ -79,7 +79,8 @@
     // ============================================
     window.toggleEditMode = function() {
         state.isEditMode = !state.isEditMode;
-        
+        const modeIndicator = document.getElementById('modeIndicator');
+
         if (state.isEditMode) {
             elements.form.classList.remove('view-mode');
             elements.form.classList.add('edit-mode');
@@ -87,6 +88,12 @@
             elements.btnEdit.classList.remove('btn-edit');
             elements.btnEdit.classList.add('btn-delete');
             elements.btnSave.disabled = false;
+            if (modeIndicator) {
+                modeIndicator.innerHTML = '<span><i class="fas fa-edit me-2"></i> <strong>Modo edicion activo</strong> — Modifica los campos y presiona <strong>Guardar</strong></span>';
+                modeIndicator.style.background = '#f0fdf4';
+                modeIndicator.style.borderColor = '#86efac';
+                modeIndicator.className = 'alert alert-success py-2 px-3 mb-3';
+            }
         } else {
             elements.form.classList.remove('edit-mode');
             elements.form.classList.add('view-mode');
@@ -94,7 +101,13 @@
             elements.btnEdit.classList.remove('btn-delete');
             elements.btnEdit.classList.add('btn-edit');
             elements.btnSave.disabled = true;
-            
+            if (modeIndicator) {
+                modeIndicator.innerHTML = '<span><i class="fas fa-eye me-2"></i> <strong>Modo visualizacion</strong> — Presiona <strong>Editar</strong> para modificar datos</span><button type="button" class="btn btn-sm btn-success rounded-pill px-3" onclick="toggleEditMode()"><i class="fas fa-edit me-1"></i> Editar</button>';
+                modeIndicator.style.background = '#eff6ff';
+                modeIndicator.style.borderColor = '#bfdbfe';
+                modeIndicator.className = 'alert alert-info py-2 px-3 mb-3 d-flex align-items-center justify-content-between';
+            }
+
             // Si había cambios sin guardar, recargar
             if (state.hasChanges) {
                 location.reload();

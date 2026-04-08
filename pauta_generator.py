@@ -915,8 +915,13 @@ class PautaInteligente:
                 if any(kw in nombre_lower for kw in gluten_kw):
                     return True
             elif restriccion == 'sin_lactosa':
-                lactose_kw = ['leche', 'queso', 'yogur', 'crema', 'mantequilla', 'helado', 'flan']
+                lactose_kw = ['leche', 'queso', 'quesillo', 'yogur', 'yoghurt', 'crema', 'mantequilla',
+                              'helado', 'flan', 'ricotta', 'mozzarella', 'nata', 'manjar', 'lacteo',
+                              'lácteo', 'cuajada', 'suero', 'cheddar', 'parmesano', 'gouda']
                 if any(kw in nombre_lower for kw in lactose_kw):
+                    return True
+                # Also block by group
+                if 'lacteo' in grupo_lower or 'lácteo' in grupo_lower:
                     return True
             elif restriccion == 'sin_mariscos':
                 seafood_kw = ['marisco', 'camarón', 'camaron', 'langosta', 'jaiba', 'pulpo', 'calamar', 'mejillón']
@@ -1236,15 +1241,19 @@ class PautaInteligente:
         grupos_requeridos = list(estructura.get('grupos_requeridos', ['cereales']))
         grupos_opcionales = list(estructura.get('grupos_opcionales', []))
 
-        # Ajustar grupos para veganos
-        if self.es_vegano:
+        # Ajustar grupos para restricciones alimentarias
+        es_sin_lactosa = 'sin_lactosa' in self.restricciones
+        if self.es_vegano or es_sin_lactosa:
             # Reemplazar lácteos por legumbres/frutas
             if 'lacteos' in grupos_requeridos:
                 grupos_requeridos.remove('lacteos')
                 if tiempo in ['desayuno', 'colacion_pm']:
-                    grupos_requeridos.append('frutas')  # Fruta en vez de lácteo
+                    grupos_requeridos.append('frutas')
                 else:
                     grupos_requeridos.append('legumbres')
+            if 'lacteos' in grupos_opcionales:
+                grupos_opcionales.remove('lacteos')
+                grupos_opcionales.append('frutas')
 
             # Para proteína, asegurar que busque alternativas vegetales
             # (esto ya está manejado por _match_grupo y _match_proteina)
@@ -1290,7 +1299,7 @@ class PautaInteligente:
         has_pan = any('pan' in a.nombre.lower() for a in alimentos)
         protein_fat_keywords = ('proteina', 'grasas', 'lacteos', 'carne', 'pescado', 'huevo', 'aceite', 'palta')
         has_protein_or_fat = any(
-            any(kw in (a.grupo_normalizado or '').lower() for kw in protein_fat_keywords)
+            any(kw in (a.grupo or '').lower() for kw in protein_fat_keywords)
             for a in alimentos
         )
         if has_pan and not has_protein_or_fat and len(alimentos) < 4:

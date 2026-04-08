@@ -57,34 +57,40 @@
                     </div>
 
                     <button type="button" class="btn-ficha btn-pauta" id="btnPauta" onclick="generarPauta()"
-                        style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
+                        style="background: linear-gradient(135deg, #10b981, #059669); color: white;"
+                        title="Generar pauta alimentaria semanal con inteligencia artificial">
                         <i class="fas fa-utensils"></i>
                         <span>Generar Pauta IA</span>
                     </button>
 
                     <button type="button" class="btn-ficha" onclick="abrirPautaManual()"
-                        style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white;">
+                        style="background: linear-gradient(135deg, #10b981, #047857); color: white;"
+                        title="Crear pauta alimentaria manualmente seleccionando alimentos">
                         <i class="fas fa-edit"></i>
                         <span>Pauta Manual</span>
                     </button>
 
                     <button type="button" class="btn-ficha btn-alertas" id="btnAlertas" onclick="cargarAlertasIA()"
-                        style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">
+                        style="background: linear-gradient(135deg, #10b981, #059669); color: white;"
+                        title="Ver alertas y recomendaciones generadas por IA basadas en los datos del paciente">
                         <i class="fas fa-brain"></i>
                         <span>Alertas IA</span>
                     </button>
 
-                    <button type="button" class="btn-ficha btn-edit" id="btnEdit" onclick="toggleEditMode()">
+                    <button type="button" class="btn-ficha btn-edit" id="btnEdit" onclick="toggleEditMode()"
+                        title="Activar modo edicion para modificar datos del paciente">
                         <i class="fas fa-edit"></i>
                         <span>Editar</span>
                     </button>
 
-                    <button type="button" class="btn-ficha btn-save" id="btnSave" onclick="savePatient()" disabled>
+                    <button type="button" class="btn-ficha btn-save" id="btnSave" onclick="savePatient()" disabled
+                        title="Guardar todos los cambios realizados">
                         <i class="fas fa-save"></i>
                         <span>Guardar</span>
                     </button>
 
-                    <button type="button" class="btn-ficha btn-print" onclick="window.print()">
+                    <button type="button" class="btn-ficha btn-print" onclick="window.print()"
+                        title="Imprimir ficha del paciente">
                         <i class="fas fa-print"></i>
                         <span>Imprimir</span>
                     </button>
@@ -144,6 +150,13 @@
 
         <!-- Form Container -->
         <form id="patientFileForm" class="view-mode">
+            <!-- H6: Mode indicator banner -->
+            <div id="modeIndicator" class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center justify-content-between" style="border-radius: 10px; font-size: 0.85rem; background: #eff6ff; border: 1px solid #bfdbfe; display: flex !important;">
+                <span><i class="fas fa-eye me-2"></i> <strong>Modo visualizacion</strong> — Presiona <strong>Editar</strong> para modificar datos</span>
+                <button type="button" class="btn btn-sm btn-success rounded-pill px-3" onclick="toggleEditMode()">
+                    <i class="fas fa-edit me-1"></i> Editar
+                </button>
+            </div>
             <input type="hidden" id="patientId" value="{{ patient.id }}">
 
             <!-- SECCIÓN 1: ANTECEDENTES GENERALES -->
@@ -366,7 +379,7 @@
                                     <i class="fas fa-stomach"></i> Síntomas GI Reportados
                                 </label>
                                 <textarea class="form-control" id="sintomas_gi_display" name="sintomas_gi"
-                                    rows="2" style="background: #fef2f2; border-color: #fca5a5;">{{ (patient.sintomas_gi or '')|format_labels('diagnosticos') }}</textarea>
+                                    rows="2" style="background: #fef2f2; border-color: #fca5a5;" readonly>{{ patient.sintomas_gi if patient.sintomas_gi is string else (patient.sintomas_gi or '')|join(', ') }}</textarea>
                             </div>
                             {% endif %}
 
@@ -1624,7 +1637,7 @@
                             <div class="col-md-6">
                                 <div class="row g-2 align-items-end">
                                     <div class="col-5">
-                                        <label class="form-label small fw-bold">Ajuste (kcal)</label>
+                                        <label class="form-label small fw-bold">Ajuste (kcal) <i class="fas fa-info-circle text-muted" style="cursor: help;" title="Deficit (-) para bajar de peso o superavit (+) para subir. Ej: -300 para deficit, +500 para superavit. Se suma/resta al GET calculado."></i></label>
                                         <input type="number" class="form-control text-center" name="ajuste_calorico" id="ajuste_calorico"
                                             value="{{ patient.ajuste_calorico or 0 }}" step="50" placeholder="-300"
                                             onchange="actualizarGetAjustado()" style="font-weight: 600;">
@@ -1687,28 +1700,28 @@
                             </div>
 
                             <!-- PAUTA-003: Show gr/kg alongside grams -->
-                            <div class="col-md-4">
+                            <div class="col-6 col-md-3">
                                 <div class="calculated-field">
                                     <div class="value" id="proteinasG">{{ patient.proteinas_g or '-' }}g</div>
                                     <div class="label">Proteínas <small id="protGrKg" class="text-primary">({{ '%.1f'|format(patient.proteinas_g / patient.peso_kg) if patient.proteinas_g and patient.peso_kg else '-' }} gr/kg)</small></div>
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-6 col-md-3">
                                 <div class="calculated-field">
                                     <div class="value" id="carbohidratosG">{{ patient.carbohidratos_g or '-' }}g</div>
-                                    <div class="label">Carbohidratos <small id="carbsGrKg" class="text-info">({{ '%.1f'|format(patient.carbohidratos_g / patient.peso_kg) if patient.carbohidratos_g and patient.peso_kg else '-' }} gr/kg)</small></div>
+                                    <div class="label">Carbos <small id="carbsGrKg" class="text-info">({{ '%.1f'|format(patient.carbohidratos_g / patient.peso_kg) if patient.carbohidratos_g and patient.peso_kg else '-' }} gr/kg)</small></div>
                                 </div>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-6 col-md-3">
                                 <div class="calculated-field">
                                     <div class="value" id="grasasG">{{ patient.grasas_g or '-' }}g</div>
                                     <div class="label">Grasas <small id="grasasGrKg" class="text-warning">({{ '%.1f'|format(patient.grasas_g / patient.peso_kg) if patient.grasas_g and patient.peso_kg else '-' }} gr/kg)</small></div>
                                 </div>
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-6 col-md-3">
                                 <div class="calculated-field">
                                     <div class="value" id="fibraG">{{ patient.fibra_g or '-' }}g</div>
                                     <div class="label">Fibra</div>
@@ -2083,8 +2096,24 @@
         document.addEventListener('DOMContentLoaded', function() {
             _fmtJson('objetivos', _objL);
             initDiagnosticosPills();
-            initHabitosRadarChart();
             initPesoEvolutionChart();
+
+            // Defer radar chart init until accordion is opened (canvas needs dimensions)
+            let radarInitialized = false;
+            const radarAccordion = document.getElementById('sectionRadar');
+            if (radarAccordion) {
+                radarAccordion.addEventListener('shown.bs.collapse', function() {
+                    if (!radarInitialized) {
+                        initHabitosRadarChart();
+                        radarInitialized = true;
+                    }
+                });
+                // If already open (has class 'show'), init immediately
+                if (radarAccordion.classList.contains('show')) {
+                    initHabitosRadarChart();
+                    radarInitialized = true;
+                }
+            }
         });
 
         function initHabitosRadarChart() {
