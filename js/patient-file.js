@@ -711,9 +711,12 @@
                                             return (order.indexOf(a) === -1 ? 99 : order.indexOf(a)) - (order.indexOf(b) === -1 ? 99 : order.indexOf(b));
                                         }).map(([tiempo, tiempoData]) => `
                                             <div class="card mb-3">
-                                                <div class="card-header bg-light d-flex justify-content-between">
-                                                    <strong>${tiempoData.nombre}</strong>
-                                                    <span class="badge bg-primary">${tiempoData.totales?.kcal || 0} kcal</span>
+                                                <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-bottom: 1px solid #bbf7d0;">
+                                                    <strong style="color:#166534;">${tiempoData.nombre}</strong>
+                                                    <div>
+                                                        <span class="badge" style="background:#10b981; color:white;">${tiempoData.totales?.kcal || 0} kcal</span>
+                                                        <span style="font-size:0.65rem; color:#64748b; margin-left:4px;">P:${tiempoData.totales?.proteinas?.toFixed(0) || 0}g C:${tiempoData.totales?.carbohidratos?.toFixed(0) || 0}g G:${tiempoData.totales?.lipidos?.toFixed(0) || 0}g</span>
+                                                    </div>
                                                 </div>
                                                 <div class="card-body p-2">
                                                     <table class="table table-sm table-striped mb-0">
@@ -723,6 +726,9 @@
                                                                 <th>Porcion</th>
                                                                 <th class="text-end">Kcal</th>
                                                                 <th class="text-end">Prot</th>
+                                                                <th class="text-end">Carbs</th>
+                                                                <th class="text-end">Grasas</th>
+                                                                <th></th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -733,13 +739,14 @@
                                                                     : (a.source === 'ia' ? '<span class="badge bg-info ms-1" style="font-size:0.6rem;">IA</span>' : '');
                                                                 return `
                                                                 <tr ${a.es_preferido ? 'class="table-success"' : ''} data-dia="${dia}" data-tiempo="${tiempo}" data-idx="${aIdx}">
-                                                                    <td><input type="text" class="form-control form-control-sm pauta-edit-field" value="${a.nombre}" style="display:none;" data-field="nombre"><span class="pauta-display">${a.nombre}</span>${srcBadge} ${a.es_preferido ? '<i class="fas fa-star text-warning" title="Preferido del paciente"></i>' : ''}</td>
-                                                                    <td><input type="text" class="form-control form-control-sm pauta-edit-field" value="${porcion}" style="display:none;" data-field="porcion"><span class="pauta-display">${porcion}</span></td>
+                                                                    <td><span>${a.nombre}</span>${srcBadge} ${a.es_preferido ? '<i class="fas fa-star text-warning"></i>' : ''}</td>
+                                                                    <td>${porcion}</td>
                                                                     <td class="text-end">${Math.round(a.kcal)}</td>
                                                                     <td class="text-end">${a.proteinas?.toFixed(1) || 0}g</td>
-                                                                    <td class="text-end">
-                                                                        <button class="btn btn-sm btn-outline-danger pauta-delete-btn" onclick="eliminarAlimentoPauta('${dia}','${tiempo}',${aIdx})" title="Eliminar"><i class="fas fa-times"></i></button>
-                                                                        <button class="btn btn-sm btn-outline-danger pauta-edit-btn" onclick="this.closest('tr').remove()" style="display:none;" title="Eliminar"><i class="fas fa-times"></i></button>
+                                                                    <td class="text-end">${a.carbohidratos?.toFixed(1) || 0}g</td>
+                                                                    <td class="text-end">${a.lipidos?.toFixed(1) || 0}g</td>
+                                                                    <td>
+                                                                        <button class="btn btn-sm btn-outline-danger border-0" onclick="eliminarAlimentoPauta('${dia}','${tiempo}',${aIdx})" title="Eliminar"><i class="fas fa-times"></i></button>
                                                                     </td>
                                                                 </tr>`;
                                                             }).join('')}
@@ -767,14 +774,11 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-warning" onclick="togglePautaEdit()">
-                                <i class="fas fa-edit me-2"></i>Editar Pauta
-                            </button>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                            <button type="button" class="btn btn-primary" onclick="guardarPautaDesdeModal()">
+                            <button type="button" class="btn" style="background:#059669; color:white;" onclick="guardarPautaDesdeModal()">
                                 <i class="fas fa-save me-2"></i>Guardar Pauta
                             </button>
-                            <button type="button" class="btn btn-success" onclick="window.print()">
+                            <button type="button" class="btn" style="background:#0891b2; color:white;" onclick="window.print()">
                                 <i class="fas fa-print me-2"></i>Imprimir
                             </button>
                         </div>
@@ -1016,7 +1020,10 @@
 
         let tiemposHTML = TIEMPOS.map(t => `
             <div class="card mb-3">
-                <div class="card-header bg-light"><strong>${NOMBRES[t]}</strong></div>
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-bottom: 1px solid #bbf7d0;">
+                    <strong style="color:#166534;">${NOMBRES[t]}</strong>
+                    <span class="badge manual-meal-total" id="manual-total-${t}" style="background:#10b981; color:white;">0 kcal</span>
+                </div>
                 <div class="card-body p-2">
                     <table class="table table-sm mb-0"><thead><tr><th>Alimento</th><th>Porción</th><th>Kcal</th><th>Prot (g)</th><th>Carbs (g)</th><th>Grasas (g)</th><th></th></tr></thead>
                     <tbody id="manual-${t}"></tbody></table>
@@ -1035,8 +1042,8 @@
                         <div class="modal-body">${tiemposHTML}</div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                            <button type="button" class="btn btn-info" onclick="complementarConIA()"><i class="fas fa-magic me-2"></i>Complementar con IA</button>
-                            <button type="button" class="btn btn-primary" onclick="guardarPautaManual()"><i class="fas fa-save me-2"></i>Guardar</button>
+                            <button type="button" class="btn" style="background:#10b981; color:white;" onclick="complementarConIA()"><i class="fas fa-magic me-2"></i>Complementar con IA</button>
+                            <button type="button" class="btn" style="background:#059669; color:white;" onclick="guardarPautaManual()"><i class="fas fa-save me-2"></i>Guardar Pauta</button>
                         </div>
                     </div>
                 </div>
