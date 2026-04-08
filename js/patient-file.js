@@ -594,6 +594,13 @@
                 // Store pauta data
                 const pauta = result.pauta;
 
+                // Tag all AI-generated items with source
+                Object.values(pauta.dias || {}).forEach(dia => {
+                    Object.values(dia.tiempos || {}).forEach(tiempo => {
+                        (tiempo.alimentos || []).forEach(a => { a.source = a.source || 'ia'; });
+                    });
+                });
+
                 // Show pauta modal or redirect to pauta view
                 showPautaModal(pauta);
                 showToast('Pauta generada exitosamente', 'success');
@@ -721,17 +728,30 @@
                                                         <tbody>
                                                             ${(tiempoData.alimentos || []).map((a, aIdx) => {
                                                                 const porcion = formatPautaPorcion(a.cantidad, a.medida_casera);
+                                                                const srcBadge = a.source === 'manual'
+                                                                    ? '<span class="badge bg-success ms-1" style="font-size:0.6rem;">Manual</span>'
+                                                                    : (a.source === 'ia' ? '<span class="badge bg-info ms-1" style="font-size:0.6rem;">IA</span>' : '');
                                                                 return `
                                                                 <tr ${a.es_preferido ? 'class="table-success"' : ''} data-dia="${dia}" data-tiempo="${tiempo}" data-idx="${aIdx}">
-                                                                    <td><input type="text" class="form-control form-control-sm pauta-edit-field" value="${a.nombre}" style="display:none;" data-field="nombre"><span class="pauta-display">${a.nombre}</span> ${a.es_preferido ? '<i class="fas fa-star text-warning" title="Preferido del paciente"></i>' : ''}</td>
+                                                                    <td><input type="text" class="form-control form-control-sm pauta-edit-field" value="${a.nombre}" style="display:none;" data-field="nombre"><span class="pauta-display">${a.nombre}</span>${srcBadge} ${a.es_preferido ? '<i class="fas fa-star text-warning" title="Preferido del paciente"></i>' : ''}</td>
                                                                     <td><input type="text" class="form-control form-control-sm pauta-edit-field" value="${porcion}" style="display:none;" data-field="porcion"><span class="pauta-display">${porcion}</span></td>
                                                                     <td class="text-end">${Math.round(a.kcal)}</td>
                                                                     <td class="text-end">${a.proteinas?.toFixed(1) || 0}g</td>
-                                                                    <td class="text-end"><button class="btn btn-sm btn-outline-danger pauta-edit-btn" onclick="this.closest('tr').remove()" style="display:none;" title="Eliminar"><i class="fas fa-times"></i></button></td>
+                                                                    <td class="text-end">
+                                                                        <button class="btn btn-sm btn-outline-danger pauta-delete-btn" onclick="eliminarAlimentoPauta('${dia}','${tiempo}',${aIdx})" title="Eliminar"><i class="fas fa-times"></i></button>
+                                                                        <button class="btn btn-sm btn-outline-danger pauta-edit-btn" onclick="this.closest('tr').remove()" style="display:none;" title="Eliminar"><i class="fas fa-times"></i></button>
+                                                                    </td>
                                                                 </tr>`;
                                                             }).join('')}
                                                         </tbody>
                                                     </table>
+                                                    <div class="p-2">
+                                                        <div class="input-group input-group-sm">
+                                                            <span class="input-group-text"><i class="fas fa-plus"></i></span>
+                                                            <input type="text" class="form-control pauta-add-food-input" placeholder="Buscar alimento para agregar..." data-dia="${dia}" data-tiempo="${tiempo}">
+                                                        </div>
+                                                        <div class="pauta-add-food-results" style="display:none; max-height:180px; overflow-y:auto; background:#fff; border:1px solid #e2e8f0; border-radius:0 0 8px 8px; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         `).join('')}
@@ -751,7 +771,7 @@
                                 <i class="fas fa-edit me-2"></i>Editar Pauta
                             </button>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                            <button type="button" class="btn btn-primary" onclick="guardarPauta(${JSON.stringify(pauta).replace(/"/g, '&quot;')})">
+                            <button type="button" class="btn btn-primary" onclick="guardarPautaDesdeModal()">
                                 <i class="fas fa-save me-2"></i>Guardar Pauta
                             </button>
                             <button type="button" class="btn btn-success" onclick="window.print()">
@@ -770,8 +790,58 @@
         document.body.insertAdjacentHTML('beforeend', modalHtml);
 
         // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('pautaModal'));
+        const pautaModalEl = document.getElementById('pautaModal');
+        // Store pauta data on the modal element for later reference
+        pautaModalEl._pautaData = JSON.parse(JSON.stringify(pauta));
+        const modal = new bootstrap.Modal(pautaModalEl);
         modal.show();
+
+        // Wire up inline food search inputs for adding manual items
+        setTimeout(() => {
+            pautaModalEl.querySelectorAll('.pauta-add-food-input').forEach(input => {
+                const resultsDiv = input.parentElement.nextElementSibling;
+                let timer;
+                input.addEventListener('input', function() {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => {
+                        if (typeof searchR24hFoods !== 'function' || !this.value || this.value.length < 2) {
+                            resultsDiv.style.display = 'none'; return;
+                        }
+                        const results = searchR24hFoods(this.value);
+                        if (!results.length) { resultsDiv.style.display = 'none'; return; }
+                        resultsDiv.innerHTML = results.map((f, i) => `
+                            <div class="pauta-add-food-item px-3 py-2" style="cursor:pointer; border-bottom:1px solid #f1f5f9; font-size:0.85rem;" data-idx="${i}">
+                                <div style="font-weight:500;">${f.nombre}</div>
+                                <div style="color:#94a3b8; font-size:0.7rem;">
+                                    <span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:0.7rem;">${f.grupo.replace(/_/g,' ')}</span>
+                                    ${f.medida_casera} · ${f.kcal} kcal · P:${f.proteinas}g C:${f.carbohidratos}g G:${f.lipidos}g
+                                </div>
+                            </div>
+                        `).join('');
+                        resultsDiv._results = results;
+                        resultsDiv.style.display = 'block';
+                    }, 200);
+                });
+                input.addEventListener('blur', () => setTimeout(() => { resultsDiv.style.display = 'none'; }, 200));
+                resultsDiv.addEventListener('mousedown', function(e) {
+                    const item = e.target.closest('.pauta-add-food-item');
+                    if (!item) return;
+                    e.preventDefault();
+                    const food = resultsDiv._results[parseInt(item.dataset.idx)];
+                    if (!food) return;
+                    const dia = input.dataset.dia;
+                    const tiempo = input.dataset.tiempo;
+                    agregarAlimentoAPauta(dia, tiempo, {
+                        nombre: food.nombre, medida_casera: food.medida_casera,
+                        cantidad: 1, kcal: food.kcal, proteinas: food.proteinas,
+                        carbohidratos: food.carbohidratos, lipidos: food.lipidos,
+                        source: 'manual'
+                    });
+                    input.value = '';
+                    resultsDiv.style.display = 'none';
+                });
+            });
+        }, 300);
     }
 
     // BUG-004: Toggle edit mode for pauta (enhanced with food DB autocomplete)
@@ -948,7 +1018,7 @@
                         <div class="modal-body">${tiemposHTML}</div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                            <button type="button" class="btn btn-info" onclick="alert('Función IA: Proyectar semana con variaciones basadas en esta pauta. Próximamente.')"><i class="fas fa-magic me-2"></i>Proyectar Semana (IA)</button>
+                            <button type="button" class="btn btn-info" onclick="complementarConIA()"><i class="fas fa-magic me-2"></i>Complementar con IA</button>
                             <button type="button" class="btn btn-primary" onclick="guardarPautaManual()"><i class="fas fa-save me-2"></i>Guardar</button>
                         </div>
                     </div>
@@ -1025,6 +1095,190 @@
         input.focus();
     };
 
+    // ============================================
+    // PAUTA: Merge, delete, complement functions
+    // ============================================
+
+    function mergeManualWithIA(manualPauta, iaPauta) {
+        const merged = JSON.parse(JSON.stringify(manualPauta));
+        for (const [dia, diaData] of Object.entries(iaPauta.dias || {})) {
+            if (!merged.dias[dia]) merged.dias[dia] = { tiempos: {} };
+            for (const [tiempo, tiempoData] of Object.entries(diaData.tiempos || {})) {
+                if (!merged.dias[dia].tiempos[tiempo]) {
+                    merged.dias[dia].tiempos[tiempo] = { nombre: tiempoData.nombre || tiempo, alimentos: [], totales: {} };
+                }
+                const existing = merged.dias[dia].tiempos[tiempo].alimentos;
+                const existingNames = new Set(existing.map(a => a.nombre.toLowerCase()));
+                for (const alimento of (tiempoData.alimentos || [])) {
+                    if (!existingNames.has(alimento.nombre.toLowerCase())) {
+                        alimento.source = 'ia';
+                        existing.push(alimento);
+                    }
+                }
+                const totales = { kcal: 0, proteinas: 0, carbohidratos: 0, lipidos: 0 };
+                existing.forEach(a => {
+                    totales.kcal += a.kcal || 0;
+                    totales.proteinas += a.proteinas || 0;
+                    totales.carbohidratos += a.carbohidratos || 0;
+                    totales.lipidos += a.lipidos || 0;
+                });
+                merged.dias[dia].tiempos[tiempo].totales = totales;
+            }
+        }
+        return merged;
+    }
+
+    window.eliminarAlimentoPauta = function(dia, tiempo, idx) {
+        const pautaModal = document.getElementById('pautaModal');
+        if (!pautaModal || !pautaModal._pautaData) return;
+        const pauta = pautaModal._pautaData;
+        if (pauta.dias[dia] && pauta.dias[dia].tiempos[tiempo]) {
+            const alimentos = pauta.dias[dia].tiempos[tiempo].alimentos;
+            if (idx >= 0 && idx < alimentos.length) {
+                alimentos.splice(idx, 1);
+                // Recalculate totals for this tiempo
+                const totales = { kcal: 0, proteinas: 0, carbohidratos: 0, lipidos: 0 };
+                alimentos.forEach(a => {
+                    totales.kcal += a.kcal || 0;
+                    totales.proteinas += a.proteinas || 0;
+                    totales.carbohidratos += a.carbohidratos || 0;
+                    totales.lipidos += a.lipidos || 0;
+                });
+                pauta.dias[dia].tiempos[tiempo].totales = totales;
+                // Recalculate day totals
+                const dayTotals = { kcal: 0, proteinas: 0, carbohidratos: 0, lipidos: 0 };
+                Object.values(pauta.dias[dia].tiempos).forEach(t => {
+                    dayTotals.kcal += t.totales?.kcal || 0;
+                    dayTotals.proteinas += t.totales?.proteinas || 0;
+                    dayTotals.carbohidratos += t.totales?.carbohidratos || 0;
+                    dayTotals.lipidos += t.totales?.lipidos || 0;
+                });
+                pauta.dias[dia].totales = dayTotals;
+            }
+        }
+        // Re-render modal with updated data
+        document.getElementById('pautaModal')?.remove();
+        showPautaModal(pauta);
+    };
+
+    window.agregarAlimentoAPauta = function(dia, tiempo, food) {
+        const pautaModal = document.getElementById('pautaModal');
+        if (!pautaModal || !pautaModal._pautaData) return;
+        const pauta = pautaModal._pautaData;
+        if (!pauta.dias[dia]) pauta.dias[dia] = { tiempos: {} };
+        if (!pauta.dias[dia].tiempos[tiempo]) {
+            pauta.dias[dia].tiempos[tiempo] = { nombre: tiempo, alimentos: [], totales: {} };
+        }
+        pauta.dias[dia].tiempos[tiempo].alimentos.push(food);
+        // Recalculate totals
+        const totales = { kcal: 0, proteinas: 0, carbohidratos: 0, lipidos: 0 };
+        pauta.dias[dia].tiempos[tiempo].alimentos.forEach(a => {
+            totales.kcal += a.kcal || 0;
+            totales.proteinas += a.proteinas || 0;
+            totales.carbohidratos += a.carbohidratos || 0;
+            totales.lipidos += a.lipidos || 0;
+        });
+        pauta.dias[dia].tiempos[tiempo].totales = totales;
+        // Recalculate day totals
+        const dayTotals = { kcal: 0, proteinas: 0, carbohidratos: 0, lipidos: 0 };
+        Object.values(pauta.dias[dia].tiempos).forEach(t => {
+            dayTotals.kcal += t.totales?.kcal || 0;
+            dayTotals.proteinas += t.totales?.proteinas || 0;
+            dayTotals.carbohidratos += t.totales?.carbohidratos || 0;
+            dayTotals.lipidos += t.totales?.lipidos || 0;
+        });
+        pauta.dias[dia].totales = dayTotals;
+        // Re-render
+        document.getElementById('pautaModal')?.remove();
+        showPautaModal(pauta);
+    };
+
+    window.guardarPautaDesdeModal = function() {
+        const pautaModal = document.getElementById('pautaModal');
+        if (!pautaModal || !pautaModal._pautaData) return;
+        guardarPauta(pautaModal._pautaData);
+    };
+
+    window.complementarConIA = async function() {
+        const patientId = elements.patientId?.value;
+        if (!patientId) { showToast('Error: No se encontro el ID del paciente', 'error'); return; }
+
+        // 1. Build the manual pauta from the current form
+        const TIEMPOS = ['desayuno', 'colacion_am', 'almuerzo', 'colacion_pm', 'cena'];
+        const manualPauta = { dias: { lunes: { tiempos: {} } }, requerimientos: {} };
+
+        TIEMPOS.forEach(t => {
+            const rows = document.querySelectorAll(`#manual-${t} tr`);
+            const alimentos = [];
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                if (inputs[0]?.value) {
+                    alimentos.push({
+                        nombre: inputs[0].value, medida_casera: inputs[1].value,
+                        kcal: parseFloat(inputs[2].value)||0, proteinas: parseFloat(inputs[3].value)||0,
+                        carbohidratos: parseFloat(inputs[4].value)||0, lipidos: parseFloat(inputs[5].value)||0,
+                        source: 'manual'
+                    });
+                }
+            });
+            if (alimentos.length > 0) {
+                const totales = { kcal: 0, proteinas: 0, carbohidratos: 0, lipidos: 0 };
+                alimentos.forEach(a => {
+                    totales.kcal += a.kcal; totales.proteinas += a.proteinas;
+                    totales.carbohidratos += a.carbohidratos; totales.lipidos += a.lipidos;
+                });
+                manualPauta.dias.lunes.tiempos[t] = { nombre: t, alimentos, totales };
+            }
+        });
+
+        // 2. Save manual first
+        try {
+            await guardarPauta(manualPauta);
+        } catch(e) {
+            showToast('Error guardando pauta manual: ' + e.message, 'error');
+            return;
+        }
+
+        // 3. Call AI to generate suggestions
+        const btnIA = document.querySelector('#pautaManualModal .btn-info');
+        const originalText = btnIA ? btnIA.innerHTML : '';
+        if (btnIA) { btnIA.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generando IA...'; btnIA.disabled = true; }
+
+        try {
+            const response = await fetch(`/api/generar-pauta/${patientId}`);
+            const result = await response.json();
+
+            if (result.success) {
+                const iaPauta = result.pauta;
+                // Tag IA items
+                Object.values(iaPauta.dias || {}).forEach(dia => {
+                    Object.values(dia.tiempos || {}).forEach(tiempo => {
+                        (tiempo.alimentos || []).forEach(a => { a.source = a.source || 'ia'; });
+                    });
+                });
+
+                // 4. Merge manual + IA
+                const merged = mergeManualWithIA(manualPauta, iaPauta);
+                // Preserve configuracion and requerimientos from AI response
+                merged.configuracion_dieta = iaPauta.configuracion_dieta || {};
+                merged.requerimientos = iaPauta.requerimientos || {};
+                merged.tiempos_comida = iaPauta.tiempos_comida || {};
+
+                // 5. Close manual modal and show merged result in the main pauta modal
+                bootstrap.Modal.getInstance(document.getElementById('pautaManualModal'))?.hide();
+                showPautaModal(merged);
+                showToast('Pauta complementada con IA exitosamente', 'success');
+            } else {
+                throw new Error(result.error || 'Error generando pauta IA');
+            }
+        } catch(error) {
+            console.error('Error complementar IA:', error);
+            showToast(error.message || 'Error generando pauta IA', 'error');
+        } finally {
+            if (btnIA) { btnIA.innerHTML = originalText; btnIA.disabled = false; }
+        }
+    };
+
     window.guardarPautaManual = async function() {
         const patientId = elements.patientId?.value;
         if (!patientId) return;
@@ -1040,7 +1294,8 @@
                     alimentos.push({
                         nombre: inputs[0].value, medida_casera: inputs[1].value,
                         kcal: parseFloat(inputs[2].value)||0, proteinas: parseFloat(inputs[3].value)||0,
-                        carbohidratos: parseFloat(inputs[4].value)||0, lipidos: parseFloat(inputs[5].value)||0
+                        carbohidratos: parseFloat(inputs[4].value)||0, lipidos: parseFloat(inputs[5].value)||0,
+                        source: 'manual'
                     });
                 }
             });
