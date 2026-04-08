@@ -166,7 +166,7 @@
                     <div class="section-icon green">
                         <i class="fas fa-user-circle"></i>
                     </div>
-                    <span>1. Antecedentes Generales <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.7rem; cursor:help;" title="Datos personales, historial medico, alergias, intolerancias y antecedentes del paciente. Completar con datos del formulario de ingreso o manualmente."></i></span>
+                    <span>1. Antecedentes Generales <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.9rem; cursor:help;" title="Datos personales, historial medico, alergias, intolerancias y antecedentes del paciente. Completar con datos del formulario de ingreso o manualmente."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse show" id="section1">
@@ -405,7 +405,7 @@
                     <div class="section-icon blue">
                         <i class="fas fa-ruler-combined"></i>
                     </div>
-                    <span>2. Evaluación Antropométrica <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.7rem; cursor:help;" title="Mediciones corporales: peso, talla, pliegues cutaneos, perimetros. El IMC, % grasa y composicion corporal se calculan automaticamente."></i></span>
+                    <span>2. Evaluación Antropométrica <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.9rem; cursor:help;" title="Mediciones corporales: peso, talla, pliegues cutaneos, perimetros. El IMC, % grasa y composicion corporal se calculan automaticamente."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse" id="section2">
@@ -432,7 +432,8 @@
                                 <div
                                     class="calculated-field {{ 'warning' if patient.imc and patient.imc >= 25 and patient.imc < 30 else 'danger' if patient.imc and patient.imc >= 30 else '' }}">
                                     <div class="value" id="imcValue">{{ patient.imc or '-' }}</div>
-                                    <div class="label" id="imcCategoria">{{ patient.imc_categoria or 'IMC' }}</div>
+                                    <div class="label" id="imcCategoria">{{ patient.imc_categoria or '-' }}</div>
+                                    <div style="font-size:0.65rem; color:#64748b; font-weight:600;">IMC</div>
                                 </div>
                             </div>
 
@@ -607,7 +608,7 @@
                     <div class="section-icon purple">
                         <i class="fas fa-vial"></i>
                     </div>
-                    <span>3. Evaluación Bioquímica <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.7rem; cursor:help;" title="Examenes de laboratorio: glicemia, perfil lipidico, hemograma, vitaminas, tiroides. Registre la fecha del examen."></i></span>
+                    <span>3. Evaluación Bioquímica <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.9rem; cursor:help;" title="Examenes de laboratorio: glicemia, perfil lipidico, hemograma, vitaminas, tiroides. Registre la fecha del examen."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse" id="section3">
@@ -903,7 +904,7 @@
                     <div class="section-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
                         <i class="fas fa-home"></i>
                     </div>
-                    <span>4b. Conducta y Entorno <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.7rem; cursor:help;" title="Entorno alimentario: quien cocina, donde come, habitos conductuales, red de apoyo y aspectos emocionales relacionados con la alimentacion."></i></span>
+                    <span>4b. Conducta y Entorno <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.9rem; cursor:help;" title="Entorno alimentario: quien cocina, donde come, habitos conductuales, red de apoyo y aspectos emocionales relacionados con la alimentacion."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse" id="section4b">
@@ -1321,7 +1322,7 @@
                     <div class="section-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
                         <i class="fas fa-utensils"></i>
                     </div>
-                    <span>4e. Registro 24 Horas y Frecuencia de Consumo <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.7rem; cursor:help;" title="R24h: registre todo lo que el paciente comio en las ultimas 24 horas por tiempo de comida. EFC: frecuencia semanal de consumo por grupo alimentario."></i></span>
+                    <span>4e. Registro 24 Horas y Frecuencia de Consumo <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.9rem; cursor:help;" title="R24h: registre todo lo que el paciente comio en las ultimas 24 horas por tiempo de comida. EFC: frecuencia semanal de consumo por grupo alimentario."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse" id="section4e">
@@ -1366,7 +1367,7 @@
                             {% set meal_icons = {'desayuno': 'sun', 'colacion1': 'apple-alt', 'almuerzo': 'hamburger', 'colacion2': 'apple-alt', 'cena': 'moon'} %}
 
                             {% for meal_key in meal_keys %}
-                            <div class="card mb-3" style="border: 1px solid var(--bt-border-default, #e2e8f0); border-radius: 12px; overflow: hidden;">
+                            <div class="card mb-3" style="border: 1px solid var(--bt-border-default, #e2e8f0); border-radius: 12px;">
                                 <div class="card-header d-flex justify-content-between align-items-center"
                                     style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-bottom: 1px solid #bbf7d0; padding: 0.75rem 1rem;">
                                     <h6 class="mb-0" style="font-weight: 600; color: #166534;">
@@ -1440,10 +1441,12 @@
                         </div>
 
                         <!-- FRECUENCIA DE CONSUMO SEMANAL -->
-                        <div class="subsection-header mt-4">
+                        <div class="subsection-header mt-4" style="cursor: pointer;" onclick="const el=document.getElementById('efcCollapseWrapper'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; this.querySelector('.collapse-icon').classList.toggle('fa-chevron-down'); this.querySelector('.collapse-icon').classList.toggle('fa-chevron-up');">
                             <i class="fas fa-calendar-week"></i> Frecuencia de Consumo Semanal
+                            <i class="fas fa-chevron-down collapse-icon ms-2" style="font-size:0.75rem; color:#94a3b8;"></i>
                         </div>
 
+                        <div id="efcCollapseWrapper">
                         <div id="frecuenciaConsumoContainer" data-freq="{{ (patient.frecuencia_consumo or {})|tojson|e }}">
                             {% set frecuencia = patient.frecuencia_consumo %}
                             {% if frecuencia and frecuencia is mapping %}
@@ -1531,6 +1534,7 @@
                             </div>
                             {% endif %}
                         </div>
+                        </div><!-- close efcCollapseWrapper -->
 
                     </div>
                 </div>
@@ -1747,7 +1751,7 @@
                     <div class="section-icon red">
                         <i class="fas fa-clipboard-check"></i>
                     </div>
-                    <span>6. Diagnóstico y Plan Nutricional <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.7rem; cursor:help;" title="Diagnostico nutricional, objetivos SMART, indicaciones y tipo de intervencion (pauta alimentaria, guias o tareas). Seleccione el tipo antes de generar."></i></span>
+                    <span>6. Diagnóstico y Plan Nutricional <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.9rem; cursor:help;" title="Diagnostico nutricional, objetivos SMART, indicaciones y tipo de intervencion (pauta alimentaria, guias o tareas). Seleccione el tipo antes de generar."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse" id="section6">
@@ -2184,10 +2188,12 @@
                         radarInitialized = true;
                     }
                 });
-                // If already open (has class 'show'), init immediately
+                // If already open (has class 'show'), init with small delay for DOM layout
                 if (radarAccordion.classList.contains('show')) {
-                    initHabitosRadarChart();
-                    radarInitialized = true;
+                    setTimeout(function() {
+                        initHabitosRadarChart();
+                        radarInitialized = true;
+                    }, 300);
                 }
             }
         });
@@ -2426,8 +2432,9 @@
                 `;
                 container.style.display = 'block';
             } finally {
-                btn.innerHTML = '<i class="fas fa-brain"></i> <span>Alertas IA</span>';
-                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> <span>Alertas Cargadas</span>';
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
             }
         }
 
@@ -2868,7 +2875,7 @@
         // Sync kcal/kg input with objective dropdown
         document.getElementById('factorial_kcalkg').value = kcalkg;
 
-        const peso = parseFloat(document.querySelector('[name="peso"]')?.value || document.getElementById('factorialPeso')?.textContent) || 0;
+        const peso = parseFloat(document.querySelector('[name="peso_kg"]')?.value || document.getElementById('factorialPeso')?.textContent) || 0;
         document.getElementById('factorialPeso').textContent = peso || '-';
 
         if (peso > 0) {
@@ -3173,7 +3180,8 @@
                 <input type="text" class="form-control form-control-sm r24h-grupo" value="${foodData ? foodData.grupo.replace(/_/g, ' ') : ''}" placeholder="Grupo" readonly style="background: #f1f5f9;">
             </td>
             <td style="padding: 0.4rem;">
-                <input type="number" class="form-control form-control-sm r24h-cantidad" value="${foodData ? 1 : 1}" min="0.25" step="0.25">
+                <input type="number" class="form-control form-control-sm r24h-cantidad" value="${foodData ? 1 : 1}" min="0.25" step="0.25"
+                    data-base-kcal="${foodData ? foodData.kcal : 0}" onchange="const base=parseFloat(this.dataset.baseKcal)||0; const qty=parseFloat(this.value)||1; this.closest('tr').querySelector('.r24h-kcal').textContent=Math.round(base*qty);">
             </td>
             <td style="padding: 0.4rem;">
                 <input type="text" class="form-control form-control-sm r24h-medida" value="${foodData ? foodData.medida_casera : ''}" placeholder="Medida casera">
