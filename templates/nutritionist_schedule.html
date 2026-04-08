@@ -300,10 +300,13 @@ async function saveSchedule() {
     const days = [];
     document.querySelectorAll('.day-row').forEach(function(row) {
         const dayIndex = parseInt(row.dataset.day);
-        const isActive = row.querySelector('.day-toggle').classList.contains('on');
+        // For nested blocks (2nd+), inherit active state from parent day container
+        const toggle = row.querySelector('.day-toggle');
+        const isActive = toggle ? toggle.classList.contains('on') : row.closest('.day-container')?.querySelector('.day-toggle')?.classList.contains('on') || false;
+        if (!isActive) return; // Skip inactive days
         days.push({
             day_of_week: dayIndex,
-            is_active: isActive,
+            is_active: true,
             start_time: row.querySelector('.input-start').value,
             end_time: row.querySelector('.input-end').value,
             slot_duration: parseInt(row.querySelector('.input-dur').value)

@@ -1353,12 +1353,7 @@
                             </div>
                         </div>
 
-                        <!-- Food Search (R24H-001) -->
-                        <div class="mb-3 position-relative">
-                            <label class="form-label small fw-bold"><i class="fas fa-search me-1"></i> Buscar Alimento</label>
-                            <input type="text" class="form-control" id="r24hFoodSearch" placeholder="Escriba para buscar alimentos... ej: pan, leche, arroz" autocomplete="off">
-                            <div id="r24hSearchResults" class="position-absolute w-100" style="z-index: 1050; display: none; max-height: 300px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 0 0 8px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
-                        </div>
+                        <!-- Global search bar removed — per-meal search bars below are used instead -->
 
                         <!-- Hidden input for JSON data on save -->
                         <input type="hidden" id="registro_24h_data" name="registro_24h_json" value="">
@@ -1556,7 +1551,7 @@
                         <div class="row g-4">
                             <!-- Método de Cálculo selector -->
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">Método de Cálculo</label>
+                                <label class="form-label fw-bold">Método de Cálculo <i class="fas fa-info-circle text-muted" style="font-size:0.75rem; cursor:help;" title="Harris-Benedict: formula clasica (GEB x FA). Factorial: kcal/kg x peso corporal. Calorimetria: valor medido directamente. Seleccione y presione Recalcular."></i></label>
                                 <select class="form-select" name="metodo_calculo" id="metodo_calculo" onchange="toggleMetodoCalculo()">
                                     <option value="tmb_fa" {{ 'selected' if patient.metodo_calculo == 'tmb_fa' or not patient.metodo_calculo }}>Harris-Benedict (GEB × FA)</option>
                                     <option value="factorial" {{ 'selected' if patient.metodo_calculo == 'factorial' }}>Método Factorial (kcal/kg)</option>
