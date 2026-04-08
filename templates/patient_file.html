@@ -1494,14 +1494,16 @@
                                     <thead style="background: linear-gradient(135deg, #faf5ff, #f3e8ff); position: sticky; top: 0; z-index: 10;">
                                         <tr>
                                             <th
-                                                style="padding: 0.75rem 1rem; font-weight: 600; color: #6b21a8; width: 40%;">
+                                                style="padding: 0.75rem 1rem; font-weight: 600; color: #6b21a8; width: 35%;">
                                                 Grupo Alimentario</th>
-                                            <th style="padding: 0.75rem 1rem; font-weight: 600; color: #6b21a8;">
+                                            <th style="padding: 0.75rem 1rem; font-weight: 600; color: #6b21a8; width: 30%;">
                                                 Frecuencia</th>
+                                            <th style="padding: 0.75rem 1rem; font-weight: 600; color: #6b21a8;">
+                                                Obs.</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for key, value in frecuencia.items() %}
+                                        {% for key, value in frecuencia.items() if key != '_comments' %}
                                         <tr>
                                             <td style="padding: 0.5rem 1rem; font-weight: 500;">
                                                 {{ freq_labels.get(key, key|replace('_', ' ')|capitalize) }}
@@ -1514,6 +1516,12 @@
                                                     style="background: {{ freq_color }}; color: white; font-size: 0.8rem; padding: 0.4rem 0.75rem; border-radius: 20px;">
                                                     {{ freq_values.get(value, value|replace('_', ' ')) }}
                                                 </span>
+                                            </td>
+                                            <td style="padding: 0.5rem;">
+                                                <input type="text" class="form-control form-control-sm freq-comment-input"
+                                                    data-freq-key="{{ key }}"
+                                                    value="{{ (frecuencia.get('_comments', {}) or {}).get(key, '') if frecuencia.get('_comments') is mapping else '' }}"
+                                                    placeholder="Obs..." style="font-size: 0.75rem;">
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -1910,10 +1918,10 @@
 
             <!-- SECCION 7: GRAFICO ARANA DE HABITOS -->
             <div class="card mb-4" id="section7">
-                <button class="accordion-btn collapsed" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#sectionRadar" aria-expanded="false">
+                <button class="accordion-btn" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#sectionRadar" aria-expanded="true">
                     <i class="fas fa-chart-pie section-icon text-info"></i>
-                    <span>7. Resumen Visual de Habitos</span>
+                    <span>7. Resumen Visual de Habitos <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.9rem; cursor:help;" title="Grafico de aranha con puntajes de hidratacion, sueno, estres, actividad fisica, consumo de frutas/verduras y digestion. Se calcula automaticamente."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse show" id="sectionRadar">
@@ -1973,39 +1981,50 @@
         </form>
     </div>
 
-    <!-- Quick Navigation -->
+    <!-- Quick Navigation with styled tooltips -->
+    <style>
+        .quick-nav-item { position: relative; }
+        .quick-nav-item::after {
+            content: attr(data-label);
+            position: absolute; right: 110%; top: 50%; transform: translateY(-50%);
+            background: #1f2937; color: white; font-size: 0.7rem; font-weight: 600;
+            padding: 4px 10px; border-radius: 6px; white-space: nowrap;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s;
+        }
+        .quick-nav-item:hover::after { opacity: 1; }
+    </style>
     <div class="quick-nav">
-        <button class="quick-nav-item active" onclick="scrollToSection('section1')" title="Antecedentes">
+        <button class="quick-nav-item active" onclick="scrollToSection('section1')" data-label="1. Antecedentes">
             <i class="fas fa-user-circle"></i>
         </button>
-        <button class="quick-nav-item" onclick="scrollToSection('section2')" title="Antropometría">
+        <button class="quick-nav-item" onclick="scrollToSection('section2')" data-label="2. Antropometria">
             <i class="fas fa-ruler-combined"></i>
         </button>
-        <button class="quick-nav-item" onclick="scrollToSection('section3')" title="Bioquímica">
+        <button class="quick-nav-item" onclick="scrollToSection('section3')" data-label="3. Bioquimica">
             <i class="fas fa-vial"></i>
         </button>
-        <button class="quick-nav-item" onclick="scrollToSection('section4')" title="Estilo de Vida">
+        <button class="quick-nav-item" onclick="scrollToSection('section4')" data-label="4. Estilo de Vida">
             <i class="fas fa-heart-pulse"></i>
         </button>
-        <button class="quick-nav-item" onclick="scrollToSection('section4b')" title="Conducta">
+        <button class="quick-nav-item" onclick="scrollToSection('section4b')" data-label="4b. Conducta">
             <i class="fas fa-home"></i>
         </button>
-        <button class="quick-nav-item" onclick="scrollToSection('section4c')" title="Síntomas GI">
+        <button class="quick-nav-item" onclick="scrollToSection('section4c')" data-label="4c. Sintomas GI">
             <i class="fas fa-stomach"></i>
         </button>
-        <button class="quick-nav-item" onclick="scrollToSection('section4d')" title="Líquidos">
+        <button class="quick-nav-item" onclick="scrollToSection('section4d')" data-label="4d. Liquidos">
             <i class="fas fa-tint"></i>
         </button>
-        <button class="quick-nav-item" onclick="scrollToSection('section4e')" title="Registro 24h">
+        <button class="quick-nav-item" onclick="scrollToSection('section4e')" data-label="4e. R24h + Frecuencia">
             <i class="fas fa-utensils"></i>
         </button>
-        <button class="quick-nav-item" onclick="scrollToSection('section5')" title="Requerimientos">
+        <button class="quick-nav-item" onclick="scrollToSection('section5')" data-label="5. Requerimientos">
             <i class="fas fa-calculator"></i>
         </button>
-        <button class="quick-nav-item" onclick="scrollToSection('section6')" title="Diagnostico">
+        <button class="quick-nav-item" onclick="scrollToSection('section6')" data-label="6. Diagnostico y Plan">
             <i class="fas fa-clipboard-check"></i>
         </button>
-        <button class="quick-nav-item" onclick="scrollToSection('section7')" title="Grafico Habitos">
+        <button class="quick-nav-item" onclick="scrollToSection('section7')" data-label="7. Grafico Habitos">
             <i class="fas fa-chart-pie"></i>
         </button>
     </div>
@@ -2178,23 +2197,25 @@
             initDiagnosticosPills();
             initPesoEvolutionChart();
 
-            // Defer radar chart init until accordion is opened (canvas needs dimensions)
+            // Init radar chart — section 7 starts open (aria-expanded=true, collapse show)
+            // Use requestAnimationFrame to ensure DOM layout is complete
             let radarInitialized = false;
             const radarAccordion = document.getElementById('sectionRadar');
             if (radarAccordion) {
+                // Re-init when accordion opens (if user closes then reopens)
                 radarAccordion.addEventListener('shown.bs.collapse', function() {
                     if (!radarInitialized) {
                         initHabitosRadarChart();
                         radarInitialized = true;
                     }
                 });
-                // If already open (has class 'show'), init with small delay for DOM layout
-                if (radarAccordion.classList.contains('show')) {
+                // Init on load — use requestAnimationFrame for reliable rendering
+                requestAnimationFrame(function() {
                     setTimeout(function() {
                         initHabitosRadarChart();
                         radarInitialized = true;
-                    }, 300);
-                }
+                    }, 500);
+                });
             }
         });
 

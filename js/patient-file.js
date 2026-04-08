@@ -162,6 +162,31 @@
                 }
             }
         }
+
+        // EFC-OBS: Collect frequency comments from the ficha and merge into frecuencia_consumo
+        const freqCommentInputs = document.querySelectorAll('.freq-comment-input');
+        if (freqCommentInputs.length > 0) {
+            const freqContainer = document.getElementById('frecuenciaConsumoContainer');
+            // If frecuencia_consumo not already set from above, load from the container data attribute
+            if (!data.frecuencia_consumo && freqContainer) {
+                try {
+                    data.frecuencia_consumo = JSON.parse(freqContainer.dataset.freq || '{}');
+                } catch(e) { data.frecuencia_consumo = {}; }
+            }
+            if (data.frecuencia_consumo && typeof data.frecuencia_consumo === 'object') {
+                const comments = {};
+                freqCommentInputs.forEach(input => {
+                    const key = input.dataset.freqKey;
+                    const val = input.value.trim();
+                    if (key && val) comments[key] = val;
+                });
+                if (Object.keys(comments).length > 0) {
+                    data.frecuencia_consumo._comments = comments;
+                } else {
+                    delete data.frecuencia_consumo._comments;
+                }
+            }
+        }
         
         showLoading();
         updateSaveStatus('saving');
@@ -937,16 +962,67 @@
 
     window.agregarAlimentoManual = function(tiempo) {
         const tbody = document.getElementById(`manual-${tiempo}`);
-        tbody.insertAdjacentHTML('beforeend', `
-            <tr>
-                <td><input type="text" class="form-control form-control-sm" placeholder="Nombre"></td>
-                <td><input type="text" class="form-control form-control-sm" placeholder="Ej: 1 taza"></td>
-                <td><input type="number" class="form-control form-control-sm" placeholder="0"></td>
-                <td><input type="number" class="form-control form-control-sm" placeholder="0"></td>
-                <td><input type="number" class="form-control form-control-sm" placeholder="0"></td>
-                <td><input type="number" class="form-control form-control-sm" placeholder="0"></td>
-                <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>
-            </tr>`);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+                <td style="position: relative;">
+                    <input type="text" class="form-control form-control-sm pauta-manual-alimento" placeholder="Nombre">
+                    <div class="pauta-manual-results" style="display:none; position:absolute; left:0; top:100%; z-index:1050; width:100%; max-height:200px; overflow-y:auto; background:white; border:1px solid #e2e8f0; border-radius:0 0 8px 8px; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
+                </td>
+                <td><input type="text" class="form-control form-control-sm pauta-manual-porcion" placeholder="Ej: 1 taza"></td>
+                <td><input type="number" class="form-control form-control-sm pauta-manual-kcal" placeholder="0"></td>
+                <td><input type="number" class="form-control form-control-sm pauta-manual-prot" placeholder="0"></td>
+                <td><input type="number" class="form-control form-control-sm pauta-manual-carbs" placeholder="0"></td>
+                <td><input type="number" class="form-control form-control-sm pauta-manual-fat" placeholder="0"></td>
+                <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>`;
+        tbody.appendChild(tr);
+
+        // Wire food DB search to the alimento input
+        const input = tr.querySelector('.pauta-manual-alimento');
+        const resultsDiv = tr.querySelector('.pauta-manual-results');
+        let searchTimeout;
+
+        input.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (typeof searchR24hFoods === 'function') {
+                    const results = searchR24hFoods(this.value);
+                    if (!results.length) { resultsDiv.style.display = 'none'; return; }
+                    resultsDiv.innerHTML = results.map((food, i) => `
+                        <div class="pauta-manual-food-item px-3 py-2" style="cursor:pointer; border-bottom:1px solid #f1f5f9; font-size:0.875rem;" data-idx="${i}">
+                            <div style="font-weight:500;">${food.nombre}</div>
+                            <div style="color:#94a3b8; font-size:0.75rem;">
+                                <span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:0.7rem;">${food.grupo.replace(/_/g, ' ')}</span>
+                                ${food.medida_casera} &middot; ${food.kcal} kcal
+                            </div>
+                        </div>
+                    `).join('');
+                    resultsDiv._results = results;
+                    resultsDiv.style.display = 'block';
+                }
+            }, 200);
+        });
+
+        input.addEventListener('blur', function() {
+            setTimeout(() => { resultsDiv.style.display = 'none'; }, 200);
+        });
+
+        resultsDiv.addEventListener('mousedown', function(e) {
+            const item = e.target.closest('.pauta-manual-food-item');
+            if (!item) return;
+            e.preventDefault();
+            const idx = parseInt(item.dataset.idx);
+            const food = resultsDiv._results[idx];
+            if (!food) return;
+            input.value = food.nombre;
+            tr.querySelector('.pauta-manual-porcion').value = food.medida_casera || '';
+            tr.querySelector('.pauta-manual-kcal').value = food.kcal || 0;
+            tr.querySelector('.pauta-manual-prot').value = food.proteinas || 0;
+            tr.querySelector('.pauta-manual-carbs').value = food.carbohidratos || 0;
+            tr.querySelector('.pauta-manual-fat').value = food.lipidos || 0;
+            resultsDiv.style.display = 'none';
+        });
+
+        input.focus();
     };
 
     window.guardarPautaManual = async function() {
