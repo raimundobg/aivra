@@ -3223,21 +3223,33 @@ def modificar_pauta_ia_endpoint():
 # ============================================
 
 # Intentar usar Gemini, si no está disponible usar Groq como fallback
+# H3 fix: check runtime availability, not just ImportError
+_ia_loaded = False
 try:
     from gemini_service import generar_alertas_paciente, chat_con_asistente, obtener_sugerencias_chat, ia_disponible, modificar_pauta_ia
-    print("[OK] Usando Gemini AI Service")
-except ImportError:
+    if ia_disponible():
+        print("[OK] Usando Gemini AI Service")
+        _ia_loaded = True
+    else:
+        print("[WARN] Gemini importado pero sin API key - probando Groq...")
+        raise RuntimeError("Gemini no disponible")
+except (ImportError, RuntimeError):
     try:
         from groq_service import generar_alertas_paciente, chat_con_asistente, obtener_sugerencias_chat, ia_disponible, modificar_pauta_ia
-        print("[OK] Usando Groq AI Service")
-    except ImportError:
+        if ia_disponible():
+            print("[OK] Usando Groq AI Service (fallback)")
+            _ia_loaded = True
+        else:
+            print("[WARN] Groq importado pero sin API key")
+            raise RuntimeError("Groq no disponible")
+    except (ImportError, RuntimeError):
         # Fallback sin IA
         def generar_alertas_paciente(data): return []
-        def chat_con_asistente(msg, ctx=None, hist=None): return "IA no disponible"
+        def chat_con_asistente(msg, ctx=None, hist=None): return "Asistente IA no disponible. Configure GEMINI_API_KEY o GROQ_API_KEY en las variables de entorno."
         def obtener_sugerencias_chat(ctx=None): return []
-        def modificar_pauta_ia(pauta, instr, data=None): raise RuntimeError("IA no disponible")
+        def modificar_pauta_ia(pauta, instr, data=None): raise RuntimeError("IA no disponible. Configure GEMINI_API_KEY o GROQ_API_KEY.")
         def ia_disponible(): return False
-        print("[WARNING] Ningun servicio de IA disponible")
+        print("[WARNING] Ningun servicio de IA disponible - configure GEMINI_API_KEY o GROQ_API_KEY")
 
 def generar_alertas_reglas(patient):
     """Rule-based nutrition alerts from R24H, frecuencia consumo, and habits data"""

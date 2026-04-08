@@ -166,7 +166,7 @@
                     <div class="section-icon green">
                         <i class="fas fa-user-circle"></i>
                     </div>
-                    <span>1. Antecedentes Generales</span>
+                    <span>1. Antecedentes Generales <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.7rem; cursor:help;" title="Datos personales, historial medico, alergias, intolerancias y antecedentes del paciente. Completar con datos del formulario de ingreso o manualmente."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse show" id="section1">
@@ -405,7 +405,7 @@
                     <div class="section-icon blue">
                         <i class="fas fa-ruler-combined"></i>
                     </div>
-                    <span>2. Evaluación Antropométrica</span>
+                    <span>2. Evaluación Antropométrica <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.7rem; cursor:help;" title="Mediciones corporales: peso, talla, pliegues cutaneos, perimetros. El IMC, % grasa y composicion corporal se calculan automaticamente."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse" id="section2">
@@ -607,7 +607,7 @@
                     <div class="section-icon purple">
                         <i class="fas fa-vial"></i>
                     </div>
-                    <span>3. Evaluación Bioquímica</span>
+                    <span>3. Evaluación Bioquímica <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.7rem; cursor:help;" title="Examenes de laboratorio: glicemia, perfil lipidico, hemograma, vitaminas, tiroides. Registre la fecha del examen."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse" id="section3">
@@ -903,7 +903,7 @@
                     <div class="section-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
                         <i class="fas fa-home"></i>
                     </div>
-                    <span>4b. Conducta y Entorno</span>
+                    <span>4b. Conducta y Entorno <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.7rem; cursor:help;" title="Entorno alimentario: quien cocina, donde come, habitos conductuales, red de apoyo y aspectos emocionales relacionados con la alimentacion."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse" id="section4b">
@@ -1321,7 +1321,7 @@
                     <div class="section-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
                         <i class="fas fa-utensils"></i>
                     </div>
-                    <span>4e. Registro 24 Horas y Frecuencia de Consumo</span>
+                    <span>4e. Registro 24 Horas y Frecuencia de Consumo <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.7rem; cursor:help;" title="R24h: registre todo lo que el paciente comio en las ultimas 24 horas por tiempo de comida. EFC: frecuencia semanal de consumo por grupo alimentario."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse" id="section4e">
@@ -1752,7 +1752,7 @@
                     <div class="section-icon red">
                         <i class="fas fa-clipboard-check"></i>
                     </div>
-                    <span>6. Diagnóstico y Plan Nutricional</span>
+                    <span>6. Diagnóstico y Plan Nutricional <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.7rem; cursor:help;" title="Diagnostico nutricional, objetivos SMART, indicaciones y tipo de intervencion (pauta alimentaria, guias o tareas). Seleccione el tipo antes de generar."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>
                 <div class="collapse" id="section6">
@@ -1840,6 +1840,74 @@
                     </div>
                 </div>
             </div>
+
+            <!-- H2: PAUTA ALIMENTARIA GUARDADA -->
+            {% if patient.plan_alimentario %}
+            {% set pauta_data = patient.plan_alimentario %}
+            <div class="section-accordion">
+                <button type="button" class="accordion-button-custom" data-bs-toggle="collapse"
+                    data-bs-target="#sectionPautaGuardada">
+                    <div class="section-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <span>Pauta Alimentaria Guardada</span>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
+                </button>
+                <div class="collapse show" id="sectionPautaGuardada">
+                    <div class="accordion-content">
+                        <div id="pautaGuardadaContainer"></div>
+                        <script>
+                            (function() {
+                                try {
+                                    const raw = {{ pauta_data|tojson }};
+                                    const pauta = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                                    if (!pauta || !pauta.dias) { document.getElementById('pautaGuardadaContainer').innerHTML = '<p class="text-muted">No hay datos de pauta.</p>'; return; }
+
+                                    const TIEMPO_NAMES = {
+                                        desayuno: {n:'Desayuno', icon:'fa-sun', c:'#f59e0b'},
+                                        colacion_am: {n:'Colación AM', icon:'fa-apple-alt', c:'#10b981'},
+                                        almuerzo: {n:'Almuerzo', icon:'fa-utensils', c:'#ef4444'},
+                                        colacion_pm: {n:'Colación PM', icon:'fa-cookie', c:'#8b5cf6'},
+                                        cena: {n:'Cena', icon:'fa-moon', c:'#3b82f6'}
+                                    };
+                                    const DIA_NAMES = {lunes:'Lunes',martes:'Martes',miercoles:'Miércoles',jueves:'Jueves',viernes:'Viernes',sabado:'Sábado',domingo:'Domingo'};
+                                    const order = ['desayuno','colacion_am','almuerzo','colacion_pm','cena'];
+                                    let html = '';
+
+                                    // Config
+                                    if (pauta.requerimientos) {
+                                        const r = pauta.requerimientos;
+                                        html += `<div class="mb-3 p-2 rounded" style="background:#f0fdf4; border: 1px solid #a7f3d0; font-size:0.82rem;">
+                                            <strong>GET:</strong> ${r.get_kcal||'-'} kcal | <strong>P:</strong> ${r.proteinas_g||'-'}g | <strong>C:</strong> ${r.carbohidratos_g||'-'}g | <strong>G:</strong> ${r.grasas_g||'-'}g</div>`;
+                                    }
+
+                                    for (const [dia, diaData] of Object.entries(pauta.dias)) {
+                                        html += `<div class="mb-3"><h6 class="fw-bold" style="color:#166534;"><i class="fas fa-calendar-day me-2"></i>${DIA_NAMES[dia]||dia}</h6>`;
+                                        const tiempos = diaData.tiempos || diaData;
+                                        order.forEach(tk => {
+                                            const t = tiempos[tk];
+                                            if (!t || !t.alimentos || !t.alimentos.length) return;
+                                            const tc = TIEMPO_NAMES[tk] || {n:tk, icon:'fa-utensils', c:'#6b7280'};
+                                            html += `<div class="card mb-2" style="border:1px solid #e5e7eb; border-radius:8px; overflow:hidden;">
+                                                <div class="d-flex justify-content-between align-items-center px-3 py-1" style="background:#f8fafc; border-bottom:1px solid #e5e7eb;">
+                                                    <span style="font-weight:600; font-size:0.82rem;"><i class="fas ${tc.icon}" style="color:${tc.c}; margin-right:6px;"></i>${t.nombre||tc.n}</span>
+                                                    <span class="badge text-white" style="background:${tc.c}; font-size:0.7rem;">${t.totales?.kcal||'?'} kcal</span>
+                                                </div>
+                                                <table class="table table-sm mb-0" style="font-size:0.8rem;">
+                                                    <thead><tr style="background:#f8fafc;"><th style="padding:4px 10px;">Alimento</th><th style="padding:4px 10px;">Porción</th><th style="padding:4px 10px; text-align:right;">Kcal</th></tr></thead>
+                                                    <tbody>${t.alimentos.map(a => `<tr><td style="padding:4px 10px;">${a.nombre}</td><td style="padding:4px 10px; color:#64748b;">${a.cantidad||1} ${a.medida_casera||''}</td><td style="padding:4px 10px; text-align:right; font-weight:600;">${Math.round(a.kcal||0)}</td></tr>`).join('')}</tbody>
+                                                </table></div>`;
+                                        });
+                                        html += '</div>';
+                                    }
+                                    document.getElementById('pautaGuardadaContainer').innerHTML = html;
+                                } catch(e) { document.getElementById('pautaGuardadaContainer').innerHTML = '<p class="text-muted">Error al cargar pauta: ' + e.message + '</p>'; }
+                            })();
+                        </script>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
             <!-- SECCION 7: GRAFICO ARANA DE HABITOS -->
             <div class="card mb-4" id="section7">

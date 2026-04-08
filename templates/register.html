@@ -224,9 +224,12 @@
                     <p style="font-size:0.8rem; color:var(--bt-fg-muted); margin:0 0 0.75rem;">
                         Tus especialidades se mostraran en tu perfil publico para que los pacientes te encuentren.
                     </p>
+                    <input type="text" id="specialtySearch" placeholder="Buscar especialidad... (ej: deportiva, renal, pediatrica)"
+                        style="width:100%; padding:0.5rem 1rem; border-radius:999px; border:1.5px solid var(--bt-border-default); font-size:0.8rem; margin-bottom:0.75rem; background:var(--bt-bg-surface-solid); color:var(--bt-fg-default);"
+                        oninput="filterSpecialties(this.value)">
                     <div id="specialtyChips" style="display:flex; flex-wrap:wrap; gap:0.5rem;">
                         {% for key, label in specialties %}
-                        <label style="display:inline-flex; align-items:center; cursor:pointer;">
+                        <label style="display:inline-flex; align-items:center; cursor:pointer;" data-search="{{ label|lower }} {{ key|lower }}">
                             <input type="checkbox" name="specialization" value="{{ key }}"
                                 style="display:none;" class="specialty-cb"
                                 onchange="limitSpecialties(this)">
@@ -239,6 +242,16 @@
                         </label>
                         {% endfor %}
                     </div>
+                    <script>
+                    function filterSpecialties(query) {
+                        const q = query.toLowerCase().trim();
+                        document.querySelectorAll('#specialtyChips label').forEach(label => {
+                            const searchText = label.dataset.search || '';
+                            const isChecked = label.querySelector('.specialty-cb')?.checked;
+                            label.style.display = (!q || searchText.includes(q) || isChecked) ? '' : 'none';
+                        });
+                    }
+                    </script>
                     <p id="specialtyCount" style="font-size:0.75rem; color:var(--bt-fg-muted); margin:0.5rem 0 0;">
                         0 de 3 seleccionadas
                     </p>

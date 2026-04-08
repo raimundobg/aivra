@@ -490,6 +490,7 @@
    PRINT STYLES
    ============================================ */
 @media print {
+    /* Hide ALL UI chrome */
     .navbar-custom,
     .ficha-header,
     .quick-nav,
@@ -497,21 +498,85 @@
     .save-status,
     .chatbot-container,
     .chatbot-fab,
-    .loading-overlay {
+    .loading-overlay,
+    .bt-sidebar,
+    .bt-topnav,
+    .bt-app-shell > aside,
+    #modeIndicator,
+    .intervencion-btn,
+    .intervencion-panel,
+    .r24h-meal-search,
+    .r24h-meal-search-results,
+    #r24hFoodSearch,
+    #r24hSearchResults,
+    .btn-outline-success,
+    .accordion-icon {
         display: none !important;
     }
 
-    .accordion-content {
+    /* Professional header */
+    body::before {
+        content: "INFORME NUTRICIONAL — BiteTrack";
+        display: block;
+        text-align: center;
+        font-size: 14pt;
+        font-weight: 700;
+        color: #10b981;
+        border-bottom: 2px solid #10b981;
+        padding-bottom: 8px;
+        margin-bottom: 16px;
+    }
+
+    /* Expand all accordion sections */
+    .accordion-content,
+    .collapse {
         display: block !important;
         height: auto !important;
     }
 
+    /* Page breaks */
     .patient-summary {
         break-inside: avoid;
     }
 
     .section-accordion {
         break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 1rem;
+    }
+
+    /* Clean field styling */
+    .form-control,
+    .form-select,
+    textarea {
+        border: none !important;
+        background: transparent !important;
+        padding: 2px 0 !important;
+        font-size: 10pt !important;
+        box-shadow: none !important;
+    }
+
+    /* Calculated fields */
+    .calculated-field {
+        border: 1px solid #e5e7eb !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Canvas charts */
+    canvas {
+        max-height: 200px !important;
+    }
+
+    /* Page setup */
+    @page {
+        margin: 1.5cm;
+        size: A4;
+    }
+
+    body {
+        font-size: 10pt;
+        line-height: 1.4;
     }
 
     /* Pauta Modal Print Styles */

@@ -216,35 +216,70 @@ function showToast(msg) {
 function buildGrid(existing) {
     const grid = document.getElementById('scheduleGrid');
     grid.innerHTML = '';
+    // Group existing schedules by day (support multiple blocks per day)
     const existMap = {};
-    (existing || []).forEach(function(s){ existMap[s.day_of_week] = s; });
+    (existing || []).forEach(function(s){
+        if (!existMap[s.day_of_week]) existMap[s.day_of_week] = [];
+        existMap[s.day_of_week].push(s);
+    });
 
     for (let i = 0; i < 7; i++) {
-        const ex = existMap[i];
-        const isActive = ex ? ex.is_active : (i < 5); // default Mon-Fri active
-        const start = ex ? ex.start_time : '09:00';
-        const end = ex ? ex.end_time : '17:00';
-        const dur = ex ? ex.slot_duration : 60;
+        const blocks = existMap[i] || [{ is_active: (i < 5), start_time: '09:00', end_time: '17:00', slot_duration: 60 }];
+        const isActive = blocks.some(b => b.is_active);
 
-        const row = document.createElement('div');
-        row.className = 'day-row' + (isActive ? ' active' : '');
-        row.dataset.day = i;
-        row.innerHTML =
-            '<span class="day-name">' + DAYS[i] + '</span>' +
-            '<button type="button" class="day-toggle' + (isActive ? ' on' : '') + '" onclick="toggleDay(this,' + i + ')"></button>' +
-            '<div class="day-fields" style="' + (isActive ? '' : 'opacity:0.4;pointer-events:none;') + '">' +
-                '<label>Desde</label><input type="time" value="' + start + '" class="input-start">' +
-                '<label>Hasta</label><input type="time" value="' + end + '" class="input-end">' +
-                '<label>Duracion</label>' +
-                '<select class="input-dur">' +
-                    '<option value="30"' + (dur===30?' selected':'') + '>30 min</option>' +
-                    '<option value="45"' + (dur===45?' selected':'') + '>45 min</option>' +
-                    '<option value="60"' + (dur===60?' selected':'') + '>60 min</option>' +
-                    '<option value="90"' + (dur===90?' selected':'') + '>90 min</option>' +
-                '</select>' +
-            '</div>';
-        grid.appendChild(row);
+        const dayContainer = document.createElement('div');
+        dayContainer.className = 'day-container';
+        dayContainer.dataset.day = i;
+        dayContainer.style.cssText = 'margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 10px;';
+
+        let blocksHtml = '';
+        blocks.forEach(function(block, idx) {
+            const start = block.start_time || '09:00';
+            const end = block.end_time || '17:00';
+            const dur = block.slot_duration || 60;
+            blocksHtml +=
+                '<div class="day-row' + (block.is_active ? ' active' : '') + '" data-day="' + i + '" style="' + (idx > 0 ? 'margin-top:4px; padding-left:2rem;' : '') + '">' +
+                    (idx === 0 ? '<span class="day-name">' + DAYS[i] + '</span>' +
+                    '<button type="button" class="day-toggle' + (isActive ? ' on' : '') + '" onclick="toggleDay(this,' + i + ')"></button>' : '<span class="day-name" style="color:#94a3b8; font-size:0.8rem;">+</span><span style="width:28px;display:inline-block;"></span>') +
+                    '<div class="day-fields" style="' + (isActive ? '' : 'opacity:0.4;pointer-events:none;') + '">' +
+                        '<label>Desde</label><input type="time" value="' + start + '" class="input-start">' +
+                        '<label>Hasta</label><input type="time" value="' + end + '" class="input-end">' +
+                        '<label>Duracion</label>' +
+                        '<select class="input-dur">' +
+                            '<option value="30"' + (dur===30?' selected':'') + '>30 min</option>' +
+                            '<option value="45"' + (dur===45?' selected':'') + '>45 min</option>' +
+                            '<option value="60"' + (dur===60?' selected':'') + '>60 min</option>' +
+                            '<option value="90"' + (dur===90?' selected':'') + '>90 min</option>' +
+                        '</select>' +
+                        (idx > 0 ? '<button type="button" onclick="this.closest(\'.day-row\').remove()" style="background:none;border:none;color:#ef4444;cursor:pointer;margin-left:4px;" title="Eliminar bloque"><i class="fas fa-times"></i></button>' : '') +
+                    '</div>' +
+                '</div>';
+        });
+
+        // Add block button
+        blocksHtml += '<button type="button" onclick="addTimeBlock(' + i + ', this)" class="btn btn-sm btn-outline-success mt-1" style="margin-left:2rem; font-size:0.75rem; display:' + (isActive ? 'inline-block' : 'none') + ';" data-add-block="' + i + '"><i class="fas fa-plus me-1"></i>Agregar bloque</button>';
+
+        dayContainer.innerHTML = blocksHtml;
+        grid.appendChild(dayContainer);
     }
+}
+
+function addTimeBlock(dayIndex, btn) {
+    const container = btn.closest('.day-container');
+    const newRow = document.createElement('div');
+    newRow.className = 'day-row active';
+    newRow.dataset.day = dayIndex;
+    newRow.style.cssText = 'margin-top:4px; padding-left:2rem;';
+    newRow.innerHTML =
+        '<span class="day-name" style="color:#94a3b8; font-size:0.8rem;">+</span><span style="width:28px;display:inline-block;"></span>' +
+        '<div class="day-fields">' +
+            '<label>Desde</label><input type="time" value="14:00" class="input-start">' +
+            '<label>Hasta</label><input type="time" value="18:00" class="input-end">' +
+            '<label>Duracion</label>' +
+            '<select class="input-dur"><option value="30">30 min</option><option value="45">45 min</option><option value="60" selected>60 min</option><option value="90">90 min</option></select>' +
+            '<button type="button" onclick="this.closest(\'.day-row\').remove()" style="background:none;border:none;color:#ef4444;cursor:pointer;margin-left:4px;" title="Eliminar bloque"><i class="fas fa-times"></i></button>' +
+        '</div>';
+    container.insertBefore(newRow, btn);
 }
 
 function toggleDay(btn, dayIndex) {
