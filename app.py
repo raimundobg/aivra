@@ -950,7 +950,7 @@ def patient_file_view(patient_id):
     import json as _json
     for json_field in ('registro_24h', 'frecuencia_consumo', 'sintomas_gi', 'actividad_fisica',
                        'actividades_detalladas', 'historial_antropometria', 'historial_bioquimico',
-                       'archivos_examenes', 'restricciones_alimentarias'):
+                       'archivos_examenes', 'restricciones_alimentarias', 'plan_alimentario'):
         val = getattr(patient, json_field, None)
         if val and isinstance(val, str):
             try:
@@ -3105,6 +3105,15 @@ def generar_pauta_endpoint(patient_id):
         if edad is None:
             edad = 30 # Default if unknown
 
+        # Ensure JSON fields are dicts (TEXT column fix)
+        for jf in ('registro_24h', 'frecuencia_consumo', 'restricciones_alimentarias'):
+            val = getattr(patient, jf, None)
+            if val and isinstance(val, str):
+                try:
+                    setattr(patient, jf, json.loads(val))
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
         patient_data = {
             'id': patient.id,
             'nombre': patient.nombre or 'Paciente',
@@ -3124,7 +3133,8 @@ def generar_pauta_endpoint(patient_id):
             # Allergy, intolerance and dietary restriction data for filtering
             'alergias': patient.alergias if patient.alergias else '',
             'intolerancias': patient.intolerancias if patient.intolerancias else '',
-            'restricciones_alimentarias': patient.restricciones_alimentarias if patient.restricciones_alimentarias else []
+            'restricciones_alimentarias': patient.restricciones_alimentarias if patient.restricciones_alimentarias else [],
+            'alimentos_no_consume': patient.alimentos_no_consume if patient.alimentos_no_consume else ''
         }
 
         # If POST request, allow frontend to override/supplement allergy data
