@@ -1063,10 +1063,10 @@
                     <div class="pauta-manual-results" style="display:none; position:absolute; left:0; top:100%; z-index:1050; width:100%; max-height:200px; overflow-y:auto; background:white; border:1px solid #e2e8f0; border-radius:0 0 8px 8px; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
                 </td>
                 <td><input type="text" class="form-control form-control-sm pauta-manual-porcion" placeholder="Ej: 1 taza"></td>
-                <td><input type="number" class="form-control form-control-sm pauta-manual-kcal" placeholder="0"></td>
-                <td><input type="number" class="form-control form-control-sm pauta-manual-prot" placeholder="0"></td>
-                <td><input type="number" class="form-control form-control-sm pauta-manual-carbs" placeholder="0"></td>
-                <td><input type="number" class="form-control form-control-sm pauta-manual-fat" placeholder="0"></td>
+                <td><input type="number" class="form-control form-control-sm pauta-manual-kcal" placeholder="0" step="1" onchange="updateManualMealTotal('${tiempo}')"></td>
+                <td><input type="number" class="form-control form-control-sm pauta-manual-prot" placeholder="0" step="0.1" onchange="updateManualMealTotal('${tiempo}')"></td>
+                <td><input type="number" class="form-control form-control-sm pauta-manual-carbs" placeholder="0" step="0.1" onchange="updateManualMealTotal('${tiempo}')"></td>
+                <td><input type="number" class="form-control form-control-sm pauta-manual-fat" placeholder="0" step="0.1" onchange="updateManualMealTotal('${tiempo}')"></td>
                 <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>`;
         tbody.appendChild(tr);
 
@@ -1114,9 +1114,24 @@
             tr.querySelector('.pauta-manual-carbs').value = food.carbohidratos || 0;
             tr.querySelector('.pauta-manual-fat').value = food.lipidos || 0;
             resultsDiv.style.display = 'none';
+            // Update meal total badge
+            if (typeof updateManualMealTotal === 'function') updateManualMealTotal(tiempo);
         });
 
         input.focus();
+    };
+
+    // Update per-meal kcal badge in manual pauta
+    window.updateManualMealTotal = function(tiempo) {
+        const tbody = document.getElementById(`manual-${tiempo}`);
+        if (!tbody) return;
+        let totalKcal = 0;
+        tbody.querySelectorAll('tr').forEach(row => {
+            const kcalInput = row.querySelector('.pauta-manual-kcal');
+            if (kcalInput) totalKcal += parseFloat(kcalInput.value) || 0;
+        });
+        const badge = document.getElementById(`manual-total-${tiempo}`);
+        if (badge) badge.textContent = Math.round(totalKcal) + ' kcal';
     };
 
     // ============================================
@@ -1307,7 +1322,11 @@
         const patientId = elements.patientId?.value;
         if (!patientId) return;
         const TIEMPOS = ['desayuno', 'colacion_am', 'almuerzo', 'colacion_pm', 'cena'];
-        const pauta = { dias: { lunes: { tiempos: {} } }, requerimientos: {} };
+        const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+
+        // Build pauta for ALL days (same meals each day — manual pauta is weekly template)
+        const dias = {};
+        const tiemposData = {};
 
         TIEMPOS.forEach(t => {
             const rows = document.querySelectorAll(`#manual-${t} tr`);
@@ -1316,23 +1335,46 @@
                 const inputs = row.querySelectorAll('input');
                 if (inputs[0]?.value) {
                     alimentos.push({
-                        nombre: inputs[0].value, medida_casera: inputs[1].value,
-                        kcal: parseFloat(inputs[2].value)||0, proteinas: parseFloat(inputs[3].value)||0,
-                        carbohidratos: parseFloat(inputs[4].value)||0, lipidos: parseFloat(inputs[5].value)||0,
+                        nombre: inputs[0].value,
+                        medida_casera: inputs[1].value,
+                        cantidad: 1,
+                        kcal: parseFloat(inputs[2].value) || 0,
+                        proteinas: parseFloat(inputs[3].value) || 0,
+                        carbohidratos: parseFloat(inputs[4].value) || 0,
+                        lipidos: parseFloat(inputs[5].value) || 0,
                         source: 'manual'
                     });
                 }
             });
             if (alimentos.length > 0) {
-                const totKcal = alimentos.reduce((s,a) => s + a.kcal, 0);
-                pauta.dias.lunes.tiempos[t] = { nombre: t, alimentos, totales: { kcal: totKcal } };
+                const totales = {
+                    kcal: Math.round(alimentos.reduce((s, a) => s + a.kcal, 0)),
+                    proteinas: Math.round(alimentos.reduce((s, a) => s + a.proteinas, 0) * 10) / 10,
+                    carbohidratos: Math.round(alimentos.reduce((s, a) => s + a.carbohidratos, 0) * 10) / 10,
+                    lipidos: Math.round(alimentos.reduce((s, a) => s + a.lipidos, 0) * 10) / 10
+                };
+                tiemposData[t] = { nombre: t, alimentos, totales };
             }
         });
+
+        // Apply to all 7 days
+        DIAS.forEach(dia => {
+            const dayTotals = { kcal: 0, proteinas: 0, carbohidratos: 0, lipidos: 0 };
+            Object.values(tiemposData).forEach(td => {
+                dayTotals.kcal += td.totales.kcal;
+                dayTotals.proteinas += td.totales.proteinas;
+                dayTotals.carbohidratos += td.totales.carbohidratos;
+                dayTotals.lipidos += td.totales.lipidos;
+            });
+            dias[dia] = { tiempos: JSON.parse(JSON.stringify(tiemposData)), totales: dayTotals };
+        });
+
+        const pauta = { dias, requerimientos: {} };
 
         try {
             await guardarPauta(pauta);
             bootstrap.Modal.getInstance(document.getElementById('pautaManualModal'))?.hide();
-        } catch(e) { console.error(e); }
+        } catch (e) { console.error(e); }
     };
 
 })();
