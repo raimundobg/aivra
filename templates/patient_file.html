@@ -1416,7 +1416,8 @@
                                                     <input type="text" class="form-control form-control-sm r24h-grupo" value="{{ item.grupo or '' }}" placeholder="Grupo" readonly style="background: #f1f5f9;">
                                                 </td>
                                                 <td style="padding: 0.4rem;">
-                                                    <input type="number" class="form-control form-control-sm r24h-cantidad" value="{{ item.cantidad or 1 }}" min="0.25" step="0.25">
+                                                    <input type="number" class="form-control form-control-sm r24h-cantidad" value="{{ item.cantidad or 1 }}" min="0.25" step="0.25"
+                                                        data-base-kcal="{{ item.kcal or 0 }}" onchange="const base=parseFloat(this.dataset.baseKcal)||0; const qty=parseFloat(this.value)||1; this.closest('tr').querySelector('.r24h-kcal').textContent=Math.round(base*qty);">
                                                 </td>
                                                 <td style="padding: 0.4rem;">
                                                     <input type="text" class="form-control form-control-sm r24h-medida" value="{{ item.medida or item.porcion or '' }}" placeholder="Medida casera">
@@ -1888,7 +1889,10 @@
                                             <strong>GET:</strong> ${r.get_kcal||'-'} kcal | <strong>P:</strong> ${r.proteinas_g||'-'}g | <strong>C:</strong> ${r.carbohidratos_g||'-'}g | <strong>G:</strong> ${r.grasas_g||'-'}g</div>`;
                                     }
 
-                                    for (const [dia, diaData] of Object.entries(pauta.dias)) {
+                                    const diaOrder = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'];
+                                    const sortedDias = diaOrder.filter(d => pauta.dias[d]).map(d => [d, pauta.dias[d]]);
+                                    if (sortedDias.length === 0) { for (const [d, dd] of Object.entries(pauta.dias)) sortedDias.push([d, dd]); }
+                                    for (const [dia, diaData] of sortedDias) {
                                         html += `<div class="mb-3"><h6 class="fw-bold" style="color:#166534;"><i class="fas fa-calendar-day me-2"></i>${DIA_NAMES[dia]||dia}</h6>`;
                                         const tiempos = diaData.tiempos || diaData;
                                         order.forEach(tk => {
@@ -1918,9 +1922,11 @@
 
             <!-- SECCION 7: GRAFICO ARANA DE HABITOS -->
             <div class="card mb-4" id="section7">
-                <button class="accordion-btn" type="button" data-bs-toggle="collapse"
+                <button type="button" class="accordion-button-custom" data-bs-toggle="collapse"
                     data-bs-target="#sectionRadar" aria-expanded="true">
-                    <i class="fas fa-chart-pie section-icon text-info"></i>
+                    <div class="section-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
                     <span>7. Resumen Visual de Habitos <i class="fas fa-info-circle text-muted ms-2" style="font-size:0.9rem; cursor:help;" title="Grafico de aranha con puntajes de hidratacion, sueno, estres, actividad fisica, consumo de frutas/verduras y digestion. Se calcula automaticamente."></i></span>
                     <i class="fas fa-chevron-down accordion-icon"></i>
                 </button>

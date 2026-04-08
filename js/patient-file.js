@@ -691,7 +691,7 @@
                             </div>
 
                             <ul class="nav nav-tabs" id="pautaTabs" role="tablist">
-                                ${Object.keys(pauta.dias || {}).map((dia, i) => `
+                                ${['lunes','martes','miercoles','jueves','viernes','sabado','domingo'].filter(d => (pauta.dias || {})[d]).map((dia, i) => `
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link ${i === 0 ? 'active' : ''}" id="tab-${dia}" data-bs-toggle="tab"
                                             data-bs-target="#pane-${dia}" type="button" role="tab"
@@ -704,7 +704,7 @@
                             </ul>
 
                             <div class="tab-content mt-3" id="pautaTabContent">
-                                ${Object.entries(pauta.dias || {}).map(([dia, diaData], i) => `
+                                ${['lunes','martes','miercoles','jueves','viernes','sabado','domingo'].filter(d => (pauta.dias || {})[d]).map((dia, i) => [dia, pauta.dias[dia]]).map(([dia, diaData], i) => `
                                     <div class="tab-pane fade ${i === 0 ? 'show active' : ''}" id="pane-${dia}" role="tabpanel">
                                         ${Object.entries(diaData.tiempos || {}).sort(([a], [b]) => {
                                             const order = ['desayuno','colacion_am','colacion1','almuerzo','colacion_pm','colacion2','once','cena'];
@@ -920,6 +920,23 @@
             const result = await response.json();
             if (result.success) {
                 showToast('Pauta guardada exitosamente', 'success');
+                // Close any open modal and remove backdrop
+                const openModal = document.querySelector('.modal.show');
+                if (openModal) {
+                    const bsModal = bootstrap.Modal.getInstance(openModal);
+                    if (bsModal) bsModal.hide();
+                    else {
+                        openModal.classList.remove('show');
+                        openModal.style.display = 'none';
+                    }
+                }
+                // Remove any leftover backdrop
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+                // Reload to show saved pauta in ficha
+                setTimeout(() => location.reload(), 500);
             } else {
                 throw new Error(result.error || 'Error guardando pauta');
             }
