@@ -1381,9 +1381,20 @@
                                             {% if registro and registro is mapping and registro[meal_key] %}{{ registro[meal_key]|length }}{% else %}0{% endif %}
                                         </span>
                                     </h6>
-                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="addR24hRow('{{ meal_key }}')">
-                                        <i class="fas fa-plus me-1"></i> Agregar
-                                    </button>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <div class="position-relative" style="width: 200px;">
+                                            <input type="text" class="form-control form-control-sm r24h-meal-search"
+                                                data-meal="{{ meal_key }}" placeholder="Buscar alimento..."
+                                                autocomplete="off" style="font-size: 0.78rem; border-radius: 20px; padding-left: 2rem;">
+                                            <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.7rem;"></i>
+                                            <div class="r24h-meal-search-results position-absolute w-100"
+                                                style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 0 0 8px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 0.8rem;">
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-success" onclick="addR24hRow('{{ meal_key }}')" title="Agregar fila vacia">
+                                            <i class="fas fa-plus me-1"></i> Agregar
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="card-body p-0">
                                     <table class="table table-sm mb-0" style="font-size: 0.875rem;" id="r24hTable_{{ meal_key }}">
@@ -1695,7 +1706,9 @@
 
                             <div class="col-md-3">
                                 <div class="text-center">
-                                    <span class="badge bg-success" id="totalPorcentaje">100%</span>
+                                    <label class="form-label">Total</label>
+                                    <div id="totalPorcentaje" class="badge bg-success" style="font-size: 1.1rem; padding: 0.5rem 1rem;">100%</div>
+                                    <div id="porcentajeFaltante" class="text-danger fw-bold mt-1" style="font-size: 0.8rem; display: none;"></div>
                                 </div>
                             </div>
 
@@ -2852,6 +2865,29 @@
         const carbsPct = parseFloat(document.getElementById('carbohidratos_porcentaje')?.value) || 50;
         const grasasPct = parseFloat(document.getElementById('grasas_porcentaje')?.value) || 30;
 
+        // M14: Update total % and show remaining
+        const totalPct = protPct + carbsPct + grasasPct;
+        const totalEl = document.getElementById('totalPorcentaje');
+        const faltanteEl = document.getElementById('porcentajeFaltante');
+        if (totalEl) {
+            totalEl.textContent = totalPct + '%';
+            totalEl.className = 'badge ' + (totalPct === 100 ? 'bg-success' : totalPct > 100 ? 'bg-danger' : 'bg-warning text-dark');
+            totalEl.style.fontSize = '1.1rem';
+            totalEl.style.padding = '0.5rem 1rem';
+        }
+        if (faltanteEl) {
+            if (totalPct !== 100) {
+                const diff = 100 - totalPct;
+                faltanteEl.textContent = diff > 0 ? `Faltan ${diff}%` : `Excede ${-diff}%`;
+                faltanteEl.style.display = 'block';
+                faltanteEl.className = 'fw-bold mt-1';
+                faltanteEl.style.fontSize = '0.8rem';
+                faltanteEl.style.color = diff > 0 ? '#f59e0b' : '#ef4444';
+            } else {
+                faltanteEl.style.display = 'none';
+            }
+        }
+
         const protG = Math.round((getFinal * protPct / 100) / 4);
         const carbsG = Math.round((getFinal * carbsPct / 100) / 4);
         const grasasG = Math.round((getFinal * grasasPct / 100) / 9);
@@ -3188,6 +3224,45 @@
             }
             attachR24hInlineSearch(input);
         });
+
+        // Per-meal search bars (H1+M6 fix)
+        document.querySelectorAll('.r24h-meal-search').forEach(input => {
+            const mealKey = input.dataset.meal;
+            const resultsDiv = input.closest('.position-relative').querySelector('.r24h-meal-search-results');
+            let timeout;
+
+            input.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    const results = searchR24hFoods(this.value);
+                    if (!results.length) { resultsDiv.style.display = 'none'; return; }
+                    resultsDiv.innerHTML = results.map((food, i) => `
+                        <div class="r24h-search-item px-3 py-2" style="cursor: pointer; border-bottom: 1px solid #f1f5f9;"
+                             onmousedown="selectMealSearchFood('${mealKey}', ${i}, this)" data-idx="${i}">
+                            <div style="font-weight: 500;">${food.nombre}</div>
+                            <div style="color: #94a3b8; font-size: 0.7rem;">
+                                <span class="badge" style="background: #e0f2fe; color: #0369a1; font-size: 0.65rem;">${food.grupo.replace(/_/g, ' ')}</span>
+                                ${food.medida_casera} · ${food.kcal} kcal
+                            </div>
+                        </div>
+                    `).join('');
+                    resultsDiv.style.display = 'block';
+                    resultsDiv._results = results;
+                }, 200);
+            });
+            input.addEventListener('blur', () => setTimeout(() => { resultsDiv.style.display = 'none'; }, 200));
+        });
+
+        // Handle per-meal search food selection
+        window.selectMealSearchFood = function(mealKey, idx, el) {
+            const container = el.closest('.r24h-meal-search-results');
+            const food = container._results[idx];
+            if (!food) return;
+            addR24hRow(mealKey, food);
+            container.style.display = 'none';
+            const searchInput = container.closest('.position-relative').querySelector('.r24h-meal-search');
+            if (searchInput) searchInput.value = '';
+        };
 
         // Hover effect for search items
         document.addEventListener('mouseover', function(e) {

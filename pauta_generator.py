@@ -860,73 +860,111 @@ class PautaInteligente:
 
         return False
 
+    # ================================================================
+    # DATA-DRIVEN RESTRICTION SYSTEM
+    # To add a new restriction: just add one entry to each dict below.
+    # No code changes needed — the filtering logic is generic.
+    # ================================================================
+
+    # Maps restriction key → list of food name keywords to block
+    RESTRICTION_KEYWORDS = {
+        'vegano': [
+            'vacuno', 'pollo', 'cerdo', 'carne', 'pavo', 'cordero', 'jamón', 'jamon',
+            'embutido', 'salchicha', 'tocino', 'bacon', 'chorizo', 'longaniza',
+            'pescado', 'salmon', 'salmón', 'atún', 'atun', 'merluza', 'reineta',
+            'congrio', 'jurel', 'sardina', 'trucha', 'tilapia', 'bacalao',
+            'marisco', 'camarón', 'camaron', 'langosta', 'jaiba', 'pulpo', 'calamar',
+            'nugget', 'filete', 'bistec', 'lomo', 'costilla',
+            'leche', 'queso', 'quesillo', 'ricotta', 'mozzarella', 'parmesano',
+            'yogur', 'yogurt', 'yoghurt', 'mantequilla', 'crema', 'nata', 'flan',
+            'huevo', 'clara', 'yema', 'mayonesa', 'miel', 'helado', 'manjar',
+        ],
+        'vegetariano': [
+            'vacuno', 'pollo', 'cerdo', 'carne', 'pavo', 'cordero', 'jamón', 'jamon',
+            'embutido', 'salchicha', 'tocino', 'bacon', 'chorizo', 'longaniza',
+            'pescado', 'salmon', 'salmón', 'atún', 'atun', 'merluza', 'reineta',
+            'congrio', 'jurel', 'sardina', 'trucha', 'tilapia', 'bacalao',
+            'marisco', 'camarón', 'camaron', 'langosta', 'jaiba', 'pulpo', 'calamar',
+            'nugget', 'filete', 'bistec', 'lomo', 'costilla',
+        ],
+        'sin_lactosa': [
+            'leche', 'queso', 'quesillo', 'yogur', 'yoghurt', 'yogurt', 'crema',
+            'mantequilla', 'helado', 'flan', 'ricotta', 'mozzarella', 'nata',
+            'manjar', 'cuajada', 'suero', 'cheddar', 'parmesano', 'gouda',
+        ],
+        'sin_gluten': [
+            'trigo', 'cebada', 'centeno', 'pan', 'pasta', 'fideo', 'galleta',
+            'harina', 'avena', 'marraqueta', 'hallulla', 'integral',
+        ],
+        'sin_mariscos': [
+            'marisco', 'camarón', 'camaron', 'langosta', 'jaiba', 'pulpo',
+            'calamar', 'mejillón', 'almeja', 'ostra',
+        ],
+        'sin_huevo': [
+            'huevo', 'clara', 'yema', 'mayonesa', 'tortilla', 'merengue',
+        ],
+        'sin_frutos_secos': [
+            'nuez', 'almendra', 'avellana', 'pistacho', 'castaña', 'pecana',
+            'maní', 'cacahuate', 'cacahuete',
+        ],
+        'sin_soya': [
+            'soya', 'soja', 'tofu', 'tempeh', 'edamame', 'lecitina',
+        ],
+        'sin_pescado': [
+            'pescado', 'salmon', 'salmón', 'atún', 'atun', 'merluza', 'reineta',
+            'congrio', 'jurel', 'sardina', 'trucha', 'tilapia', 'bacalao',
+        ],
+    }
+
+    # Maps restriction key → food groups to block entirely (by grupo_normalizado)
+    RESTRICTION_BLOCKED_GROUPS = {
+        'vegano': ['lacteos', 'lácteos', 'carnes', 'pescados', 'mariscos', 'huevos'],
+        'vegetariano': ['carnes', 'pescados', 'mariscos'],
+        'sin_lactosa': ['lacteos', 'lácteos'],
+        'sin_gluten': ['cereales'],  # partial — some cereals are gluten-free
+        'sin_mariscos': ['mariscos'],
+        'sin_huevo': ['huevos'],
+        'sin_frutos_secos': ['frutos_secos'],
+        'sin_pescado': ['pescados', 'pescados_mariscos'],
+    }
+
+    # Maps restriction key → groups to REMOVE from ESTRUCTURA_COMIDAS + what to substitute
+    RESTRICTION_GROUP_SUBSTITUTIONS = {
+        'vegano': {'lacteos': 'frutas', 'proteina': 'legumbres'},
+        'sin_lactosa': {'lacteos': 'frutas'},
+        'sin_gluten': {'cereales': 'papas_tuberculos'},
+        'sin_huevo': {},
+        'sin_frutos_secos': {},
+        'sin_mariscos': {},
+        'sin_pescado': {},
+        'sin_soya': {},
+        'vegetariano': {'proteina': 'legumbres'},
+    }
+
     def _es_restriccion_alimentaria(self, alimento) -> bool:
-        """Verifica si un alimento viola las restricciones alimentarias del paciente"""
+        """Verifica si un alimento viola las restricciones alimentarias del paciente.
+        Data-driven: uses RESTRICTION_KEYWORDS and RESTRICTION_BLOCKED_GROUPS dicts.
+        Adding a new restriction = adding one entry to each dict, zero code changes."""
         nombre_lower = alimento.nombre.lower()
         grupo_lower = alimento.grupo_normalizado.lower()
-        subgrupo_lower = alimento.subgrupo_original.lower() if alimento.subgrupo_original else ''
 
-        # VEGANO: Sin ningún producto animal
+        # Build the active restriction set from patient data
+        active_restrictions = set(self.restricciones)
         if self.es_vegano:
-            # Excluir carnes, pescados, mariscos
-            animal_keywords = [
-                'vacuno', 'pollo', 'cerdo', 'carne', 'pavo', 'cordero', 'jamón', 'jamon',
-                'embutido', 'salchicha', 'tocino', 'bacon', 'chorizo', 'longaniza',
-                'pescado', 'salmon', 'salmón', 'atún', 'atun', 'merluza', 'reineta',
-                'congrio', 'jurel', 'sardina', 'trucha', 'tilapia', 'bacalao',
-                'marisco', 'camarón', 'camaron', 'langosta', 'jaiba', 'pulpo', 'calamar',
-                'nugget', 'hamburguesa de carne', 'filete', 'bistec', 'lomo', 'costilla'
-            ]
-            if any(kw in nombre_lower for kw in animal_keywords):
-                return True
-
-            # Excluir lácteos y huevos
-            dairy_egg_keywords = [
-                'leche', 'queso', 'quesillo', 'ricotta', 'mozzarella', 'parmesano',
-                'yogur', 'yogurt', 'mantequilla', 'crema', 'nata', 'flan',
-                'huevo', 'clara', 'yema', 'mayonesa', 'tortilla',
-                'miel', 'helado', 'manjar'
-            ]
-            if any(kw in nombre_lower for kw in dairy_egg_keywords):
-                return True
-
-            # Verificar grupo
-            if grupo_lower in ('lacteos', 'lácteos', 'proteina'):
-                if 'carne' in subgrupo_lower or 'pescado' in subgrupo_lower or 'huevo' in subgrupo_lower:
-                    return True
-
-        # VEGETARIANO: Sin carne ni pescado, pero permite lácteos y huevos
+            active_restrictions.add('vegano')
         elif self.es_vegetariano:
-            meat_fish_keywords = [
-                'vacuno', 'pollo', 'cerdo', 'carne', 'pavo', 'cordero', 'jamón', 'jamon',
-                'embutido', 'salchicha', 'tocino', 'bacon', 'chorizo', 'longaniza',
-                'pescado', 'salmon', 'salmón', 'atún', 'atun', 'merluza', 'reineta',
-                'congrio', 'jurel', 'sardina', 'trucha', 'tilapia', 'bacalao',
-                'marisco', 'camarón', 'camaron', 'langosta', 'jaiba', 'pulpo', 'calamar',
-                'nugget', 'hamburguesa de carne', 'filete', 'bistec', 'lomo', 'costilla'
-            ]
-            if any(kw in nombre_lower for kw in meat_fish_keywords):
+            active_restrictions.add('vegetariano')
+
+        for restriccion in active_restrictions:
+            # Check by food name keywords
+            keywords = self.RESTRICTION_KEYWORDS.get(restriccion, [])
+            if any(kw in nombre_lower for kw in keywords):
                 return True
 
-        # Otras restricciones
-        for restriccion in self.restricciones:
-            if restriccion == 'sin_gluten':
-                gluten_kw = ['trigo', 'cebada', 'centeno', 'pan', 'pasta', 'fideo', 'galleta', 'harina']
-                if any(kw in nombre_lower for kw in gluten_kw):
-                    return True
-            elif restriccion == 'sin_lactosa':
-                lactose_kw = ['leche', 'queso', 'quesillo', 'yogur', 'yoghurt', 'crema', 'mantequilla',
-                              'helado', 'flan', 'ricotta', 'mozzarella', 'nata', 'manjar', 'lacteo',
-                              'lácteo', 'cuajada', 'suero', 'cheddar', 'parmesano', 'gouda']
-                if any(kw in nombre_lower for kw in lactose_kw):
-                    return True
-                # Also block by group
-                if 'lacteo' in grupo_lower or 'lácteo' in grupo_lower:
-                    return True
-            elif restriccion == 'sin_mariscos':
-                seafood_kw = ['marisco', 'camarón', 'camaron', 'langosta', 'jaiba', 'pulpo', 'calamar', 'mejillón']
-                if any(kw in nombre_lower for kw in seafood_kw):
-                    return True
+            # Check by food group
+            blocked_groups = self.RESTRICTION_BLOCKED_GROUPS.get(restriccion, [])
+            if any(bg in grupo_lower for bg in blocked_groups):
+                return True
 
         return False
 
@@ -1241,22 +1279,24 @@ class PautaInteligente:
         grupos_requeridos = list(estructura.get('grupos_requeridos', ['cereales']))
         grupos_opcionales = list(estructura.get('grupos_opcionales', []))
 
-        # Ajustar grupos para restricciones alimentarias
-        es_sin_lactosa = 'sin_lactosa' in self.restricciones
-        if self.es_vegano or es_sin_lactosa:
-            # Reemplazar lácteos por legumbres/frutas
-            if 'lacteos' in grupos_requeridos:
-                grupos_requeridos.remove('lacteos')
-                if tiempo in ['desayuno', 'colacion_pm']:
-                    grupos_requeridos.append('frutas')
-                else:
-                    grupos_requeridos.append('legumbres')
-            if 'lacteos' in grupos_opcionales:
-                grupos_opcionales.remove('lacteos')
-                grupos_opcionales.append('frutas')
+        # Data-driven group substitution for ALL active restrictions
+        active_restrictions = set(self.restricciones)
+        if self.es_vegano:
+            active_restrictions.add('vegano')
+        elif self.es_vegetariano:
+            active_restrictions.add('vegetariano')
 
-            # Para proteína, asegurar que busque alternativas vegetales
-            # (esto ya está manejado por _match_grupo y _match_proteina)
+        for restriccion in active_restrictions:
+            subs = self.RESTRICTION_GROUP_SUBSTITUTIONS.get(restriccion, {})
+            for blocked_group, replacement in subs.items():
+                if blocked_group in grupos_requeridos:
+                    grupos_requeridos.remove(blocked_group)
+                    if replacement not in grupos_requeridos:
+                        grupos_requeridos.append(replacement)
+                if blocked_group in grupos_opcionales:
+                    grupos_opcionales.remove(blocked_group)
+                    if replacement not in grupos_opcionales:
+                        grupos_opcionales.append(replacement)
         
         n_grupos = len(grupos_requeridos)
         kcal_por_grupo = kcal_objetivo / n_grupos if n_grupos > 0 else kcal_objetivo
