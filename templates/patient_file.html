@@ -1426,7 +1426,7 @@
                                                         oninput="const base=parseFloat(this.dataset.baseKcal)||0; const qty=parseFloat(this.value)||1; const span=this.closest('tr').querySelector('.r24h-kcal'); span.textContent=Math.round(base*qty); span.dataset.computed=Math.round(base*qty);">
                                                 </td>
                                                 <td style="padding: 0.4rem;">
-                                                    <input type="text" class="form-control form-control-sm r24h-medida" value="{{ item.medida or item.porcion or '' }}" placeholder="Medida casera">
+                                                    <input type="text" class="form-control form-control-sm r24h-medida" value="{{ item.medida or item.porcion or '' }}" placeholder="Medida casera" readonly style="background:#f1f5f9; cursor:not-allowed;">
                                                 </td>
                                                 <td style="padding: 0.4rem;">
                                                     <span class="r24h-kcal badge bg-light text-dark">{{ item.kcal or '-' }}</span>
@@ -3273,7 +3273,7 @@
                     oninput="const base=parseFloat(this.dataset.baseKcal)||0; const qty=parseFloat(this.value)||1; const span=this.closest('tr').querySelector('.r24h-kcal'); span.textContent=Math.round(base*qty); span.dataset.computed=Math.round(base*qty);">
             </td>
             <td style="padding: 0.4rem;">
-                <input type="text" class="form-control form-control-sm r24h-medida" value="${foodData ? foodData.medida_casera : ''}" placeholder="Medida casera">
+                <input type="text" class="form-control form-control-sm r24h-medida" value="${foodData ? foodData.medida_casera : ''}" placeholder="Seleccionar alimento primero" readonly style="background:#f1f5f9; cursor:not-allowed;">
             </td>
             <td style="padding: 0.4rem;">
                 <span class="r24h-kcal badge bg-light text-dark" data-computed="${foodData && foodData.kcal ? foodData.kcal : 0}">${foodData && foodData.kcal ? foodData.kcal : '-'}</span>

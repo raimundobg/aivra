@@ -1096,7 +1096,7 @@
                         updateManualMealTotal('${tiempo}');">
             </td>
             <td style="padding:0.4rem;">
-                <input type="text" class="form-control form-control-sm pauta-manual-medida" placeholder="Medida casera">
+                <input type="text" class="form-control form-control-sm pauta-manual-medida" placeholder="Seleccionar alimento primero" readonly style="background:#f1f5f9; cursor:not-allowed;">
             </td>
             <td style="padding:0.4rem;">
                 <span class="pauta-manual-kcal badge bg-light text-dark" data-val="0">0</span>
