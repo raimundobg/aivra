@@ -1019,15 +1019,28 @@
         const NOMBRES = {desayuno:'Desayuno', colacion_am:'Colación AM', almuerzo:'Almuerzo', colacion_pm:'Colación PM', cena:'Cena'};
 
         let tiemposHTML = TIEMPOS.map(t => `
-            <div class="card mb-3">
-                <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-bottom: 1px solid #bbf7d0;">
-                    <strong style="color:#166534;">${NOMBRES[t]}</strong>
-                    <span class="badge manual-meal-total" id="manual-total-${t}" style="background:#10b981; color:white;">0 kcal</span>
+            <div class="card mb-3" style="border: 1px solid #e2e8f0; border-radius: 12px;">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-bottom: 1px solid #bbf7d0; padding: 0.75rem 1rem;">
+                    <h6 class="mb-0" style="font-weight:600; color:#166534;"><i class="fas fa-utensils me-2"></i>${NOMBRES[t]}</h6>
+                    <div class="d-flex gap-2 align-items-center">
+                        <span class="badge manual-meal-total" id="manual-total-${t}" style="background:#10b981; color:white;">0 kcal</span>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="agregarAlimentoManual('${t}')"><i class="fas fa-plus me-1"></i>Agregar</button>
+                    </div>
                 </div>
-                <div class="card-body p-2">
-                    <table class="table table-sm mb-0"><thead><tr><th>Alimento</th><th>Porción</th><th>Kcal</th><th>Prot (g)</th><th>Carbs (g)</th><th>Grasas (g)</th><th></th></tr></thead>
-                    <tbody id="manual-${t}"></tbody></table>
-                    <button type="button" class="btn btn-sm btn-outline-success mt-1" onclick="agregarAlimentoManual('${t}')"><i class="fas fa-plus me-1"></i>Agregar</button>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0" style="font-size:0.875rem;">
+                        <thead style="background:#f8fafc;">
+                            <tr>
+                                <th style="padding:0.5rem; font-weight:600; color:#64748b; width:30%;">Alimento</th>
+                                <th style="padding:0.5rem; font-weight:600; color:#64748b; width:20%;">Grupo</th>
+                                <th style="padding:0.5rem; font-weight:600; color:#64748b; width:12%;">Cantidad</th>
+                                <th style="padding:0.5rem; font-weight:600; color:#64748b; width:20%;">Medida</th>
+                                <th style="padding:0.5rem; font-weight:600; color:#64748b; width:13%;">Kcal</th>
+                                <th style="padding:0.5rem; width:5%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="manual-${t}"></tbody>
+                    </table>
                 </div>
             </div>`).join('');
 
@@ -1057,20 +1070,46 @@
     window.agregarAlimentoManual = function(tiempo) {
         const tbody = document.getElementById(`manual-${tiempo}`);
         const tr = document.createElement('tr');
+        tr.className = 'pauta-manual-row';
         tr.innerHTML = `
-                <td style="position: relative;">
-                    <input type="text" class="form-control form-control-sm pauta-manual-alimento" placeholder="Nombre">
-                    <div class="pauta-manual-results" style="display:none; position:absolute; left:0; top:100%; z-index:1050; width:100%; max-height:200px; overflow-y:auto; background:white; border:1px solid #e2e8f0; border-radius:0 0 8px 8px; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
-                </td>
-                <td><input type="text" class="form-control form-control-sm pauta-manual-porcion" placeholder="Ej: 1 taza"></td>
-                <td><input type="number" class="form-control form-control-sm pauta-manual-kcal" placeholder="0" step="1" onchange="updateManualMealTotal('${tiempo}')"></td>
-                <td><input type="number" class="form-control form-control-sm pauta-manual-prot" placeholder="0" step="0.1" onchange="updateManualMealTotal('${tiempo}')"></td>
-                <td><input type="number" class="form-control form-control-sm pauta-manual-carbs" placeholder="0" step="0.1" onchange="updateManualMealTotal('${tiempo}')"></td>
-                <td><input type="number" class="form-control form-control-sm pauta-manual-fat" placeholder="0" step="0.1" onchange="updateManualMealTotal('${tiempo}')"></td>
-                <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>`;
+            <td style="padding:0.4rem; position:relative;">
+                <input type="text" class="form-control form-control-sm pauta-manual-alimento" placeholder="Buscar alimento...">
+                <div class="pauta-manual-results" style="display:none; position:absolute; left:0; top:100%; z-index:1050; width:100%; max-height:200px; overflow-y:auto; background:white; border:1px solid #e2e8f0; border-radius:0 0 8px 8px; box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
+            </td>
+            <td style="padding:0.4rem;">
+                <input type="text" class="form-control form-control-sm pauta-manual-grupo" placeholder="Grupo" readonly style="background:#f1f5f9;">
+            </td>
+            <td style="padding:0.4rem;">
+                <input type="number" class="form-control form-control-sm pauta-manual-cantidad" value="1" min="0.25" step="0.25" data-base-kcal="0" data-base-prot="0" data-base-carbs="0" data-base-fat="0"
+                    oninput="
+                        const tr=this.closest('tr');
+                        const qty=parseFloat(this.value)||1;
+                        const bk=parseFloat(this.dataset.baseKcal)||0;
+                        const bp=parseFloat(this.dataset.baseProt)||0;
+                        const bc=parseFloat(this.dataset.baseCarbs)||0;
+                        const bf=parseFloat(this.dataset.baseFat)||0;
+                        tr.querySelector('.pauta-manual-kcal').textContent=Math.round(bk*qty);
+                        tr.querySelector('.pauta-manual-kcal').dataset.val=Math.round(bk*qty);
+                        tr.querySelector('.pauta-manual-prot').dataset.val=(bp*qty).toFixed(1);
+                        tr.querySelector('.pauta-manual-carbs').dataset.val=(bc*qty).toFixed(1);
+                        tr.querySelector('.pauta-manual-fat').dataset.val=(bf*qty).toFixed(1);
+                        updateManualMealTotal('${tiempo}');">
+            </td>
+            <td style="padding:0.4rem;">
+                <input type="text" class="form-control form-control-sm pauta-manual-medida" placeholder="Medida casera">
+            </td>
+            <td style="padding:0.4rem;">
+                <span class="pauta-manual-kcal badge bg-light text-dark" data-val="0">0</span>
+                <span class="pauta-manual-prot" data-val="0" style="display:none;">0</span>
+                <span class="pauta-manual-carbs" data-val="0" style="display:none;">0</span>
+                <span class="pauta-manual-fat" data-val="0" style="display:none;">0</span>
+            </td>
+            <td style="padding:0.4rem;">
+                <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="this.closest('tr').remove(); updateManualMealTotal('${tiempo}');" title="Eliminar"><i class="fas fa-times"></i></button>
+            </td>`;
         tbody.appendChild(tr);
 
-        // Wire food DB search to the alimento input
+        // Wire food DB search
         const input = tr.querySelector('.pauta-manual-alimento');
         const resultsDiv = tr.querySelector('.pauta-manual-results');
         let searchTimeout;
@@ -1108,14 +1147,16 @@
             const food = resultsDiv._results[idx];
             if (!food) return;
             input.value = food.nombre;
-            tr.querySelector('.pauta-manual-porcion').value = food.medida_casera || '';
-            tr.querySelector('.pauta-manual-kcal').value = food.kcal || 0;
-            tr.querySelector('.pauta-manual-prot').value = food.proteinas || 0;
-            tr.querySelector('.pauta-manual-carbs').value = food.carbohidratos || 0;
-            tr.querySelector('.pauta-manual-fat').value = food.lipidos || 0;
+            tr.querySelector('.pauta-manual-grupo').value = food.grupo.replace(/_/g, ' ');
+            tr.querySelector('.pauta-manual-medida').value = food.medida_casera || '';
+            const cantInput = tr.querySelector('.pauta-manual-cantidad');
+            cantInput.dataset.baseKcal = food.kcal || 0;
+            cantInput.dataset.baseProt = food.proteinas || 0;
+            cantInput.dataset.baseCarbs = food.carbohidratos || 0;
+            cantInput.dataset.baseFat = food.lipidos || 0;
+            // Trigger recalc with current qty
+            cantInput.dispatchEvent(new Event('input'));
             resultsDiv.style.display = 'none';
-            // Update meal total badge
-            if (typeof updateManualMealTotal === 'function') updateManualMealTotal(tiempo);
         });
 
         input.focus();
@@ -1127,8 +1168,8 @@
         if (!tbody) return;
         let totalKcal = 0;
         tbody.querySelectorAll('tr').forEach(row => {
-            const kcalInput = row.querySelector('.pauta-manual-kcal');
-            if (kcalInput) totalKcal += parseFloat(kcalInput.value) || 0;
+            const kcalSpan = row.querySelector('.pauta-manual-kcal');
+            if (kcalSpan) totalKcal += parseFloat(kcalSpan.dataset.val || kcalSpan.textContent) || 0;
         });
         const badge = document.getElementById(`manual-total-${tiempo}`);
         if (badge) badge.textContent = Math.round(totalKcal) + ' kcal';
@@ -1329,22 +1370,22 @@
         const tiemposData = {};
 
         TIEMPOS.forEach(t => {
-            const rows = document.querySelectorAll(`#manual-${t} tr`);
+            const rows = document.querySelectorAll(`#manual-${t} tr.pauta-manual-row`);
             const alimentos = [];
             rows.forEach(row => {
-                const inputs = row.querySelectorAll('input');
-                if (inputs[0]?.value) {
-                    alimentos.push({
-                        nombre: inputs[0].value,
-                        medida_casera: inputs[1].value,
-                        cantidad: 1,
-                        kcal: parseFloat(inputs[2].value) || 0,
-                        proteinas: parseFloat(inputs[3].value) || 0,
-                        carbohidratos: parseFloat(inputs[4].value) || 0,
-                        lipidos: parseFloat(inputs[5].value) || 0,
-                        source: 'manual'
-                    });
-                }
+                const nombre = row.querySelector('.pauta-manual-alimento')?.value?.trim();
+                if (!nombre) return;
+                alimentos.push({
+                    nombre: nombre,
+                    grupo: row.querySelector('.pauta-manual-grupo')?.value || '',
+                    cantidad: parseFloat(row.querySelector('.pauta-manual-cantidad')?.value) || 1,
+                    medida_casera: row.querySelector('.pauta-manual-medida')?.value || '',
+                    kcal: parseFloat(row.querySelector('.pauta-manual-kcal')?.dataset.val) || 0,
+                    proteinas: parseFloat(row.querySelector('.pauta-manual-prot')?.dataset.val) || 0,
+                    carbohidratos: parseFloat(row.querySelector('.pauta-manual-carbs')?.dataset.val) || 0,
+                    lipidos: parseFloat(row.querySelector('.pauta-manual-fat')?.dataset.val) || 0,
+                    source: 'manual'
+                });
             });
             if (alimentos.length > 0) {
                 const totales = {

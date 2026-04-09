@@ -1420,8 +1420,10 @@
                                                     <input type="text" class="form-control form-control-sm r24h-grupo" value="{{ item.grupo or '' }}" placeholder="Grupo" readonly style="background: #f1f5f9;">
                                                 </td>
                                                 <td style="padding: 0.4rem;">
+                                                    {% set base_k = (item.kcal|int / (item.cantidad|float if item.cantidad and item.cantidad|float > 0 else 1))|int if item.kcal else 0 %}
                                                     <input type="number" class="form-control form-control-sm r24h-cantidad" value="{{ item.cantidad or 1 }}" min="0.25" step="0.25"
-                                                        data-base-kcal="{{ item.kcal or 0 }}" onchange="const base=parseFloat(this.dataset.baseKcal)||0; const qty=parseFloat(this.value)||1; this.closest('tr').querySelector('.r24h-kcal').textContent=Math.round(base*qty);">
+                                                        data-base-kcal="{{ base_k }}"
+                                                        oninput="const base=parseFloat(this.dataset.baseKcal)||0; const qty=parseFloat(this.value)||1; const span=this.closest('tr').querySelector('.r24h-kcal'); span.textContent=Math.round(base*qty); span.dataset.computed=Math.round(base*qty);">
                                                 </td>
                                                 <td style="padding: 0.4rem;">
                                                     <input type="text" class="form-control form-control-sm r24h-medida" value="{{ item.medida or item.porcion or '' }}" placeholder="Medida casera">
@@ -3266,14 +3268,15 @@
                 <input type="text" class="form-control form-control-sm r24h-grupo" value="${foodData ? foodData.grupo.replace(/_/g, ' ') : ''}" placeholder="Grupo" readonly style="background: #f1f5f9;">
             </td>
             <td style="padding: 0.4rem;">
-                <input type="number" class="form-control form-control-sm r24h-cantidad" value="${foodData ? 1 : 1}" min="0.25" step="0.25"
-                    data-base-kcal="${foodData ? foodData.kcal : 0}" onchange="const base=parseFloat(this.dataset.baseKcal)||0; const qty=parseFloat(this.value)||1; this.closest('tr').querySelector('.r24h-kcal').textContent=Math.round(base*qty);">
+                <input type="number" class="form-control form-control-sm r24h-cantidad" value="1" min="0.25" step="0.25"
+                    data-base-kcal="${foodData && foodData.kcal ? foodData.kcal : 0}"
+                    oninput="const base=parseFloat(this.dataset.baseKcal)||0; const qty=parseFloat(this.value)||1; const span=this.closest('tr').querySelector('.r24h-kcal'); span.textContent=Math.round(base*qty); span.dataset.computed=Math.round(base*qty);">
             </td>
             <td style="padding: 0.4rem;">
                 <input type="text" class="form-control form-control-sm r24h-medida" value="${foodData ? foodData.medida_casera : ''}" placeholder="Medida casera">
             </td>
             <td style="padding: 0.4rem;">
-                <span class="r24h-kcal badge bg-light text-dark">${foodData ? foodData.kcal : '-'}</span>
+                <span class="r24h-kcal badge bg-light text-dark" data-computed="${foodData && foodData.kcal ? foodData.kcal : 0}">${foodData && foodData.kcal ? foodData.kcal : '-'}</span>
             </td>
             <td style="padding: 0.4rem;">
                 <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="this.closest('tr').remove(); updateR24hCounts();" title="Eliminar">
