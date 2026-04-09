@@ -561,12 +561,31 @@ def update_patient(patient_id):
 
         # Campos JSON Objeto (db.JSON - NO serializar manual)
         campos_json_obj = [
-            'actividad_fisica', 'restricciones_alimentarias', 'registro_24h', 'frecuencia_consumo', 'sintomas_gi'
+            'actividad_fisica', 'restricciones_alimentarias', 'registro_24h', 'sintomas_gi'
         ]
 
         for campo in campos_json_obj:
             if campo in data:
                 setattr(patient, campo, data[campo])
+
+        # frecuencia_consumo: MERGE (no overwrite) to preserve intake data
+        if 'frecuencia_consumo' in data and data['frecuencia_consumo']:
+            new_fc = data['frecuencia_consumo']
+            existing = patient.frecuencia_consumo
+            if isinstance(existing, str):
+                try:
+                    existing = json.loads(existing)
+                except (ValueError, TypeError):
+                    existing = {}
+            if not isinstance(existing, dict):
+                existing = {}
+            if isinstance(new_fc, dict):
+                # Merge: new keys overwrite, but preserve existing ones not in new
+                merged = dict(existing)
+                merged.update(new_fc)
+                patient.frecuencia_consumo = merged
+            else:
+                patient.frecuencia_consumo = new_fc
 
         # Manejar alias para Antropometría (v3.4 compatibility)
         if 'talla' in data and data['talla']:

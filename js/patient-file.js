@@ -669,7 +669,7 @@
                 <div class="modal-dialog modal-xl modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">
-                            <h5 class="modal-title">
+                            <h5 class="modal-title" style="color: white !important;">
                                 <i class="fas fa-utensils me-2"></i>
                                 Pauta Alimentaria Semanal
                             </h5>
@@ -690,13 +690,13 @@
                                 ${tiemposInfo}
                             </div>
 
-                            <ul class="nav nav-tabs" id="pautaTabs" role="tablist">
+                            <ul class="nav nav-tabs" id="pautaTabs" role="tablist" style="border-bottom: 2px solid #10b981;">
                                 ${['lunes','martes','miercoles','jueves','viernes','sabado','domingo'].filter(d => (pauta.dias || {})[d]).map((dia, i) => `
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link ${i === 0 ? 'active' : ''}" id="tab-${dia}" data-bs-toggle="tab"
+                                        <button class="nav-link" id="tab-${dia}" data-bs-toggle="tab"
                                             data-bs-target="#pane-${dia}" type="button" role="tab"
-                                            style="color: ${i === 0 ? 'white' : '#166534'}; background: ${i === 0 ? '#10b981' : '#f0fdf4'}; border: 1px solid #a7f3d0; border-radius: 8px 8px 0 0; font-weight: 600; font-size: 0.85rem;"
-                                            onclick="this.parentElement.parentElement.querySelectorAll('.nav-link').forEach(t=>{t.style.background='#f0fdf4';t.style.color='#166534';}); this.style.background='#10b981'; this.style.color='white';">
+                                            style="color: ${i === 0 ? '#ffffff' : '#166534'} !important; background: ${i === 0 ? '#10b981' : '#f0fdf4'} !important; border: 1px solid #a7f3d0 !important; border-radius: 8px 8px 0 0; font-weight: 700; font-size: 0.9rem; padding: 0.6rem 1.2rem; margin-right: 4px;"
+                                            onclick="this.parentElement.parentElement.querySelectorAll('.nav-link').forEach(t=>{t.style.setProperty('background','#f0fdf4','important');t.style.setProperty('color','#166534','important');}); this.style.setProperty('background','#10b981','important'); this.style.setProperty('color','#ffffff','important');">
                                             ${dia.charAt(0).toUpperCase() + dia.slice(1)}
                                         </button>
                                     </li>
@@ -1049,7 +1049,7 @@
                 <div class="modal-dialog modal-xl modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header" style="background:linear-gradient(135deg,#10b981,#059669);color:white;">
-                            <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Crear Pauta Manual</h5>
+                            <h5 class="modal-title" style="color: white !important;"><i class="fas fa-edit me-2"></i>Crear Pauta Manual</h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">${tiemposHTML}</div>
