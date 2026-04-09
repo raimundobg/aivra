@@ -3227,8 +3227,15 @@
             const row = r24hActiveInput.closest('tr');
             r24hActiveInput.value = food.nombre;
             row.querySelector('.r24h-grupo').value = food.grupo.replace(/_/g, ' ');
-            row.querySelector('.r24h-medida').value = food.medida_casera;
-            row.querySelector('.r24h-kcal').textContent = food.kcal;
+            row.querySelector('.r24h-medida').value = food.medida_casera || '';
+            const cantInput = row.querySelector('.r24h-cantidad');
+            const kcalSpan = row.querySelector('.r24h-kcal');
+            const baseKcal = food.kcal || 0;
+            cantInput.dataset.baseKcal = baseKcal;
+            const qty = parseFloat(cantInput.value) || 1;
+            const computedKcal = Math.round(baseKcal * qty);
+            kcalSpan.textContent = computedKcal;
+            kcalSpan.dataset.computed = computedKcal;
             container.style.display = 'none';
             r24hActiveInput = null;
             updateR24hCounts();
@@ -3337,13 +3344,19 @@
             table.querySelectorAll('tbody .r24h-row').forEach(row => {
                 const alimento = row.querySelector('.r24h-alimento')?.value?.trim();
                 if (!alimento) return;
+                const cantInput = row.querySelector('.r24h-cantidad');
+                const kcalSpan = row.querySelector('.r24h-kcal');
+                const cantidad = parseFloat(cantInput?.value) || 1;
+                const baseKcal = parseFloat(cantInput?.dataset.baseKcal) || 0;
+                // Prefer computed value, fallback to base*qty, fallback to textContent
+                const kcal = parseInt(kcalSpan?.dataset.computed) || Math.round(baseKcal * cantidad) || parseInt(kcalSpan?.textContent) || 0;
                 registro[meal].push({
                     alimento: alimento,
                     alimento_nombre: alimento,
                     grupo: row.querySelector('.r24h-grupo')?.value || '',
-                    cantidad: parseFloat(row.querySelector('.r24h-cantidad')?.value) || 1,
+                    cantidad: cantidad,
                     medida: row.querySelector('.r24h-medida')?.value || '',
-                    kcal: parseInt(row.querySelector('.r24h-kcal')?.textContent) || 0
+                    kcal: kcal
                 });
             });
         });

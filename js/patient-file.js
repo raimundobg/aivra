@@ -1283,33 +1283,53 @@
         const patientId = elements.patientId?.value;
         if (!patientId) { showToast('Error: No se encontro el ID del paciente', 'error'); return; }
 
-        // 1. Build the manual pauta from the current form
+        // 1. Build the manual pauta from the current form (new structure)
         const TIEMPOS = ['desayuno', 'colacion_am', 'almuerzo', 'colacion_pm', 'cena'];
-        const manualPauta = { dias: { lunes: { tiempos: {} } }, requerimientos: {} };
+        const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+        const tiemposData = {};
 
         TIEMPOS.forEach(t => {
-            const rows = document.querySelectorAll(`#manual-${t} tr`);
+            const rows = document.querySelectorAll(`#manual-${t} tr.pauta-manual-row`);
             const alimentos = [];
             rows.forEach(row => {
-                const inputs = row.querySelectorAll('input');
-                if (inputs[0]?.value) {
-                    alimentos.push({
-                        nombre: inputs[0].value, medida_casera: inputs[1].value,
-                        kcal: parseFloat(inputs[2].value)||0, proteinas: parseFloat(inputs[3].value)||0,
-                        carbohidratos: parseFloat(inputs[4].value)||0, lipidos: parseFloat(inputs[5].value)||0,
-                        source: 'manual'
-                    });
-                }
+                const nombre = row.querySelector('.pauta-manual-alimento')?.value?.trim();
+                if (!nombre) return;
+                alimentos.push({
+                    nombre: nombre,
+                    grupo: row.querySelector('.pauta-manual-grupo')?.value || '',
+                    cantidad: parseFloat(row.querySelector('.pauta-manual-cantidad')?.value) || 1,
+                    medida_casera: row.querySelector('.pauta-manual-medida')?.value || '',
+                    kcal: parseFloat(row.querySelector('.pauta-manual-kcal')?.dataset.val) || 0,
+                    proteinas: parseFloat(row.querySelector('.pauta-manual-prot')?.dataset.val) || 0,
+                    carbohidratos: parseFloat(row.querySelector('.pauta-manual-carbs')?.dataset.val) || 0,
+                    lipidos: parseFloat(row.querySelector('.pauta-manual-fat')?.dataset.val) || 0,
+                    source: 'manual'
+                });
             });
             if (alimentos.length > 0) {
-                const totales = { kcal: 0, proteinas: 0, carbohidratos: 0, lipidos: 0 };
-                alimentos.forEach(a => {
-                    totales.kcal += a.kcal; totales.proteinas += a.proteinas;
-                    totales.carbohidratos += a.carbohidratos; totales.lipidos += a.lipidos;
-                });
-                manualPauta.dias.lunes.tiempos[t] = { nombre: t, alimentos, totales };
+                const totales = {
+                    kcal: Math.round(alimentos.reduce((s, a) => s + a.kcal, 0)),
+                    proteinas: Math.round(alimentos.reduce((s, a) => s + a.proteinas, 0) * 10) / 10,
+                    carbohidratos: Math.round(alimentos.reduce((s, a) => s + a.carbohidratos, 0) * 10) / 10,
+                    lipidos: Math.round(alimentos.reduce((s, a) => s + a.lipidos, 0) * 10) / 10
+                };
+                tiemposData[t] = { nombre: t, alimentos, totales };
             }
         });
+
+        // Apply to all 7 days
+        const dias = {};
+        DIAS.forEach(dia => {
+            const dayTotals = { kcal: 0, proteinas: 0, carbohidratos: 0, lipidos: 0 };
+            Object.values(tiemposData).forEach(td => {
+                dayTotals.kcal += td.totales.kcal;
+                dayTotals.proteinas += td.totales.proteinas;
+                dayTotals.carbohidratos += td.totales.carbohidratos;
+                dayTotals.lipidos += td.totales.lipidos;
+            });
+            dias[dia] = { tiempos: JSON.parse(JSON.stringify(tiemposData)), totales: dayTotals };
+        });
+        const manualPauta = { dias, requerimientos: {} };
 
         // 2. Save manual first
         try {
