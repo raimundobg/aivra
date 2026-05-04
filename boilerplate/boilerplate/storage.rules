@@ -1,0 +1,31 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+    function isAuth() { return request.auth != null; }
+    function isOwner(uid) { return request.auth.uid == uid; }
+    function getUserRole(uid) {
+      let userDoc = firestore.get(/databases/(default)/documents/users/$(uid));
+      return userDoc == null || userDoc.data == null ? null : userDoc.data.role;
+    }
+    function isNutritionist(uid) { return getUserRole(uid) == 'nutritionist'; }
+    function isAssignedNutritionistOf(patientUid) {
+      return isNutritionist(request.auth.uid) &&
+        firestore.get(/databases/(default)/documents/users/$(patientUid)).data.assignedNutritionistUid == request.auth.uid;
+    }
+
+    // ── Progress photos: users/{uid}/fotos/{filename} ──────────────────────
+    match /users/{uid}/fotos/{allPaths=**} {
+      allow read: if isAuth() && (isOwner(uid) || isAssignedNutritionistOf(uid));
+      allow create: if isAuth() && isOwner(uid);
+      allow update: if isAuth() && isOwner(uid);
+      allow delete: if false;
+    }
+
+    // Deny everything else
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

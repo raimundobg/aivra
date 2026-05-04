@@ -1,0 +1,98 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function isAuth() { return request.auth != null; }
+    function isOwner(uid) { return request.auth.uid == uid; }
+    function getUserRole() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userDoc == null || userDoc.data == null ? null : userDoc.data.role;
+    }
+    function isNutritionist() { return getUserRole() == 'nutritionist'; }
+    function isAssignedNutritionistOf(patientUid) {
+      return isNutritionist() &&
+        get(/databases/$(database)/documents/users/$(patientUid)).data.assignedNutritionistUid == request.auth.uid;
+    }
+
+    // ── Users ─────────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      allow read: if isAuth() && (isOwner(uid) || isAssignedNutritionistOf(uid));
+      allow create: if isAuth() && isOwner(uid);
+      allow update: if isAuth() && (isOwner(uid) || isAssignedNutritionistOf(uid));
+      allow delete: if false;
+
+      // Habits: patient writes own, nutritionist reads
+      match /habits/{date} {
+        allow read: if isAuth() && (isOwner(uid) || isAssignedNutritionistOf(uid));
+        allow write: if isAuth() && isOwner(uid);
+        allow delete: if false;
+      }
+
+      // Intake form: patient writes own, nutritionist reads
+      match /intake/{doc} {
+        allow read: if isAuth() && (isOwner(uid) || isAssignedNutritionistOf(uid));
+        allow write: if isAuth() && isOwner(uid);
+        allow delete: if false;
+      }
+
+      // Pauta: nutritionist writes, patient also writes (IA self-generation on onboarding), both read
+      match /pauta/{doc} {
+        allow read: if isAuth() && (isOwner(uid) || isAssignedNutritionistOf(uid));
+        allow write: if isAuth() && (isOwner(uid) || isAssignedNutritionistOf(uid));
+        allow delete: if false;
+      }
+
+      // Clinical ficha: nutritionist writes, patient and nutritionist read
+      match /ficha/{doc} {
+        allow read: if isAuth() && (isOwner(uid) || isAssignedNutritionistOf(uid));
+        allow write: if isAuth() && isAssignedNutritionistOf(uid);
+        allow delete: if false;
+      }
+
+      // Body measurements: patient writes own, nutritionist reads
+      match /mediciones/{doc} {
+        allow read: if isAuth() && (isOwner(uid) || isAssignedNutritionistOf(uid));
+        allow write: if isAuth() && isOwner(uid);
+        allow delete: if false;
+      }
+
+      // Weekly menu: patient writes own (IA generated), nutritionist reads
+      match /menu/{doc} {
+        allow read: if isAuth() && (isOwner(uid) || isAssignedNutritionistOf(uid));
+        allow write: if isAuth() && isOwner(uid);
+        allow delete: if false;
+      }
+
+      // Recipes: IA generated, patient and nutritionist read
+      match /recetas/{doc} {
+        allow read: if isAuth() && (isOwner(uid) || isAssignedNutritionistOf(uid));
+        allow write: if isAuth() && isOwner(uid);
+        allow delete: if false;
+      }
+
+      // 24-hour dietary recall: patient writes, nutritionist reads & writes
+      match /r24/{doc} {
+        allow read: if isAuth() && (isOwner(uid) || isAssignedNutritionistOf(uid));
+        allow write: if isAuth() && (isOwner(uid) || isAssignedNutritionistOf(uid));
+        allow delete: if false;
+      }
+    }
+
+    // ── Conversations (chat) ──────────────────────────────────────────────────
+    match /conversations/{patientUid} {
+      allow read: if isAuth() && (isOwner(patientUid) || isAssignedNutritionistOf(patientUid));
+
+      match /messages/{msgId} {
+        allow read: if isAuth() && (isOwner(patientUid) || isAssignedNutritionistOf(patientUid));
+        allow create: if isAuth() && (isOwner(patientUid) || isAssignedNutritionistOf(patientUid));
+        allow update, delete: if false;
+      }
+    }
+
+    // ── Internal throttle (Cloud Functions only) ──────────────────────────────
+    match /_emailThrottle/{doc} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,497 @@
+
+<style>
+.sc{width:100%;overflow-x:auto;padding-bottom:8px;}
+svg{display:block;font-family:inherit;}
+.nd{cursor:pointer;}
+.nd:hover rect{opacity:.82;}
+.nd:hover polygon{opacity:.82;}
+</style>
+<div class="sc">
+<svg width="1700" height="1020" viewBox="0 0 1700 1020" role="img" style="min-width:1700px;">
+<title>Sistema de Adherencia del Paciente – BPMN</title>
+<desc>Flujo BPMN con triggers automáticos, loops de adherencia y swimlanes</desc>
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<!-- ══════ POOL ══════ -->
+<rect x="2" y="2" width="1696" height="1016" rx="8" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+<rect x="2" y="2" width="26" height="1016" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.5"/>
+<text x="15" y="510" text-anchor="middle" transform="rotate(-90,15,510)" style="font-size:10px;font-weight:600;fill:#64748b;letter-spacing:.6px;">SISTEMA DE ADHERENCIA DEL PACIENTE</text>
+
+<!-- ══════ LANE: USUARIO  y=2 h=220 ══════ -->
+<rect x="28" y="2"   width="1668" height="220" fill="#f5f3ff" stroke="#e2e8f0" stroke-width="0.5"/>
+<rect x="28" y="2"   width="62"   height="220" fill="#ede9fe" stroke="#ddd6fe" stroke-width="0.5"/>
+<text x="59" y="112" text-anchor="middle" transform="rotate(-90,59,112)" style="font-size:10px;font-weight:600;fill:#5b21b6;">Usuario</text>
+
+<!-- ══════ LANE: MONITOR  y=222 h=220 ══════ -->
+<rect x="28" y="222" width="1668" height="220" fill="#f0f9ff" stroke="#e2e8f0" stroke-width="0.5"/>
+<rect x="28" y="222" width="62"   height="220" fill="#bae6fd" stroke="#7dd3fc" stroke-width="0.5"/>
+<text x="59" y="332" text-anchor="middle" transform="rotate(-90,59,332)" style="font-size:10px;font-weight:600;fill:#0369a1;">Monitor / Sensores</text>
+
+<!-- ══════ LANE: SISTEMA  y=442 h=260 ══════ -->
+<rect x="28" y="442" width="1668" height="260" fill="#f0fdf4" stroke="#e2e8f0" stroke-width="0.5"/>
+<rect x="28" y="442" width="62"   height="260" fill="#dcfce7" stroke="#bbf7d0" stroke-width="0.5"/>
+<text x="59" y="572" text-anchor="middle" transform="rotate(-90,59,572)" style="font-size:10px;font-weight:600;fill:#166534;">Sistema / Automatización</text>
+
+<!-- ══════ LANE: NUTRICIONISTA  y=702 h=160 ══════ -->
+<rect x="28" y="702" width="1668" height="160" fill="#fff7ed" stroke="#e2e8f0" stroke-width="0.5"/>
+<rect x="28" y="702" width="62"   height="160" fill="#fed7aa" stroke="#fdba74" stroke-width="0.5"/>
+<text x="59" y="782" text-anchor="middle" transform="rotate(-90,59,782)" style="font-size:10px;font-weight:600;fill:#92400e;">Nutricionista</text>
+
+<!-- ══════ LANE: ESTADO  y=862 h=156 ══════ -->
+<rect x="28" y="862" width="1668" height="156" fill="#fafafa" stroke="#e2e8f0" stroke-width="0.5"/>
+<rect x="28" y="862" width="62"   height="156" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="0.5"/>
+<text x="59" y="940" text-anchor="middle" transform="rotate(-90,59,940)" style="font-size:10px;font-weight:600;fill:#475569;">Estado Adherencia</text>
+
+<!-- ══════════════════════════════════════════
+     USUARIO LANE
+══════════════════════════════════════════ -->
+
+<!-- E-INI -->
+<circle cx="112" cy="112" r="15" fill="none" stroke="#059669" stroke-width="2.5"/>
+<text x="112" y="140" text-anchor="middle" style="font-size:9px;fill:#065f46;">Usuario</text>
+<text x="112" y="151" text-anchor="middle" style="font-size:9px;fill:#065f46;">activo</text>
+
+<!-- T-U1: Accede plataforma -->
+<g class="nd" onclick="sendPrompt('¿Qué acciones puede realizar el usuario desde su dashboard?')">
+  <rect x="144" y="92" width="130" height="40" rx="5" fill="white" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="209" y="109" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#1e40af;">Accede a</text>
+  <text x="209" y="122" text-anchor="middle" style="font-size:9px;fill:#3b82f6;">plataforma</text>
+</g>
+
+<!-- T-U2: Abre pauta -->
+<g class="nd" onclick="sendPrompt('¿Qué información contiene la pauta nutricional del usuario?')">
+  <rect x="320" y="70" width="120" height="40" rx="5" fill="white" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="380" y="87" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#1e40af;">Abre</text>
+  <text x="380" y="100" text-anchor="middle" style="font-size:9px;fill:#3b82f6;">pauta</text>
+</g>
+
+<!-- T-U3: Registra datos -->
+<g class="nd" onclick="sendPrompt('¿Qué datos puede registrar el usuario en la plataforma?')">
+  <rect x="320" y="130" width="120" height="40" rx="5" fill="white" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="380" y="147" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#1e40af;">Registra</text>
+  <text x="380" y="160" text-anchor="middle" style="font-size:9px;fill:#3b82f6;">datos</text>
+</g>
+
+<!-- G-U1: XOR ¿retoma actividad? (loop de adherencia) -->
+<polygon points="1460,112 1478,94 1496,112 1478,130" fill="white" stroke="#059669" stroke-width="1.5"/>
+<text x="1467" y="90" style="font-size:9px;fill:#059669;font-weight:700;">✕</text>
+<text x="1478" y="146" text-anchor="middle" style="font-size:9px;fill:#065f46;">¿Retoma</text>
+<text x="1478" y="157" text-anchor="middle" style="font-size:9px;fill:#065f46;">actividad?</text>
+
+<!-- T-U4: Retoma uso de plataforma -->
+<g class="nd" onclick="sendPrompt('¿Qué hace el sistema cuando el usuario retoma la actividad?')">
+  <rect x="1516" y="92" width="130" height="40" rx="5" fill="white" stroke="#059669" stroke-width="1.5"/>
+  <text x="1581" y="109" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#065f46;">Retoma</text>
+  <text x="1581" y="122" text-anchor="middle" style="font-size:9px;fill:#059669;">actividad</text>
+</g>
+
+<!-- E-FIN usuario (loop continuo) -->
+<circle cx="1670" cy="112" r="14" fill="none" stroke="#e11d48" stroke-width="3.5"/>
+<text x="1670" y="140" text-anchor="middle" style="font-size:9px;fill:#be123c;">↻ ciclo</text>
+<text x="1670" y="151" text-anchor="middle" style="font-size:9px;fill:#be123c;">continuo</text>
+
+<!-- Flechas usuario -->
+<line x1="127" y1="112" x2="144" y2="112" stroke="#2563eb" stroke-width="1.3" marker-end="url(#ar)"/>
+<path d="M274 112 L300 112 L300 90 L320 90" fill="none" stroke="#2563eb" stroke-width="1.2" marker-end="url(#ar)"/>
+<path d="M274 112 L300 112 L300 150 L320 150" fill="none" stroke="#2563eb" stroke-width="1.2" marker-end="url(#ar)"/>
+<line x1="1496" y1="112" x2="1516" y2="112" stroke="#059669" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="1498" y="108" style="font-size:8px;fill:#059669;">Sí</text>
+<line x1="1646" y1="112" x2="1656" y2="112" stroke="#059669" stroke-width="1.3" marker-end="url(#ar)"/>
+<!-- retoma → vuelve al inicio del ciclo (loop) -->
+<path d="M1581 92 L1581 50 L209 50 L209 92" fill="none" stroke="#059669" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#ar)"/>
+<text x="880" y="46" text-anchor="middle" style="font-size:8px;fill:#059669;">↻ actualiza adherencia → vuelve al ciclo de monitoreo</text>
+
+<!-- ══════════════════════════════════════════
+     MONITOR LANE  (centro y ≈ 332)
+══════════════════════════════════════════ -->
+
+<!-- Título sección -->
+<text x="118" y="252" style="font-size:8px;fill:#0369a1;font-weight:600;">TRIGGERS AUTOMÁTICOS (cada N horas)</text>
+
+<!-- T-M1: Sensor apertura pauta -->
+<g class="nd" onclick="sendPrompt('¿Con qué frecuencia monitorea el sistema si el usuario abre su pauta?')">
+  <rect x="100" y="268" width="140" height="50" rx="5" fill="white" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="170" y="285" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#0369a1;">Monitorea</text>
+  <text x="170" y="298" text-anchor="middle" style="font-size:9px;fill:#0284c7;">apertura pauta</text>
+  <text x="170" y="310" text-anchor="middle" style="font-size:8px;fill:#7dd3fc;">trigger: cada 24h</text>
+</g>
+
+<!-- T-M2: Sensor registro de datos -->
+<g class="nd" onclick="sendPrompt('¿Qué considera el sistema como un registro de datos válido?')">
+  <rect x="280" y="268" width="140" height="50" rx="5" fill="white" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="350" y="285" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#0369a1;">Monitorea</text>
+  <text x="350" y="298" text-anchor="middle" style="font-size:9px;fill:#0284c7;">registro de datos</text>
+  <text x="350" y="310" text-anchor="middle" style="font-size:8px;fill:#7dd3fc;">trigger: cada 48h</text>
+</g>
+
+<!-- T-M3: Sensor actividad general -->
+<g class="nd" onclick="sendPrompt('¿Cuántos días sin actividad activan la alerta de inactividad?')">
+  <rect x="460" y="268" width="140" height="50" rx="5" fill="white" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="530" y="285" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#0369a1;">Monitorea</text>
+  <text x="530" y="298" text-anchor="middle" style="font-size:9px;fill:#0284c7;">actividad general</text>
+  <text x="530" y="310" text-anchor="middle" style="font-size:8px;fill:#7dd3fc;">trigger: cada X días</text>
+</g>
+
+<!-- T-M4: Sensor score adherencia -->
+<g class="nd" onclick="sendPrompt('¿Cómo calcula el sistema el score de adherencia del usuario?')">
+  <rect x="640" y="268" width="140" height="50" rx="5" fill="white" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="710" y="285" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#0369a1;">Calcula score</text>
+  <text x="710" y="298" text-anchor="middle" style="font-size:9px;fill:#0284c7;">adherencia</text>
+  <text x="710" y="310" text-anchor="middle" style="font-size:8px;fill:#7dd3fc;">trigger: continuo</text>
+</g>
+
+<!-- Gateways Monitor -->
+<!-- G-M1: ¿Abrió pauta? -->
+<polygon points="170,370 188,352 206,370 188,388" fill="white" stroke="#d97706" stroke-width="1.5"/>
+<text x="177" y="349" style="font-size:9px;fill:#d97706;font-weight:700;">✕</text>
+<text x="188" y="404" text-anchor="middle" style="font-size:9px;fill:#92400e;">¿Abrió</text>
+<text x="188" y="415" text-anchor="middle" style="font-size:9px;fill:#92400e;">pauta?</text>
+
+<!-- G-M2: ¿Registró datos? -->
+<polygon points="350,370 368,352 386,370 368,388" fill="white" stroke="#d97706" stroke-width="1.5"/>
+<text x="357" y="349" style="font-size:9px;fill:#d97706;font-weight:700;">✕</text>
+<text x="368" y="404" text-anchor="middle" style="font-size:9px;fill:#92400e;">¿Registró</text>
+<text x="368" y="415" text-anchor="middle" style="font-size:9px;fill:#92400e;">datos?</text>
+
+<!-- G-M3: ¿Actividad en X días? -->
+<polygon points="530,370 548,352 566,370 548,388" fill="white" stroke="#d97706" stroke-width="1.5"/>
+<text x="537" y="349" style="font-size:9px;fill:#d97706;font-weight:700;">✕</text>
+<text x="548" y="404" text-anchor="middle" style="font-size:9px;fill:#92400e;">¿Actividad</text>
+<text x="548" y="415" text-anchor="middle" style="font-size:9px;fill:#92400e;">en X días?</text>
+
+<!-- G-M4: ¿Score bajo? -->
+<polygon points="710,370 728,352 746,370 728,388" fill="white" stroke="#d97706" stroke-width="1.5"/>
+<text x="717" y="349" style="font-size:9px;fill:#d97706;font-weight:700;">✕</text>
+<text x="728" y="404" text-anchor="middle" style="font-size:9px;fill:#92400e;">¿Score</text>
+<text x="728" y="415" text-anchor="middle" style="font-size:9px;fill:#92400e;">bajo?</text>
+
+<!-- Flechas monitor -->
+<line x1="170" y1="318" x2="170" y2="352" stroke="#0284c7" stroke-width="1.2" marker-end="url(#ar)"/>
+<line x1="350" y1="318" x2="350" y2="352" stroke="#0284c7" stroke-width="1.2" marker-end="url(#ar)"/>
+<line x1="530" y1="318" x2="530" y2="352" stroke="#0284c7" stroke-width="1.2" marker-end="url(#ar)"/>
+<line x1="710" y1="318" x2="710" y2="352" stroke="#0284c7" stroke-width="1.2" marker-end="url(#ar)"/>
+
+<!-- flechas desde usuario a sensores -->
+<path d="M380 110 L380 222 L170 222 L170 268" fill="none" stroke="#0284c7" stroke-width="0.9" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<path d="M380 150 L380 222 L350 222 L350 268" fill="none" stroke="#0284c7" stroke-width="0.9" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<path d="M209 132 L209 200 L530 200 L530 268" fill="none" stroke="#0284c7" stroke-width="0.9" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<path d="M440 90 L530 90 L530 200 L710 200 L710 268" fill="none" stroke="#0284c7" stroke-width="0.9" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+
+<!-- ══════════════════════════════════════════
+     SISTEMA LANE  (centro y ≈ 572)
+══════════════════════════════════════════ -->
+
+<!-- T-S1: Recordatorio apertura pauta -->
+<g class="nd" onclick="sendPrompt('¿Qué mensaje incluye el recordatorio de apertura de pauta?')">
+  <rect x="100" y="462" width="140" height="50" rx="5" fill="#fff7ed" stroke="#d97706" stroke-width="1.5"/>
+  <text x="170" y="479" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Recordatorio</text>
+  <text x="170" y="492" text-anchor="middle" style="font-size:9px;fill:#b45309;">apertura pauta</text>
+  <text x="170" y="504" text-anchor="middle" style="font-size:8px;fill:#fcd34d;">push + email</text>
+</g>
+
+<!-- T-S2: Recordatorio registro datos -->
+<g class="nd" onclick="sendPrompt('¿Qué canales usa el sistema para enviar recordatorios de registro?')">
+  <rect x="280" y="462" width="140" height="50" rx="5" fill="#fff7ed" stroke="#d97706" stroke-width="1.5"/>
+  <text x="350" y="479" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Recordatorio</text>
+  <text x="350" y="492" text-anchor="middle" style="font-size:9px;fill:#b45309;">registro datos</text>
+  <text x="350" y="504" text-anchor="middle" style="font-size:8px;fill:#fcd34d;">push + email</text>
+</g>
+
+<!-- T-S3: Alerta inactividad -->
+<g class="nd" onclick="sendPrompt('¿Cómo escala el sistema las alertas de inactividad?')">
+  <rect x="460" y="462" width="140" height="50" rx="5" fill="#fff1f2" stroke="#e11d48" stroke-width="1.5"/>
+  <text x="530" y="479" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#be123c;">Alerta</text>
+  <text x="530" y="492" text-anchor="middle" style="font-size:9px;fill:#e11d48;">inactividad</text>
+  <text x="530" y="504" text-anchor="middle" style="font-size:8px;fill:#fca5a5;">email urgente</text>
+</g>
+
+<!-- T-S4: Mensaje motivacional -->
+<g class="nd" onclick="sendPrompt('¿Qué tipo de mensajes motivacionales envía el sistema?')">
+  <rect x="640" y="462" width="140" height="50" rx="5" fill="#f0f9ff" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="710" y="479" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#0369a1;">Mensaje</text>
+  <text x="710" y="492" text-anchor="middle" style="font-size:9px;fill:#0284c7;">motivacional</text>
+  <text x="710" y="504" text-anchor="middle" style="font-size:8px;fill:#7dd3fc;">personalizado IA</text>
+</g>
+
+<!-- G-S1: XOR ¿responde al recordatorio? -->
+<polygon points="170,550 188,532 206,550 188,568" fill="white" stroke="#d97706" stroke-width="1.5"/>
+<text x="177" y="528" style="font-size:9px;fill:#d97706;font-weight:700;">✕</text>
+<text x="188" y="584" text-anchor="middle" style="font-size:9px;fill:#92400e;">¿Responde?</text>
+
+<!-- G-S2: XOR -->
+<polygon points="350,550 368,532 386,550 368,568" fill="white" stroke="#d97706" stroke-width="1.5"/>
+<text x="357" y="528" style="font-size:9px;fill:#d97706;font-weight:700;">✕</text>
+<text x="368" y="584" text-anchor="middle" style="font-size:9px;fill:#92400e;">¿Responde?</text>
+
+<!-- G-S3: XOR inactividad -->
+<polygon points="530,550 548,532 566,550 548,568" fill="white" stroke="#d97706" stroke-width="1.5"/>
+<text x="537" y="528" style="font-size:9px;fill:#d97706;font-weight:700;">✕</text>
+<text x="548" y="584" text-anchor="middle" style="font-size:9px;fill:#92400e;">¿Responde?</text>
+
+<!-- G-S4: XOR motivacional -->
+<polygon points="710,550 728,532 746,550 728,568" fill="white" stroke="#d97706" stroke-width="1.5"/>
+<text x="717" y="528" style="font-size:9px;fill:#d97706;font-weight:700;">✕</text>
+<text x="728" y="584" text-anchor="middle" style="font-size:9px;fill:#92400e;">¿Responde?</text>
+
+<!-- T-S5: Actualiza score adherencia (sí responde) -->
+<g class="nd" onclick="sendPrompt('¿Cómo actualiza el sistema el score de adherencia tras respuesta?')">
+  <rect x="820" y="462" width="140" height="50" rx="5" fill="white" stroke="#059669" stroke-width="1.5"/>
+  <text x="890" y="479" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#065f46;">Actualiza score</text>
+  <text x="890" y="492" text-anchor="middle" style="font-size:9px;fill:#059669;">adherencia</text>
+  <text x="890" y="504" text-anchor="middle" style="font-size:8px;fill:#6ee7b7;">→ sube nivel</text>
+</g>
+
+<!-- G-S5: XOR ¿escalar a nutricionista? -->
+<polygon points="1000,487 1018,469 1036,487 1018,505" fill="white" stroke="#d97706" stroke-width="1.5"/>
+<text x="1007" y="465" style="font-size:9px;fill:#d97706;font-weight:700;">✕</text>
+<text x="1018" y="520" text-anchor="middle" style="font-size:9px;fill:#92400e;">¿Escalar?</text>
+
+<!-- T-S6: Genera tarea para nutricionista -->
+<g class="nd" onclick="sendPrompt('¿Qué información incluye la tarea generada para la nutricionista?')">
+  <rect x="1050" y="467" width="140" height="50" rx="5" fill="#fff7ed" stroke="#d97706" stroke-width="1.5"/>
+  <text x="1120" y="484" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Genera tarea</text>
+  <text x="1120" y="497" text-anchor="middle" style="font-size:9px;fill:#b45309;">para nutricionista</text>
+  <text x="1120" y="509" text-anchor="middle" style="font-size:8px;fill:#fcd34d;">→ revisión manual</text>
+</g>
+
+<!-- T-S7: Contador de reintentos recordatorio -->
+<g class="nd" onclick="sendPrompt('¿Cuántas veces reintenta el sistema antes de escalar?')">
+  <rect x="280" y="600" width="140" height="50" rx="5" fill="#fafafa" stroke="#94a3b8" stroke-width="1.3"/>
+  <text x="350" y="617" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#475569;">Contador</text>
+  <text x="350" y="630" text-anchor="middle" style="font-size:9px;fill:#64748b;">reintentos</text>
+  <text x="350" y="642" text-anchor="middle" style="font-size:8px;fill:#94a3b8;">máx. 3 × canal</text>
+</g>
+
+<!-- T-S8: Registra evento inactividad -->
+<g class="nd" onclick="sendPrompt('¿Cómo registra el sistema los eventos de inactividad para el historial?')">
+  <rect x="460" y="600" width="140" height="50" rx="5" fill="#fff1f2" stroke="#e11d48" stroke-width="1.3"/>
+  <text x="530" y="617" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#be123c;">Registra</text>
+  <text x="530" y="630" text-anchor="middle" style="font-size:9px;fill:#e11d48;">inactividad</text>
+  <text x="530" y="642" text-anchor="middle" style="font-size:8px;fill:#fca5a5;">→ historial</text>
+</g>
+
+<!-- T-S9: G-U1 espera retoma (no responde → G-U1 ¿retoma?) -->
+<g class="nd" onclick="sendPrompt('¿Cuánto tiempo espera el sistema antes de considerar abandono?')">
+  <rect x="1200" y="462" width="140" height="50" rx="5" fill="#fafafa" stroke="#94a3b8" stroke-width="1.3"/>
+  <text x="1270" y="479" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#475569;">Espera</text>
+  <text x="1270" y="492" text-anchor="middle" style="font-size:9px;fill:#64748b;">señal retoma</text>
+  <text x="1270" y="504" text-anchor="middle" style="font-size:8px;fill:#94a3b8;">timeout → G retoma</text>
+</g>
+
+<!-- Flechas sistema - gatillos desde monitor -->
+<!-- No abrió pauta → recordatorio -->
+<path d="M188 388 L188 442 L170 442 L170 462" fill="none" stroke="#e11d48" stroke-width="1.2" marker-end="url(#ar)"/>
+<text x="192" y="430" style="font-size:8px;fill:#e11d48;">No</text>
+<!-- Sí abrió pauta → score OK -->
+<path d="M206 370 L240 370 L240 340 L890 340 L890 462" fill="none" stroke="#059669" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="250" y="366" style="font-size:8px;fill:#059669;">Sí</text>
+<!-- No registró → recordatorio -->
+<path d="M368 388 L368 442 L350 442 L350 462" fill="none" stroke="#e11d48" stroke-width="1.2" marker-end="url(#ar)"/>
+<text x="372" y="430" style="font-size:8px;fill:#e11d48;">No</text>
+<!-- Sí registró → score OK -->
+<path d="M386 370 L420 370 L420 340" fill="none" stroke="#059669" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="390" y="366" style="font-size:8px;fill:#059669;">Sí</text>
+<!-- No actividad → alerta -->
+<path d="M548 388 L548 442 L530 442 L530 462" fill="none" stroke="#e11d48" stroke-width="1.2" marker-end="url(#ar)"/>
+<text x="552" y="430" style="font-size:8px;fill:#e11d48;">No</text>
+<!-- Sí actividad → score OK -->
+<path d="M566 370 L600 370 L600 340" fill="none" stroke="#059669" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="570" y="366" style="font-size:8px;fill:#059669;">Sí</text>
+<!-- Score bajo → motivacional -->
+<path d="M728 388 L728 442 L710 442 L710 462" fill="none" stroke="#e11d48" stroke-width="1.2" marker-end="url(#ar)"/>
+<text x="732" y="430" style="font-size:8px;fill:#e11d48;">Bajo</text>
+<!-- Score OK → G-U1 -->
+<path d="M746 370 L780 370 L780 340 L1478 340 L1478 94" fill="none" stroke="#059669" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="750" y="366" style="font-size:8px;fill:#059669;">OK</text>
+
+<!-- G-S1 responde sí → actualiza -->
+<path d="M206 550 L820 550 L820 487" fill="none" stroke="#059669" stroke-width="1.2" marker-end="url(#ar)"/>
+<text x="210" y="546" style="font-size:8px;fill:#059669;">Sí</text>
+<!-- G-S2 sí -->
+<path d="M386 550 L820 550" fill="none" stroke="#059669" stroke-width="1.1" stroke-dasharray="3 2" marker-end="url(#ar)"/>
+<text x="390" y="546" style="font-size:8px;fill:#059669;">Sí</text>
+<!-- G-S3 sí -->
+<path d="M566 550 L820 550" fill="none" stroke="#059669" stroke-width="1.1" stroke-dasharray="3 2" marker-end="url(#ar)"/>
+<text x="570" y="546" style="font-size:8px;fill:#059669;">Sí</text>
+<!-- G-S4 sí -->
+<path d="M746 550 L820 550" fill="none" stroke="#059669" stroke-width="1.1" stroke-dasharray="3 2" marker-end="url(#ar)"/>
+<text x="750" y="546" style="font-size:8px;fill:#059669;">Sí</text>
+
+<!-- actualiza → G-S5 escalar -->
+<line x1="960" y1="487" x2="1000" y2="487" stroke="#059669" stroke-width="1.2" marker-end="url(#ar)"/>
+<!-- G-S5 sí → nutricionista -->
+<line x1="1036" y1="487" x2="1050" y2="487" stroke="#d97706" stroke-width="1.2" marker-end="url(#ar)"/>
+<text x="1038" y="483" style="font-size:8px;fill:#d97706;">Sí</text>
+<!-- G-S5 no → G-U1 -->
+<path d="M1018 469 L1018 440 L1270 440 L1270 462" fill="none" stroke="#059669" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="1022" y="436" style="font-size:8px;fill:#059669;">No → continúa ciclo</text>
+
+<!-- No responde → contador / loop -->
+<path d="M188 568 L188 625 L280 625" fill="none" stroke="#d97706" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="192" y="600" style="font-size:8px;fill:#d97706;">No</text>
+<path d="M368 568 L368 625" fill="none" stroke="#d97706" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<path d="M548 568 L548 625 L460 625" fill="none" stroke="#e11d48" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="552" y="600" style="font-size:8px;fill:#e11d48;">No</text>
+<path d="M728 568 L728 640 L1270 640 L1270 512" fill="none" stroke="#d97706" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="732" y="600" style="font-size:8px;fill:#d97706;">No</text>
+
+<!-- espera señal → G-U1 ¿retoma? -->
+<path d="M1270 462 L1270 420 L1478 420 L1478 94" fill="none" stroke="#94a3b8" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+
+<!-- recordatorio T-S1 → G-S1 -->
+<line x1="170" y1="512" x2="170" y2="532" stroke="#d97706" stroke-width="1.2" marker-end="url(#ar)"/>
+<line x1="350" y1="512" x2="350" y2="532" stroke="#d97706" stroke-width="1.2" marker-end="url(#ar)"/>
+<line x1="530" y1="512" x2="530" y2="532" stroke="#e11d48" stroke-width="1.2" marker-end="url(#ar)"/>
+<line x1="710" y1="512" x2="710" y2="532" stroke="#0284c7" stroke-width="1.2" marker-end="url(#ar)"/>
+
+<!-- ══════════════════════════════════════════
+     NUTRICIONISTA LANE
+══════════════════════════════════════════ -->
+
+<!-- T-N1: Revisa tarea de baja adherencia -->
+<g class="nd" onclick="sendPrompt('¿Qué información ve la nutricionista al revisar un caso de baja adherencia?')">
+  <rect x="1050" y="722" width="140" height="45" rx="5" fill="white" stroke="#d97706" stroke-width="1.5"/>
+  <text x="1120" y="739" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Revisa tarea</text>
+  <text x="1120" y="752" text-anchor="middle" style="font-size:9px;fill:#b45309;">baja adherencia</text>
+</g>
+
+<!-- G-N1: XOR ¿tipo intervención? -->
+<polygon points="1230,744 1248,726 1266,744 1248,762" fill="white" stroke="#d97706" stroke-width="1.5"/>
+<text x="1237" y="722" style="font-size:9px;fill:#d97706;font-weight:700;">✕</text>
+<text x="1248" y="776" text-anchor="middle" style="font-size:9px;fill:#92400e;">Tipo acción</text>
+
+<!-- T-N2: Ajusta plan -->
+<g class="nd" onclick="sendPrompt('¿Cómo ajusta la nutricionista el plan cuando hay baja adherencia?')">
+  <rect x="1290" y="710" width="130" height="40" rx="5" fill="white" stroke="#d97706" stroke-width="1.5"/>
+  <text x="1355" y="727" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Ajusta plan</text>
+  <text x="1355" y="740" text-anchor="middle" style="font-size:9px;fill:#b45309;">del paciente</text>
+</g>
+
+<!-- T-N3: Envía mensaje personal -->
+<g class="nd" onclick="sendPrompt('¿Qué incluye el mensaje personalizado de la nutricionista?')">
+  <rect x="1290" y="764" width="130" height="40" rx="5" fill="white" stroke="#d97706" stroke-width="1.5"/>
+  <text x="1355" y="781" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Envía mensaje</text>
+  <text x="1355" y="794" text-anchor="middle" style="font-size:9px;fill:#b45309;">personalizado</text>
+</g>
+
+<!-- T-N4: Agenda seguimiento -->
+<g class="nd" onclick="sendPrompt('¿Con qué frecuencia programa seguimientos la nutricionista?')">
+  <rect x="1450" y="737" width="130" height="40" rx="5" fill="white" stroke="#d97706" stroke-width="1.5"/>
+  <text x="1515" y="754" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Agenda</text>
+  <text x="1515" y="767" text-anchor="middle" style="font-size:9px;fill:#b45309;">seguimiento</text>
+</g>
+
+<!-- Flechas nutricionista -->
+<line x1="1190" y1="744" x2="1230" y2="744" stroke="#d97706" stroke-width="1.3" marker-end="url(#ar)"/>
+<path d="M1266 744 L1290 730" fill="none" stroke="#d97706" stroke-width="1.2" marker-end="url(#ar)"/>
+<path d="M1266 744 L1290 784" fill="none" stroke="#d97706" stroke-width="1.2" marker-end="url(#ar)"/>
+<line x1="1420" y1="730" x2="1450" y2="750" stroke="#d97706" stroke-width="1.2" marker-end="url(#ar)"/>
+<line x1="1420" y1="784" x2="1450" y2="760" stroke="#d97706" stroke-width="1.2" marker-end="url(#ar)"/>
+<!-- nutricionista → G-U1 retoma (inter-lane, impacta ciclo) -->
+<path d="M1515 737 L1515 680 L1478 680 L1478 130" fill="none" stroke="#0d9488" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#ar)"/>
+<text x="1520" y="400" style="font-size:8px;fill:#0d9488;writing-mode:vertical-rl;">intervención → actualiza ciclo</text>
+
+<!-- inter-lane: T-S6 → T-N1 -->
+<path d="M1120 517 L1120 560 L1120 580 L1120 702 L1120 722" fill="none" stroke="#0d9488" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#ar)"/>
+
+<!-- ══════════════════════════════════════════
+     ESTADO LANE  (y ≈ 940)
+══════════════════════════════════════════ -->
+
+<text x="100" y="885" style="font-size:8px;font-weight:600;fill:#475569;">NIVELES DE ADHERENCIA</text>
+
+<!-- Estado: ALTA -->
+<rect x="90"  y="896" width="120" height="38" rx="18" fill="#dcfce7" stroke="#059669" stroke-width="1.5"/>
+<text x="150" y="911" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#065f46;">ALTA</text>
+<text x="150" y="924" text-anchor="middle" style="font-size:8px;fill:#059669;">score ≥ 80%</text>
+
+<!-- Estado: MEDIA -->
+<rect x="240" y="896" width="120" height="38" rx="18" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+<text x="300" y="911" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#854d0e;">MEDIA</text>
+<text x="300" y="924" text-anchor="middle" style="font-size:8px;fill:#ca8a04;">score 50–79%</text>
+
+<!-- Estado: BAJA -->
+<rect x="390" y="896" width="120" height="38" rx="18" fill="#fff7ed" stroke="#d97706" stroke-width="1.5"/>
+<text x="450" y="911" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">BAJA</text>
+<text x="450" y="924" text-anchor="middle" style="font-size:8px;fill:#d97706;">score 20–49%</text>
+
+<!-- Estado: CRITICA -->
+<rect x="540" y="896" width="130" height="38" rx="18" fill="#fff1f2" stroke="#e11d48" stroke-width="1.5"/>
+<text x="605" y="911" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#be123c;">CRÍTICA</text>
+<text x="605" y="924" text-anchor="middle" style="font-size:8px;fill:#e11d48;">score &lt; 20%</text>
+
+<!-- Estado: EN RECUPERACIÓN -->
+<rect x="700" y="896" width="150" height="38" rx="18" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="775" y="911" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#4c1d95;">EN RECUPERACIÓN</text>
+<text x="775" y="924" text-anchor="middle" style="font-size:8px;fill:#7c3aed;">retomó actividad</text>
+
+<!-- Estado: INTERVENIDA -->
+<rect x="880" y="896" width="150" height="38" rx="18" fill="#fdf2f8" stroke="#db2777" stroke-width="1.5"/>
+<text x="955" y="911" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#9d174d;">INTERVENIDA</text>
+<text x="955" y="924" text-anchor="middle" style="font-size:8px;fill:#db2777;">nutricionista activa</text>
+
+<!-- flechas estados -->
+<line x1="210" y1="915" x2="240" y2="915" stroke="#64748b" stroke-width="1" marker-end="url(#ar)"/>
+<line x1="360" y1="915" x2="390" y2="915" stroke="#64748b" stroke-width="1" marker-end="url(#ar)"/>
+<line x1="510" y1="915" x2="540" y2="915" stroke="#e11d48" stroke-width="1" marker-end="url(#ar)"/>
+<!-- critica → recuperación -->
+<path d="M670 915 L700 915" fill="none" stroke="#7c3aed" stroke-width="1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<!-- recuperación → intervenida (si escala) -->
+<line x1="850" y1="915" x2="880" y2="915" stroke="#db2777" stroke-width="1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<!-- intervenida → alta (tras intervención) -->
+<path d="M955 896 L955 870 L150 870 L150 896" fill="none" stroke="#059669" stroke-width="1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="530" y="866" text-anchor="middle" style="font-size:8px;fill:#059669;">↻ tras intervención exitosa → vuelve a ALTA</text>
+
+<!-- conectores verticales score → estado -->
+<path d="M890 512 L890 560 L150 560 L150 862" fill="none" stroke="#059669" stroke-width="0.7" stroke-dasharray="3 3"/>
+<path d="M710 512 L710 560 L450 560 L450 896" fill="none" stroke="#d97706" stroke-width="0.7" stroke-dasharray="3 3"/>
+<path d="M530 650 L530 680 L605 680 L605 896" fill="none" stroke="#e11d48" stroke-width="0.7" stroke-dasharray="3 3"/>
+<path d="M1120 517 L1120 560 L955 560 L955 896" fill="none" stroke="#db2777" stroke-width="0.7" stroke-dasharray="3 3"/>
+<path d="M1478 130 L1478 860 L775 860 L775 896" fill="none" stroke="#7c3aed" stroke-width="0.7" stroke-dasharray="3 3"/>
+
+<!-- ══════ LEYENDA ══════ -->
+<rect x="90" y="960" width="1578" height="50" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="0.8"/>
+
+<circle cx="118" cy="985" r="8" fill="none" stroke="#059669" stroke-width="2.2"/>
+<text x="132" y="989" style="font-size:8px;fill:#475569;">Inicio</text>
+
+<circle cx="186" cy="985" r="8" fill="none" stroke="#e11d48" stroke-width="3.5"/>
+<text x="200" y="989" style="font-size:8px;fill:#475569;">Fin / loop</text>
+
+<rect x="254" y="977" width="30" height="16" rx="3" fill="white" stroke="#2563eb" stroke-width="1.3"/>
+<text x="290" y="989" style="font-size:8px;fill:#475569;">Tarea usuario</text>
+
+<rect x="374" y="977" width="30" height="16" rx="3" fill="white" stroke="#0284c7" stroke-width="1.3"/>
+<text x="410" y="989" style="font-size:8px;fill:#475569;">Sensor / monitor</text>
+
+<rect x="502" y="977" width="30" height="16" rx="3" fill="#fff7ed" stroke="#d97706" stroke-width="1.3"/>
+<text x="538" y="989" style="font-size:8px;fill:#475569;">Trigger automático</text>
+
+<rect x="636" y="977" width="30" height="16" rx="3" fill="white" stroke="#059669" stroke-width="1.3"/>
+<text x="672" y="989" style="font-size:8px;fill:#475569;">Sistema OK</text>
+
+<rect x="742" y="977" width="30" height="16" rx="3" fill="white" stroke="#d97706" stroke-width="1.3"/>
+<text x="778" y="989" style="font-size:8px;fill:#475569;">Nutricionista</text>
+
+<polygon points="848,985 860,973 872,985 860,997" fill="white" stroke="#d97706" stroke-width="1.3"/>
+<text x="878" y="989" style="font-size:8px;fill:#475569;">Gateway XOR</text>
+
+<line x1="960" y1="985" x2="998" y2="985" stroke="#059669" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="1006" y="989" style="font-size:8px;fill:#475569;">Flujo normal</text>
+
+<line x1="1084" y1="985" x2="1122" y2="985" stroke="#0d9488" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#ar)"/>
+<text x="1130" y="989" style="font-size:8px;fill:#475569;">Inter-lane</text>
+
+<line x1="1208" y1="985" x2="1246" y2="985" stroke="#e11d48" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="1254" y="989" style="font-size:8px;fill:#475569;">Alerta / error</text>
+
+<line x1="1332" y1="985" x2="1370" y2="985" stroke="#d97706" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="1378" y="989" style="font-size:8px;fill:#475569;">Loop recordatorio</text>
+
+<text x="1540" y="989" style="font-size:8px;fill:#94a3b8;font-style:italic;">Clic para explorar</text>
+</svg>
+</div>

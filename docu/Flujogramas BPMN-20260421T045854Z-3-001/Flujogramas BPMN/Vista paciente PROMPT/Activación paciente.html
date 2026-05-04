@@ -1,0 +1,418 @@
+
+<style>
+.sc{width:100%;overflow-x:auto;padding-bottom:8px;}
+svg{display:block;font-family:inherit;}
+.nd{cursor:pointer;}
+.nd:hover rect{opacity:.82;}
+.nd:hover polygon{opacity:.82;}
+/* estado badges */
+.badge-ok{font-size:8px;fill:#065f46;}
+.badge-warn{font-size:8px;fill:#92400e;}
+.badge-err{font-size:8px;fill:#be123c;}
+</style>
+<div class="sc">
+<svg width="1520" height="980" viewBox="0 0 1520 980" role="img" style="min-width:1520px;">
+<title>Flujo de Activación de Paciente – Plataforma Nutricional</title>
+<desc>BPMN detallado con acciones de usuario, sistema, cambios de estado y loops</desc>
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<!-- ══════ POOL ══════ -->
+<rect x="2" y="2" width="1516" height="976" rx="8" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+<rect x="2" y="2" width="26" height="976" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.5"/>
+<text x="15" y="490" text-anchor="middle" transform="rotate(-90,15,490)" style="font-size:10px;font-weight:600;fill:#64748b;letter-spacing:.5px;">FLUJO DE ACTIVACIÓN DE PACIENTE</text>
+
+<!-- ══════ SWIMLANE: USUARIO  y=2 h=240 ══════ -->
+<rect x="28" y="2"   width="1490" height="240" fill="#f5f3ff" stroke="#e2e8f0" stroke-width="0.5"/>
+<rect x="28" y="2"   width="62"   height="240" fill="#ede9fe" stroke="#ddd6fe" stroke-width="0.5"/>
+<text x="59" y="122" text-anchor="middle" transform="rotate(-90,59,122)" style="font-size:10px;font-weight:600;fill:#5b21b6;">Usuario</text>
+
+<!-- ══════ SWIMLANE: SISTEMA  y=242 h=390 ══════ -->
+<rect x="28" y="242" width="1490" height="390" fill="#f0fdf4" stroke="#e2e8f0" stroke-width="0.5"/>
+<rect x="28" y="242" width="62"   height="390" fill="#dcfce7" stroke="#bbf7d0" stroke-width="0.5"/>
+<text x="59" y="437" text-anchor="middle" transform="rotate(-90,59,437)" style="font-size:10px;font-weight:600;fill:#166534;">Sistema / Plataforma</text>
+
+<!-- ══════ SWIMLANE: NUTRICIONISTA  y=632 h=170 ══════ -->
+<rect x="28" y="632" width="1490" height="170" fill="#fff7ed" stroke="#e2e8f0" stroke-width="0.5"/>
+<rect x="28" y="632" width="62"   height="170" fill="#fed7aa" stroke="#fdba74" stroke-width="0.5"/>
+<text x="59" y="717" text-anchor="middle" transform="rotate(-90,59,717)" style="font-size:10px;font-weight:600;fill:#92400e;">Nutricionista</text>
+
+<!-- ══════ SWIMLANE: ESTADOS  y=802 h=176 ══════ -->
+<rect x="28" y="802" width="1490" height="176" fill="#fafafa" stroke="#e2e8f0" stroke-width="0.5"/>
+<rect x="28" y="802" width="62"   height="176" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="0.5"/>
+<text x="59" y="890" text-anchor="middle" transform="rotate(-90,59,890)" style="font-size:10px;font-weight:600;fill:#475569;">Estado del Paciente</text>
+
+<!-- ══════════════════════════════════════
+     USUARIO LANE  (centro y ≈ 122)
+══════════════════════════════════════ -->
+
+<!-- E-INI: Pago aprobado -->
+<circle cx="118" cy="110" r="15" fill="none" stroke="#059669" stroke-width="2.5"/>
+<text x="118" y="138" text-anchor="middle" style="font-size:9px;fill:#065f46;">Pago</text>
+<text x="118" y="149" text-anchor="middle" style="font-size:9px;fill:#065f46;">aprobado</text>
+
+<!-- T-U1: Usuario recibe email bienvenida -->
+<g class="nd" onclick="sendPrompt('¿Qué contiene el email de bienvenida que recibe el usuario?')">
+  <rect x="150" y="90" width="130" height="40" rx="5" fill="white" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="215" y="107" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#1e40af;">Recibe email</text>
+  <text x="215" y="120" text-anchor="middle" style="font-size:9px;fill:#3b82f6;">de bienvenida</text>
+</g>
+
+<!-- T-U2: Usuario abre onboarding -->
+<g class="nd" onclick="sendPrompt('¿Qué pasos tiene el formulario de onboarding?')">
+  <rect x="306" y="90" width="130" height="40" rx="5" fill="white" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="371" y="107" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#1e40af;">Abre formulario</text>
+  <text x="371" y="120" text-anchor="middle" style="font-size:9px;fill:#3b82f6;">onboarding</text>
+</g>
+
+<!-- G-U1: XOR ¿completa onboarding? -->
+<polygon points="462,110 480,92 498,110 480,128" fill="white" stroke="#d97706" stroke-width="1.5"/>
+<text x="469" y="88" style="font-size:9px;fill:#d97706;font-weight:700;">✕</text>
+<text x="480" y="144" text-anchor="middle" style="font-size:9px;fill:#92400e;">¿Completa</text>
+<text x="480" y="155" text-anchor="middle" style="font-size:9px;fill:#92400e;">onboarding?</text>
+
+<!-- T-U3: Usuario completa onboarding -->
+<g class="nd" onclick="sendPrompt('¿Qué información clave recoge el onboarding?')">
+  <rect x="520" y="90" width="130" height="40" rx="5" fill="white" stroke="#059669" stroke-width="1.5"/>
+  <text x="585" y="107" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#065f46;">Completa</text>
+  <text x="585" y="120" text-anchor="middle" style="font-size:9px;fill:#059669;">onboarding</text>
+</g>
+
+<!-- G-U2: XOR tipo de plan -->
+<polygon points="676,110 694,92 712,110 694,128" fill="white" stroke="#d97706" stroke-width="1.5"/>
+<text x="683" y="88" style="font-size:9px;fill:#d97706;font-weight:700;">✕</text>
+<text x="694" y="144" text-anchor="middle" style="font-size:9px;fill:#92400e;">¿Tipo</text>
+<text x="694" y="155" text-anchor="middle" style="font-size:9px;fill:#92400e;">de plan?</text>
+
+<!-- T-U4: Accede dashboard COMPLETO (plan auto) -->
+<g class="nd" onclick="sendPrompt('¿Qué módulos incluye el dashboard completo del plan automático?')">
+  <rect x="1230" y="60" width="138" height="50" rx="5" fill="white" stroke="#059669" stroke-width="2"/>
+  <text x="1299" y="78" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#065f46;">Dashboard</text>
+  <text x="1299" y="91" text-anchor="middle" style="font-size:9px;fill:#059669;">completo</text>
+  <text x="1299" y="104" text-anchor="middle" style="font-size:9px;fill:#059669;">(pauta + módulos)</text>
+</g>
+
+<!-- T-U5: Accede dashboard PARCIAL (seguimiento/full) -->
+<g class="nd" onclick="sendPrompt('¿Qué puede hacer el usuario con acceso parcial al dashboard?')">
+  <rect x="1230" y="130" width="138" height="50" rx="5" fill="white" stroke="#d97706" stroke-width="2"/>
+  <text x="1299" y="148" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Dashboard</text>
+  <text x="1299" y="161" text-anchor="middle" style="font-size:9px;fill:#b45309;">parcial</text>
+  <text x="1299" y="174" text-anchor="middle" style="font-size:9px;fill:#b45309;">(sin pauta)</text>
+</g>
+
+<!-- E-FIN usuario -->
+<circle cx="1440" cy="110" r="15" fill="none" stroke="#e11d48" stroke-width="4"/>
+<text x="1440" y="138" text-anchor="middle" style="font-size:9px;fill:#be123c;">Usuario</text>
+<text x="1440" y="149" text-anchor="middle" style="font-size:9px;fill:#be123c;">activo</text>
+
+<!-- ── Flechas usuario ── -->
+<line x1="133" y1="110" x2="150" y2="110" stroke="#2563eb" stroke-width="1.3" marker-end="url(#ar)"/>
+<line x1="280" y1="110" x2="306" y2="110" stroke="#2563eb" stroke-width="1.3" marker-end="url(#ar)"/>
+<line x1="436" y1="110" x2="462" y2="110" stroke="#2563eb" stroke-width="1.3" marker-end="url(#ar)"/>
+<!-- Sí → completa -->
+<line x1="498" y1="110" x2="520" y2="110" stroke="#059669" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="501" y="106" style="font-size:8px;fill:#059669;">Sí</text>
+<!-- completa → tipo plan -->
+<line x1="650" y1="110" x2="676" y2="110" stroke="#059669" stroke-width="1.3" marker-end="url(#ar)"/>
+<!-- tipo plan auto → dashboard completo -->
+<path d="M694 92 L694 70 L1230 70" fill="none" stroke="#7c3aed" stroke-width="1.2" marker-end="url(#ar)"/>
+<text x="780" y="66" style="font-size:8px;fill:#7c3aed;">Automatizado</text>
+<!-- tipo plan seguim → dashboard parcial -->
+<path d="M694 128 L694 155 L1230 155" fill="none" stroke="#d97706" stroke-width="1.2" marker-end="url(#ar)"/>
+<text x="760" y="170" style="font-size:8px;fill:#d97706;">Seguimiento / Full</text>
+<!-- dashboards → fin -->
+<line x1="1368" y1="85"  x2="1425" y2="108" stroke="#059669" stroke-width="1.3" marker-end="url(#ar)"/>
+<line x1="1368" y1="155" x2="1425" y2="115" stroke="#d97706" stroke-width="1.3" marker-end="url(#ar)"/>
+
+<!-- ══════════════════════════════════════
+     SISTEMA LANE  (centro y ≈ 437)
+══════════════════════════════════════ -->
+
+<!-- T-S1: Asigna plan -->
+<g class="nd" onclick="sendPrompt('¿Qué configura el sistema al asignar el plan al usuario?')">
+  <rect x="90" y="270" width="130" height="50" rx="5" fill="white" stroke="#059669" stroke-width="1.5"/>
+  <text x="155" y="289" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#065f46;">Asigna plan</text>
+  <text x="155" y="302" text-anchor="middle" style="font-size:9px;fill:#059669;">al usuario</text>
+  <text x="155" y="314" text-anchor="middle" style="font-size:8px;fill:#6ee7b7;">→ estado: pendiente</text>
+</g>
+
+<!-- T-S2: Inicia onboarding -->
+<g class="nd" onclick="sendPrompt('¿Qué activa el sistema al iniciar el onboarding?')">
+  <rect x="250" y="270" width="130" height="50" rx="5" fill="white" stroke="#059669" stroke-width="1.5"/>
+  <text x="315" y="289" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#065f46;">Inicia onboarding</text>
+  <text x="315" y="302" text-anchor="middle" style="font-size:9px;fill:#059669;">envía email</text>
+  <text x="315" y="314" text-anchor="middle" style="font-size:8px;fill:#6ee7b7;">→ estado: onboarding</text>
+</g>
+
+<!-- T-S3: Guarda info onboarding -->
+<g class="nd" onclick="sendPrompt('¿Qué hace el motor nutricional con los datos del onboarding?')">
+  <rect x="520" y="270" width="130" height="50" rx="5" fill="white" stroke="#059669" stroke-width="1.5"/>
+  <text x="585" y="289" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#065f46;">Guarda info</text>
+  <text x="585" y="302" text-anchor="middle" style="font-size:9px;fill:#059669;">activa motor</text>
+  <text x="585" y="314" text-anchor="middle" style="font-size:8px;fill:#6ee7b7;">→ estado: procesando</text>
+</g>
+
+<!-- ── LOOP: No completa onboarding ── -->
+<!-- Contador recordatorios -->
+<g class="nd" onclick="sendPrompt('¿Cómo gestiona el sistema el contador de recordatorios de onboarding?')">
+  <rect x="250" y="390" width="130" height="50" rx="5" fill="#fff7ed" stroke="#d97706" stroke-width="1.5"/>
+  <text x="315" y="407" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Contador</text>
+  <text x="315" y="420" text-anchor="middle" style="font-size:9px;fill:#b45309;">recordatorios</text>
+  <text x="315" y="432" text-anchor="middle" style="font-size:8px;fill:#b45309;">intentos: 0→3</text>
+</g>
+
+<!-- G-S1: XOR ¿intentos < 3? -->
+<polygon points="412,415 430,397 448,415 430,433" fill="white" stroke="#d97706" stroke-width="1.5"/>
+<text x="419" y="393" style="font-size:9px;fill:#d97706;font-weight:700;">✕</text>
+<text x="430" y="448" text-anchor="middle" style="font-size:9px;fill:#92400e;">¿Intentos</text>
+<text x="430" y="459" text-anchor="middle" style="font-size:9px;fill:#92400e;">&lt; 3?</text>
+
+<!-- T-S4: Espera 24h y envía recordatorio -->
+<g class="nd" onclick="sendPrompt('¿Qué incluye el email recordatorio de onboarding?')">
+  <rect x="460" y="395" width="130" height="50" rx="5" fill="#fff7ed" stroke="#d97706" stroke-width="1.5"/>
+  <text x="525" y="412" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Espera 24h</text>
+  <text x="525" y="425" text-anchor="middle" style="font-size:9px;fill:#b45309;">envía recordatorio</text>
+  <text x="525" y="437" text-anchor="middle" style="font-size:8px;fill:#b45309;">intento +1</text>
+</g>
+
+<!-- T-S5: Marca estado INACTIVO -->
+<g class="nd" onclick="sendPrompt('¿Qué ocurre con el usuario cuando queda en estado inactivo?')">
+  <rect x="460" y="470" width="130" height="50" rx="5" fill="#fff1f2" stroke="#e11d48" stroke-width="1.5"/>
+  <text x="525" y="487" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#be123c;">Marca estado</text>
+  <text x="525" y="500" text-anchor="middle" style="font-size:9px;fill:#e11d48;">INACTIVO</text>
+  <text x="525" y="512" text-anchor="middle" style="font-size:8px;fill:#e11d48;">envía email final</text>
+</g>
+
+<!-- E-FIN inactivo -->
+<circle cx="640" cy="495" r="15" fill="none" stroke="#e11d48" stroke-width="4"/>
+<text x="640" y="520" text-anchor="middle" style="font-size:9px;fill:#be123c;">Fin flujo</text>
+<text x="640" y="531" text-anchor="middle" style="font-size:9px;fill:#be123c;">(inactivo)</text>
+
+<!-- ── Plan auto: IA genera pauta ── -->
+<g class="nd" onclick="sendPrompt('¿Qué algoritmo usa la IA para calcular la pauta nutricional?')">
+  <rect x="780" y="260" width="140" height="60" rx="5" fill="white" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="850" y="278" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#4c1d95;">IA calcula</text>
+  <text x="850" y="291" text-anchor="middle" style="font-size:9px;fill:#6d28d9;">requerimientos</text>
+  <text x="850" y="304" text-anchor="middle" style="font-size:9px;fill:#6d28d9;">genera pauta</text>
+  <text x="850" y="316" text-anchor="middle" style="font-size:8px;fill:#a78bfa;">→ estado: activo</text>
+</g>
+
+<!-- T-S6: Desbloquea dashboard completo -->
+<g class="nd" onclick="sendPrompt('¿Qué contenido se desbloquea en el dashboard completo?')">
+  <rect x="950" y="260" width="140" height="60" rx="5" fill="white" stroke="#059669" stroke-width="1.5"/>
+  <text x="1020" y="278" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#065f46;">Desbloquea</text>
+  <text x="1020" y="291" text-anchor="middle" style="font-size:9px;fill:#059669;">dashboard completo</text>
+  <text x="1020" y="304" text-anchor="middle" style="font-size:9px;fill:#059669;">pauta + módulos</text>
+  <text x="1020" y="316" text-anchor="middle" style="font-size:8px;fill:#6ee7b7;">→ estado: activo</text>
+</g>
+
+<!-- ── Plan seguimiento/full ── -->
+<!-- T-S7: Habilita acceso parcial -->
+<g class="nd" onclick="sendPrompt('¿Qué módulos quedan habilitados en el acceso parcial?')">
+  <rect x="780" y="360" width="140" height="50" rx="5" fill="white" stroke="#d97706" stroke-width="1.5"/>
+  <text x="850" y="378" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Habilita acceso</text>
+  <text x="850" y="391" text-anchor="middle" style="font-size:9px;fill:#b45309;">parcial dashboard</text>
+  <text x="850" y="403" text-anchor="middle" style="font-size:8px;fill:#fcd34d;">→ estado: parcial</text>
+</g>
+
+<!-- T-S8: Solicita agendamiento -->
+<g class="nd" onclick="sendPrompt('¿Cómo funciona el sistema de agendamiento de consulta?')">
+  <rect x="950" y="360" width="140" height="50" rx="5" fill="white" stroke="#d97706" stroke-width="1.5"/>
+  <text x="1020" y="378" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Solicita</text>
+  <text x="1020" y="391" text-anchor="middle" style="font-size:9px;fill:#b45309;">agendamiento</text>
+  <text x="1020" y="403" text-anchor="middle" style="font-size:8px;fill:#fcd34d;">envía recordatorio</text>
+</g>
+
+<!-- ── Flechas Sistema ── -->
+<line x1="220" y1="295" x2="250" y2="295" stroke="#059669" stroke-width="1.3" marker-end="url(#ar)"/>
+<line x1="380" y1="295" x2="520" y2="295" stroke="#059669" stroke-width="1.3" marker-end="url(#ar)" stroke-dasharray="4 2"/>
+
+<!-- No completa → contador -->
+<path d="M480 128 L480 180 L315 180 L315 390" fill="none" stroke="#e11d48" stroke-width="1.2" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="350" y="176" style="font-size:8px;fill:#e11d48;">No</text>
+
+<!-- contador → G-S1 -->
+<line x1="380" y1="415" x2="412" y2="415" stroke="#d97706" stroke-width="1.3" marker-end="url(#ar)"/>
+<!-- G-S1 sí (<3) → recordatorio -->
+<line x1="448" y1="415" x2="460" y2="415" stroke="#d97706" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="450" y="411" style="font-size:8px;fill:#059669;">Sí</text>
+<!-- recordatorio → loop vuelve a G-U1 -->
+<path d="M525 395 L525 360 L371 360 L371 130" fill="none" stroke="#d97706" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="374" y="356" style="font-size:8px;fill:#d97706;">↻ loop 24h</text>
+<!-- G-S1 no (≥3) → inactivo -->
+<path d="M430 433 L430 495 L460 495" fill="none" stroke="#e11d48" stroke-width="1.2" marker-end="url(#ar)"/>
+<text x="434" y="468" style="font-size:8px;fill:#e11d48;">No (≥3)</text>
+<!-- inactivo → E-FIN inactivo -->
+<line x1="590" y1="495" x2="625" y2="495" stroke="#e11d48" stroke-width="1.3" marker-end="url(#ar)"/>
+
+<!-- Sistema guarda → IA (plan auto) inter-lane desde G-U2 -->
+<path d="M585 270 L585 240 L850 240 L850 260" fill="none" stroke="#7c3aed" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<!-- IA → desbloquea -->
+<line x1="920" y1="290" x2="950" y2="290" stroke="#7c3aed" stroke-width="1.3" marker-end="url(#ar)"/>
+<!-- desbloquea → dashboard completo usuario (inter-lane) -->
+<path d="M1090 270 L1160 270 L1160 85 L1230 85" fill="none" stroke="#0d9488" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#ar)"/>
+<!-- plan seguim habilita → solicita -->
+<line x1="920" y1="385" x2="950" y2="385" stroke="#d97706" stroke-width="1.3" marker-end="url(#ar)"/>
+<!-- solicita agendamiento → nutricionista -->
+<path d="M1020 410 L1020 460 L1020 570 L1090 570 L1090 632" fill="none" stroke="#0d9488" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#ar)"/>
+<!-- habilita parcial → dashboard parcial usuario (inter-lane) -->
+<path d="M920 360 L960 360 L960 200 L1230 155" fill="none" stroke="#0d9488" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#ar)"/>
+
+<!-- Sistema guarda → habilita parcial (desde sistema onboarding) -->
+<path d="M585 320 L585 385 L780 385" fill="none" stroke="#059669" stroke-width="1.2" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="618" y="400" style="font-size:8px;fill:#d97706;">Seguim./Full</text>
+<path d="M585 260 L585 240 L850 240" fill="none" stroke="#7c3aed" stroke-width="1.1" stroke-dasharray="4 2"/>
+<text x="618" y="236" style="font-size:8px;fill:#7c3aed;">Auto</text>
+
+<!-- ══════════════════════════════════════
+     NUTRICIONISTA LANE
+══════════════════════════════════════ -->
+
+<!-- T-N1: Recibe solicitud consulta -->
+<g class="nd" onclick="sendPrompt('¿Qué información recibe la nutricionista al agendar una consulta?')">
+  <rect x="980" y="652" width="140" height="40" rx="5" fill="white" stroke="#d97706" stroke-width="1.5"/>
+  <text x="1050" y="669" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Recibe solicitud</text>
+  <text x="1050" y="682" text-anchor="middle" style="font-size:9px;fill:#b45309;">de consulta</text>
+</g>
+
+<!-- T-N2: Confirma / agenda hora -->
+<g class="nd" onclick="sendPrompt('¿Cómo confirma la nutricionista la hora de consulta?')">
+  <rect x="1150" y="652" width="140" height="40" rx="5" fill="white" stroke="#d97706" stroke-width="1.5"/>
+  <text x="1220" y="669" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Confirma</text>
+  <text x="1220" y="682" text-anchor="middle" style="font-size:9px;fill:#b45309;">y agenda hora</text>
+</g>
+
+<!-- T-N3: Realiza consulta + construye plan -->
+<g class="nd" onclick="sendPrompt('¿Qué hace la nutricionista durante la consulta con el plan full?')">
+  <rect x="1320" y="652" width="140" height="50" rx="5" fill="white" stroke="#d97706" stroke-width="1.5"/>
+  <text x="1390" y="669" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">Realiza consulta</text>
+  <text x="1390" y="682" text-anchor="middle" style="font-size:9px;fill:#b45309;">construye plan</text>
+  <text x="1390" y="695" text-anchor="middle" style="font-size:8px;fill:#b45309;">personalizado</text>
+</g>
+
+<!-- E-FIN nutric: plan entregado → desbloquea dashboard completo -->
+<circle cx="1490" cy="677" r="12" fill="none" stroke="#e11d48" stroke-width="3.5"/>
+<text x="1490" y="702" text-anchor="middle" style="font-size:9px;fill:#be123c;">Plan</text>
+<text x="1490" y="713" text-anchor="middle" style="font-size:9px;fill:#be123c;">entregado</text>
+
+<!-- Flechas nutricionista -->
+<line x1="1120" y1="672" x2="1150" y2="672" stroke="#d97706" stroke-width="1.3" marker-end="url(#ar)"/>
+<line x1="1290" y1="672" x2="1320" y2="672" stroke="#d97706" stroke-width="1.3" marker-end="url(#ar)"/>
+<line x1="1460" y1="677" x2="1478" y2="677" stroke="#d97706" stroke-width="1.3" marker-end="url(#ar)"/>
+
+<!-- Plan entregado → desbloquea dashboard completo (inter-lane) -->
+<path d="M1490 665 L1490 155 L1368 155" fill="none" stroke="#0d9488" stroke-width="1.1" stroke-dasharray="5 3" marker-end="url(#ar)"/>
+<text x="1494" y="420" style="font-size:8px;fill:#0d9488;writing-mode:vertical-rl;">desbloquea dashboard</text>
+
+<!-- ══════════════════════════════════════
+     ESTADOS LANE  (y ≈ 890)
+══════════════════════════════════════ -->
+
+<!-- Estado: PENDIENTE -->
+<g class="nd" onclick="sendPrompt('¿Qué puede hacer el usuario en estado pendiente?')">
+  <rect x="90" y="830" width="140" height="38" rx="18" fill="#fef3c7" stroke="#d97706" stroke-width="1.2"/>
+  <text x="160" y="845" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">PENDIENTE</text>
+  <text x="160" y="858" text-anchor="middle" style="font-size:8px;fill:#b45309;">plan asignado, sin onboarding</text>
+</g>
+
+<!-- Estado: ONBOARDING -->
+<g class="nd" onclick="sendPrompt('¿Cuánto tiempo tiene el usuario para completar el onboarding?')">
+  <rect x="260" y="830" width="140" height="38" rx="18" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.2"/>
+  <text x="330" y="845" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#0369a1;">ONBOARDING</text>
+  <text x="330" y="858" text-anchor="middle" style="font-size:8px;fill:#0284c7;">formulario activo</text>
+</g>
+
+<!-- Estado: PROCESANDO -->
+<g class="nd" onclick="sendPrompt('¿Qué hace el motor nutricional durante el procesamiento?')">
+  <rect x="430" y="830" width="140" height="38" rx="18" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.2"/>
+  <text x="500" y="845" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#4c1d95;">PROCESANDO</text>
+  <text x="500" y="858" text-anchor="middle" style="font-size:8px;fill:#6d28d9;">motor IA activo</text>
+</g>
+
+<!-- Estado: PARCIAL -->
+<g class="nd" onclick="sendPrompt('¿Por cuánto tiempo puede estar el usuario en estado parcial?')">
+  <rect x="600" y="830" width="140" height="38" rx="18" fill="#fff7ed" stroke="#d97706" stroke-width="1.2"/>
+  <text x="670" y="845" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#92400e;">PARCIAL</text>
+  <text x="670" y="858" text-anchor="middle" style="font-size:8px;fill:#b45309;">dashboard sin pauta</text>
+</g>
+
+<!-- Estado: INACTIVO -->
+<g class="nd" onclick="sendPrompt('¿Puede el usuario volver a activarse desde el estado inactivo?')">
+  <rect x="770" y="830" width="140" height="38" rx="18" fill="#fff1f2" stroke="#e11d48" stroke-width="1.2"/>
+  <text x="840" y="845" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#be123c;">INACTIVO</text>
+  <text x="840" y="858" text-anchor="middle" style="font-size:8px;fill:#e11d48;">3 recordatorios sin respuesta</text>
+</g>
+
+<!-- Estado: ACTIVO (auto) -->
+<g class="nd" onclick="sendPrompt('¿Qué puede hacer el usuario en estado activo con plan automático?')">
+  <rect x="940" y="820" width="160" height="38" rx="18" fill="#dcfce7" stroke="#059669" stroke-width="1.8"/>
+  <text x="1020" y="835" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#065f46;">ACTIVO</text>
+  <text x="1020" y="848" text-anchor="middle" style="font-size:8px;fill:#059669;">plan automático completo</text>
+</g>
+
+<!-- Estado: ACTIVO (nutric) -->
+<g class="nd" onclick="sendPrompt('¿Cómo se diferencia el estado activo del plan full vs automático?')">
+  <rect x="1130" y="860" width="180" height="38" rx="18" fill="#dcfce7" stroke="#d97706" stroke-width="1.8"/>
+  <text x="1220" y="875" text-anchor="middle" style="font-size:9px;font-weight:600;fill:#065f46;">ACTIVO</text>
+  <text x="1220" y="888" text-anchor="middle" style="font-size:8px;fill:#b45309;">plan nutricionista completo</text>
+</g>
+
+<!-- flechas estados -->
+<line x1="230" y1="849" x2="260" y2="849" stroke="#64748b" stroke-width="1.1" marker-end="url(#ar)"/>
+<line x1="400" y1="849" x2="430" y2="849" stroke="#64748b" stroke-width="1.1" marker-end="url(#ar)"/>
+<!-- procesando → activo (auto) -->
+<line x1="570" y1="849" x2="600" y2="849" stroke="#64748b" stroke-width="1.1" marker-end="url(#ar)"/>
+<line x1="740" y1="849" x2="770" y2="849" stroke="#e11d48" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<line x1="910" y1="849" x2="940" y2="839" stroke="#059669" stroke-width="1.1" marker-end="url(#ar)"/>
+<line x1="1100" y1="839" x2="1130" y2="872" stroke="#d97706" stroke-width="1.1" marker-end="url(#ar)"/>
+
+<!-- conectores verticales de estados con eventos del sistema -->
+<path d="M155 295 L155 868" fill="none" stroke="#64748b" stroke-width="0.7" stroke-dasharray="3 3"/>
+<path d="M315 295 L330 295 L330 830" fill="none" stroke="#64748b" stroke-width="0.7" stroke-dasharray="3 3"/>
+<path d="M525 295 L500 295 L500 830" fill="none" stroke="#64748b" stroke-width="0.7" stroke-dasharray="3 3"/>
+<path d="M525 495 L840 495 L840 868" fill="none" stroke="#e11d48" stroke-width="0.7" stroke-dasharray="3 3"/>
+<path d="M850 320 L850 848 L940 848" fill="none" stroke="#7c3aed" stroke-width="0.7" stroke-dasharray="3 3"/>
+<path d="M850 410 L670 410 L670 830" fill="none" stroke="#d97706" stroke-width="0.7" stroke-dasharray="3 3"/>
+
+<!-- ══════════════════════════════════════
+     LEYENDA
+══════════════════════════════════════ -->
+<rect x="90" y="920" width="1400" height="50" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="0.8"/>
+
+<circle cx="120" cy="945" r="8" fill="none" stroke="#059669" stroke-width="2.2"/>
+<text x="134" y="949" style="font-size:8px;fill:#475569;">Inicio</text>
+
+<circle cx="188" cy="945" r="8" fill="none" stroke="#e11d48" stroke-width="3.5"/>
+<text x="202" y="949" style="font-size:8px;fill:#475569;">Fin</text>
+
+<rect x="242" y="937" width="32" height="16" rx="3" fill="white" stroke="#2563eb" stroke-width="1.3"/>
+<text x="280" y="949" style="font-size:8px;fill:#475569;">Tarea usuario/sistema</text>
+
+<rect x="390" y="937" width="32" height="16" rx="3" fill="white" stroke="#7c3aed" stroke-width="1.3"/>
+<text x="428" y="949" style="font-size:8px;fill:#475569;">Tarea IA</text>
+
+<rect x="490" y="937" width="32" height="16" rx="3" fill="white" stroke="#d97706" stroke-width="1.3"/>
+<text x="528" y="949" style="font-size:8px;fill:#475569;">Tarea nutricionista</text>
+
+<polygon points="618,945 630,933 642,945 630,957" fill="white" stroke="#d97706" stroke-width="1.3"/>
+<text x="628" y="930" style="font-size:8px;fill:#d97706;font-weight:700;">✕</text>
+<text x="648" y="949" style="font-size:8px;fill:#475569;">Gateway XOR</text>
+
+<line x1="730" y1="945" x2="770" y2="945" stroke="#2563eb" stroke-width="1.3" marker-end="url(#ar)"/>
+<text x="778" y="949" style="font-size:8px;fill:#475569;">Flujo secuencia</text>
+
+<line x1="866" y1="945" x2="906" y2="945" stroke="#0d9488" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="914" y="949" style="font-size:8px;fill:#475569;">Flujo inter-lane</text>
+
+<line x1="1010" y1="945" x2="1050" y2="945" stroke="#e11d48" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="1058" y="949" style="font-size:8px;fill:#475569;">Flujo error/inactivo</text>
+
+<line x1="1164" y1="945" x2="1204" y2="945" stroke="#d97706" stroke-width="1.1" stroke-dasharray="4 2" marker-end="url(#ar)"/>
+<text x="1212" y="949" style="font-size:8px;fill:#475569;">Loop recordatorio</text>
+
+<text x="1360" y="949" style="font-size:8px;fill:#94a3b8;font-style:italic;">Clic en cualquier elemento para explorar</text>
+</svg>
+</div>

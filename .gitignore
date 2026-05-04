@@ -1,6 +1,7 @@
 # Environment and secrets
 .env
 *.env
+.env.*
 gmaipassword.txt
 
 # Python
@@ -46,3 +47,15 @@ nul
 *.temp
 _pdf_pages/
 listabugsmarzoabril.pdf
+
+# Node / Firebase
+node_modules/
+dist/
+boilerplate/boilerplate/functions/lib/
+.firebase/
+*.cache
+firebase-debug.log
+firebase-debug.*.log
+
+# Reference images (keep local only)
+images/refprototipos/

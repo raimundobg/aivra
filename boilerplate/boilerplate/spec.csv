@@ -1,0 +1,50 @@
+id,feature,page/component,status,priority,notes
+1,Landing page — hero + planes + profesionales,LandingPage,done,high,3 planes con CTA por rol
+2,Login email/password,LoginPage,done,high,redirige por rol + onboardingCompleted check
+3,Login Google SSO,LoginPage,done,high,preserva rol existente
+4,Register paciente,RegisterPage,done,high,campos: nombre/tel/email/nacimiento/pais/pass
+5,Register nutricionista,RegisterPage,done,high,chips especialidades + modalidad + registro profesional
+6,Onboarding 7 pasos,OnboardingPage,done,high,guarda en users/{uid}/intake/form + onboardingCompleted:true
+7,Redirect nuevo paciente → onboarding,LoginPage + AuthProvider,done,high,bug fix: login chequeaba rol pero no onboardingCompleted
+8,Dashboard paciente,DashboardPage,done,high,lee mediciones reales + macros desde pauta/current
+9,Pauta nutricional (tabs),PautaPage,done,high,lee users/{uid}/pauta/current — empty state si no hay pauta
+10,Seguimiento de progreso + gráficos,ProgresoPage,done,high,Firestore users/{uid}/mediciones — guarda + lee real
+11,Chat paciente en tiempo real,ChatPage,done,high,Firestore conversations/{uid}/messages — AI reply pendiente
+12,Registro de hábitos diarios,HabitsPage,done,medium,Firestore users/{uid}/habits/{date} — historial semanal mock
+13,Perfil del paciente,ProfilePage,done,medium,menú items sin funcionalidad real aún
+14,Dashboard nutricionista — lista pacientes,NutricionistaPage,done,high,lee users donde role=patient
+15,Ficha clínica paciente (nutricionista),NutricionistaPage,done,high,lee users/{uid}/intake/form
+16,Chat nutricionista → paciente,NutricionistaPage,done,high,escribe en conversations/{uid}/messages con sender:nutritionist
+17,Generar pauta con IA (onboarding),OnboardingPage + groq.ts,done,high,Groq genera pauta al finalizar onboarding → escribe users/{uid}/pauta/current
+18,Navbar compartida paciente,PatientNav,done,medium,useLocation para active link automático
+19,Bottom nav mobile (5 tabs),BottomNav,done,medium,Inicio/Pauta/Progreso/Chat/Perfil
+20,Firebase Auth configurado,firebase.ts + AuthProvider,done,high,Email+Password + Google SSO activos
+21,Firestore schema,AuthProvider + hooks,done,high,users/{uid} / habits/{date} / intake/form / pauta/current / conversations
+22,Firestore Security Rules,firestore.rules,done,high,paciente lee solo lo suyo — nutricionista lee todo
+23,Firebase Hosting deploy,firebase.json,done,high,https://aivra-370c4.web.app
+24,Email bienvenida paciente,functions/src/email.ts,done,medium,trigger onPatientCreated — via Resend API
+25,Email onboarding completo → nutricionista,functions/src/index.ts,done,medium,trigger onOnboardingCompleted
+26,Email nuevo mensaje chat → nutricionista,functions/src/index.ts,done,medium,throttle 10min por paciente
+27,Cloud Functions deploy,functions/,pending,high,requiere Firebase Blaze plan + firebase deploy --only functions
+28,Conectar Dashboard a Firestore real,DashboardPage,done,high,mediciones + macros desde Firestore en vez de mock
+29,Conectar Pauta a Firestore real,PautaPage,done,high,leer users/{uid}/pauta/current escrito por nutricionista
+30,Conectar Progreso a Firestore real,ProgresoPage,done,medium,mediciones desde subcolección users/{uid}/mediciones
+31,AI reply en chat,ChatPage + groq.ts,done,high,Groq llama-3.3-70b responde con contexto de pauta + intake — frontend directo
+32,Historial semanal hábitos desde Firestore,HabitsPage + useHabits,done,medium,últimos 7 días reales + adherencia + racha en Dashboard
+33,Perfil — editar datos personales,ProfilePage,done,low,formulario editar displayName/phone/birthDate
+34,Notificaciones push (FCM),pending,pending,low,opcional — Firebase Cloud Messaging
+35,Dominio custom (aivra.cl),Firebase Hosting,pending,medium,conectar en Hosting → Custom domain
+36,Página selección de plan post-onboarding,PlanSelectionPage (/planes),done,high,Flujo 13: Freemium / Plan IA / Plan Full — guarda users/{uid}.plan — redirige desde finish() del onboarding
+37,Onboarding — diagnósticos multi-select con chips,OnboardingPage Step2,done,high,Reunión 27/04: reemplazar Textarea por chips + texto libre — lista diagnósticos chilenos comunes precargados
+38,Onboarding — actividad física multi-select,OnboardingPage Step4,done,high,Reunión 27/04: actividadFisica pasa a actividadFisicas[] con toggle() — hoy usa set() (single select)
+39,Onboarding — objetivo multi-selección,OnboardingPage Step7,done,medium,Reunión 27/04: permitir selección de más de un objetivo en lugar de uno solo
+40,Onboarding — Bristol scale con explicación visual,OnboardingPage Step5,done,medium,Reunión 27/04: agregar descripción/imagen de qué es la escala de Bristol antes de las opciones
+41,Onboarding — remover preferenciaSegimiento,OnboardingPage Step7,done,high,Reunión 27/04: campo pertenece a PlanSelectionPage — borrar de interfaz y de OnboardingData
+42,Onboarding — agregar peso y talla (datos antropométricos),OnboardingPage Step1,done,high,Flujo 12 BPMN: peso+talla son críticos para calcular TMB y déficit calórico — actualmente no se capturan
+43,Red flags triage system (Plan Automatizado gatekeeper),groq.ts + OnboardingPage,done,high,Flujo 4 BPMN: árbol 4 salidas (apto / apto con revisión / no apto / incompleto) — para MVP: exclusiones absolutas + alertas leves que modifican el plan generado
+44,Menú semanal generado con IA,DashboardPage + groq.ts,done,high,Reunión 27/04: feature más votado — sección en dashboard con menú 7 días generado por Groq desde pauta/current
+45,EFC (Encuesta de Frecuencia de Consumo),OnboardingPage Step6 o nuevo step,done,medium,Flujos 3 y 4 BPMN: frecuencia de consumo por grupo alimentario — genera alertas automáticas de calidad dietaria
+46,Onboarding — guardado parcial entre sesiones,OnboardingPage,done,medium,Flujo 2 BPMN: guardar progreso si usuario abandona — recargar al volver — recordatorios si no termina en 7 días
+47,Plan Freemium — experiencia demo sin pauta real,LandingPage + DashboardPage,pending,low,Flujo 13 BPMN: contenido educativo + ejemplo de plan bloqueado + triggers de upgrade — sin Groq AI real
+48,Agendamiento de consulta (Plan Full),AgendamientoPage,pending,low,Flujo Agendamiento BPMN: calendario disponibilidad nutricionista + recordatorios 24h y 2h — solo relevante cuando exista Plan Full con más de un nutricionista
+49,Generación de pauta — cálculo nutricional real,groq.ts,done,medium,Flujo 12 BPMN: usar Harris-Benedict + factor actividad para calcular GET → déficit 200-400kcal → macros (proteína 1.6-2.2g/kg) en lugar de solo prompt libre al LLM
