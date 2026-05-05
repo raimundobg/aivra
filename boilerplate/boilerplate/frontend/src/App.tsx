@@ -10,6 +10,7 @@ import PautaPage from './pages/PautaPage'
 import ProgresoPage from './pages/ProgresoPage'
 import ChatPage from './pages/ChatPage'
 import HabitsPage from './pages/HabitsPage'
+import HabitsPersonalizePage from './pages/HabitsPersonalizePage'
 import ProfilePage from './pages/ProfilePage'
 import NutricionistaPage from './pages/NutricionistaPage'
 import PlanSelectionPage from './pages/PlanSelectionPage'
@@ -68,6 +69,7 @@ export default function App() {
       <Route path="/progreso" element={<PatientRoute><ProgresoPage /></PatientRoute>} />
       <Route path="/chat" element={<PatientRoute><ChatPage /></PatientRoute>} />
       <Route path="/habitos" element={<PatientRoute><HabitsPage /></PatientRoute>} />
+      <Route path="/habitos/personalizar" element={<PatientRoute><HabitsPersonalizePage /></PatientRoute>} />
       <Route path="/perfil" element={<PatientRoute><ProfilePage /></PatientRoute>} />
       <Route path="/recetas" element={<PatientRoute><RecipesPage /></PatientRoute>} />
       <Route path="/lista-compras" element={<PatientRoute><ShoppingListPage /></PatientRoute>} />

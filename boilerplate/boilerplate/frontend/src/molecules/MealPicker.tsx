@@ -8,12 +8,14 @@ const C = { green: '#5F6F52', greenLight: '#eef2ea', cream: '#F9F4EF', border: '
 interface MealPickerProps {
   mealName: string
   emoji: string
-  value: AlimentoSeleccionado[]
+  value: AlimentoSeleccionado[] | unknown
   onChange: (foods: AlimentoSeleccionado[]) => void
   placeholder: string
 }
 
 export function MealPicker({ mealName, emoji, value, onChange, placeholder }: MealPickerProps) {
+  // Defensive: ensure value is always an array (legacy data may be a string)
+  const items: AlimentoSeleccionado[] = Array.isArray(value) ? value : []
   const [alimentos, setAlimentos] = useState<Alimento[]>([])
   const [search, setSearch] = useState('')
   const [searchResults, setSearchResults] = useState<Alimento[]>([])
@@ -45,32 +47,26 @@ export function MealPicker({ mealName, emoji, value, onChange, placeholder }: Me
 
   function addFood(food: Alimento) {
     const totals = calculateAlimentoTotals(food, 1)
-    const selected: AlimentoSeleccionado = {
-      ...food,
-      ...totals,
-    }
-    onChange([...value, selected])
+    const selected: AlimentoSeleccionado = { ...food, ...totals }
+    onChange([...items, selected])
     setSearch('')
     setSearchResults([])
     setShowResults(false)
   }
 
   function updatePorciones(idx: number, porciones: number) {
-    const food = value[idx]
+    const food = items[idx]
     const totals = calculateAlimentoTotals(food, porciones)
-    const updated = [...value]
-    updated[idx] = {
-      ...food,
-      ...totals,
-    }
+    const updated = [...items]
+    updated[idx] = { ...food, ...totals }
     onChange(updated)
   }
 
   function removeFood(idx: number) {
-    onChange(value.filter((_, i) => i !== idx))
+    onChange(items.filter((_, i) => i !== idx))
   }
 
-  const totalKcal = value.reduce((sum, f) => sum + f.kcal_total, 0)
+  const totalKcal = items.reduce((sum, f) => sum + (f.kcal_total ?? 0), 0)
 
   return (
     <Box p={4} borderRadius="xl" borderWidth="1px" borderColor={C.border} bg="white">
@@ -117,9 +113,9 @@ export function MealPicker({ mealName, emoji, value, onChange, placeholder }: Me
       </Box>
 
       {/* Selected foods */}
-      {value.length > 0 && (
+      {items.length > 0 && (
         <Stack gap={2} mb={3}>
-          {value.map((food, idx) => (
+          {items.map((food, idx) => (
             <Box key={idx} p={2.5} bg={C.cream} borderRadius="lg" borderWidth="1px" borderColor={C.border}>
               <Flex justify="space-between" align="start" mb={1.5} gap={2}>
                 <Box flex={1}>
@@ -159,7 +155,7 @@ export function MealPicker({ mealName, emoji, value, onChange, placeholder }: Me
                   </Button>
                 </Flex>
                 <Text fontSize="xs" fontWeight="600" color={C.green} ml="auto">
-                  {food.kcal_total.toFixed(0)} kcal
+                  {(food.kcal_total ?? 0).toFixed(0)} kcal
                 </Text>
               </Flex>
             </Box>
@@ -168,15 +164,15 @@ export function MealPicker({ mealName, emoji, value, onChange, placeholder }: Me
       )}
 
       {/* Summary */}
-      {value.length > 0 && (
+      {items.length > 0 && (
         <Box p={2} bg={C.greenLight} borderRadius="lg">
           <Text fontSize="xs" color={C.green} fontWeight="600">
-            Total: {totalKcal.toFixed(0)} kcal | P:{value.reduce((s, f) => s + f.proteinas_total, 0).toFixed(0)}g C:{value.reduce((s, f) => s + f.carbohidratos_total, 0).toFixed(0)}g F:{value.reduce((s, f) => s + f.lipidos_total, 0).toFixed(0)}g
+            Total: {totalKcal.toFixed(0)} kcal | P:{items.reduce((s, f) => s + (f.proteinas_total ?? 0), 0).toFixed(0)}g C:{items.reduce((s, f) => s + (f.carbohidratos_total ?? 0), 0).toFixed(0)}g F:{items.reduce((s, f) => s + (f.lipidos_total ?? 0), 0).toFixed(0)}g
           </Text>
         </Box>
       )}
 
-      {value.length === 0 && !search && (
+      {items.length === 0 && !search && (
         <Text fontSize="xs" color={C.muted}>Busca alimentos para agregar a esta comida</Text>
       )}
     </Box>

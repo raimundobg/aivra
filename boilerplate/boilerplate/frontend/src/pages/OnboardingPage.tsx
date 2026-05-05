@@ -603,7 +603,18 @@ export default function OnboardingPage() {
         const saved = snap.data() as Partial<IntakeData> & { lastStep?: number }
         const lastStep = saved.lastStep ?? 0
         if (lastStep < STEPS.length - 1) {
-          setData({ ...empty, ...saved, efc: saved.efc ?? {} })
+          // Sanitize: legacy data may have meal fields as strings or array fields as strings
+          const arrayKeys: ArrayKey[] = [
+            'diagnosticos', 'diagnosticosOtros', 'medicamentos', 'suplementos', 'cirugias',
+            'antecedenteFamiliar', 'restricciones', 'alergias', 'actividadFisicas', 'sintomasGI',
+            'desayuno', 'colacion_am', 'almuerzo', 'colacion_pm', 'cena', 'objetivos',
+          ]
+          const sanitized: Partial<IntakeData> = { ...saved }
+          for (const k of arrayKeys) {
+            const v = (sanitized as Record<string, unknown>)[k]
+            if (!Array.isArray(v)) (sanitized as Record<string, unknown>)[k] = []
+          }
+          setData({ ...empty, ...sanitized, efc: saved.efc ?? {} })
           setStep(lastStep)
         }
       }
@@ -616,11 +627,9 @@ export default function OnboardingPage() {
 
   function toggle(k: ArrayKey, v: string) {
     setData(prev => {
-      const arr = prev[k] as string[] | AlimentoSeleccionado[]
-      if (Array.isArray(arr) && arr.length > 0 && typeof arr[0] === 'string') {
-        return { ...prev, [k]: (arr as string[]).includes(v) ? (arr as string[]).filter(x => x !== v) : [...arr as string[], v] }
-      }
-      return prev
+      const arr = prev[k] as string[]
+      if (!Array.isArray(arr)) return prev
+      return { ...prev, [k]: arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v] }
     })
   }
 

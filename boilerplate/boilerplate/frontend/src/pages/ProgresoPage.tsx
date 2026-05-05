@@ -6,10 +6,25 @@ import { ref as storageRef, uploadBytesResumable, getDownloadURL, listAll } from
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { db, storage } from '../config/firebase'
 import { useAuth } from '../providers/AuthProvider'
+import { useHabits, type HabitLog } from '../hooks/useHabits'
 import AppLayout from '../app/AppLayout'
 import PatientNav from '../organisms/PatientNav'
 
-const C = { green: '#3d5a3e', greenLight: '#f0f4f0', tan: '#8b6914', cream: '#faf9f7', border: '#e8e4df', text: '#1a1a1a', muted: '#6b6b6b' }
+type Period = 'semana' | 'mes' | '3meses' | 'año'
+
+const PERIOD_DAYS: Record<Period, number> = { semana: 7, mes: 30, '3meses': 90, 'año': 365 }
+const PERIOD_LABELS: Record<Period, string> = { semana: 'Semana', mes: 'Mes', '3meses': '3 meses', 'año': 'Año' }
+
+const HABIT_LABELS: Record<keyof HabitLog, { icon: string; label: string }> = {
+  agua: { icon: '💧', label: 'Agua' },
+  sueno: { icon: '😴', label: 'Sueño' },
+  estres: { icon: '🧘', label: 'Estrés' },
+  actividad: { icon: '🏃', label: 'Actividad' },
+  frutasVerduras: { icon: '🥦', label: 'Frutas y verduras' },
+  digestion: { icon: '🌿', label: 'Digestión' },
+}
+
+const C = { green: '#5F6F52', greenDark: '#4a5740', greenLight: '#eef2ea', tan: '#8b6914', cream: '#F9F4EF', beige: '#E9DFD3', rose: '#C6A28F', border: 'rgba(95,111,82,0.15)', text: '#2D3319', muted: '#7a7264', amber: '#fbbf24' }
 
 interface Medicion {
   id: string
@@ -40,7 +55,9 @@ interface FotoProgreso {
 
 export default function ProgresoPage() {
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState<'mediciones' | 'fotos'>('mediciones')
+  const [activeTab, setActiveTab] = useState<'adherencia' | 'mediciones' | 'fotos'>('adherencia')
+  const [period, setPeriod] = useState<Period>('semana')
+  const { weekHistory, adherence } = useHabits(user?.uid)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [historial, setHistorial] = useState<Medicion[]>([])
@@ -185,18 +202,129 @@ export default function ProgresoPage() {
           </Text>
 
           {/* Tabs */}
-          <Box bg="white" borderRadius="full" p={1} borderWidth="1px" borderColor={C.border} mb={6} maxW="300px">
-            <Grid templateColumns="1fr 1fr">
-              {([['mediciones', 'Mediciones'], ['fotos', 'Fotos de Progreso']] as const).map(([t, l]) => (
+          <Box bg="white" borderRadius="full" p={1} borderWidth="1px" borderColor={C.border} mb={6}>
+            <Grid templateColumns="1fr 1fr 1fr" gap={1}>
+              {([['adherencia', 'Adherencia'], ['mediciones', 'Mediciones'], ['fotos', 'Fotos']] as const).map(([t, l]) => (
                 <Box key={t} py={2} textAlign="center" borderRadius="full" cursor="pointer"
                   bg={activeTab === t ? C.green : 'transparent'} color={activeTab === t ? 'white' : C.muted}
-                  fontWeight={activeTab === t ? '700' : '400'} fontSize="sm"
+                  fontWeight={activeTab === t ? '700' : '500'} fontSize="xs"
                   onClick={() => setActiveTab(t)} transition="all 0.2s">
                   {l}
                 </Box>
               ))}
             </Grid>
           </Box>
+
+          {activeTab === 'adherencia' && (
+            <Stack gap={5}>
+              {/* Period selector */}
+              <Flex gap={2} flexWrap="wrap">
+                {(Object.keys(PERIOD_LABELS) as Period[]).map(p => (
+                  <Box
+                    key={p}
+                    onClick={() => setPeriod(p)}
+                    px={4} py={1.5} borderRadius="full" cursor="pointer"
+                    bg={period === p ? C.green : 'white'}
+                    borderWidth="1px"
+                    borderColor={period === p ? C.green : C.border}
+                    transition="all 0.15s"
+                  >
+                    <Text fontSize="xs" fontWeight="700" color={period === p ? 'white' : C.muted}>
+                      {PERIOD_LABELS[p]}
+                    </Text>
+                  </Box>
+                ))}
+              </Flex>
+
+              {/* Adherence circle + chart */}
+              <Box bg="white" borderRadius="2xl" p={5} borderWidth="1px" borderColor={C.border}>
+                <Text fontFamily="heading" fontWeight="700" color={C.text} mb={4}>
+                  Adherencia al plan
+                </Text>
+                <Flex align="center" gap={5} mb={5}>
+                  <Box position="relative" w="100px" h="100px" flexShrink={0}>
+                    <svg width="100" height="100" style={{ transform: 'rotate(-90deg)' }}>
+                      <circle cx="50" cy="50" r="42" stroke={C.greenLight} strokeWidth="10" fill="none" />
+                      <circle
+                        cx="50" cy="50" r="42" stroke={C.green} strokeWidth="10" fill="none"
+                        strokeDasharray={2 * Math.PI * 42}
+                        strokeDashoffset={2 * Math.PI * 42 * (1 - adherence / 100)}
+                        strokeLinecap="round"
+                        style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                      />
+                    </svg>
+                    <Flex position="absolute" inset={0} align="center" justify="center" direction="column">
+                      <Text fontFamily="heading" fontWeight="800" fontSize="xl" color={C.green} lineHeight="1">{adherence}%</Text>
+                    </Flex>
+                  </Box>
+                  <Box flex={1}>
+                    <Text fontSize="sm" color={C.text} fontWeight="600" mb={1}>
+                      {adherence >= 80 ? '🎉 ¡Excelente!' : adherence >= 60 ? '💪 Vas bien' : adherence >= 40 ? '🌱 Podés mejorar' : '🌿 Empezá hoy'}
+                    </Text>
+                    <Text fontSize="xs" color={C.muted} lineHeight="1.5">
+                      Última {PERIOD_LABELS[period].toLowerCase()}: registraste hábitos {Math.round((adherence / 100) * PERIOD_DAYS[period])} de {PERIOD_DAYS[period]} días.
+                    </Text>
+                  </Box>
+                </Flex>
+
+                {/* Mini line chart of last 7 days */}
+                <Box mb={1}>
+                  <Text fontSize="xs" color={C.muted} fontWeight="600" mb={2}>Últimos 7 días</Text>
+                  <ResponsiveContainer width="100%" height={120}>
+                    <LineChart data={weekHistory.map(d => ({
+                      day: d.day,
+                      score: ((d.agua + d.sueno + d.actividad + d.frutasVerduras + d.digestion + (10 - d.estres)) / 60) * 100,
+                    }))}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                      <XAxis dataKey="day" tick={{ fontSize: 10, fill: C.muted }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10, fill: C.muted }} axisLine={false} tickLine={false} domain={[0, 100]} />
+                      <Tooltip formatter={(v: unknown) => [`${Math.round(Number(v))}%`, 'Adherencia']}
+                        contentStyle={{ borderRadius: 12, fontSize: 12, border: `1px solid ${C.border}` }} />
+                      <Line type="monotone" dataKey="score" stroke={C.green} strokeWidth={2.5}
+                        dot={{ fill: C.green, r: 3 }} activeDot={{ r: 5 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Box>
+
+              {/* Hábitos más consistentes */}
+              <Box bg="white" borderRadius="2xl" p={5} borderWidth="1px" borderColor={C.border}>
+                <Text fontFamily="heading" fontWeight="700" color={C.text} mb={4}>
+                  Hábitos más consistentes
+                </Text>
+                <Stack gap={3}>
+                  {(Object.keys(HABIT_LABELS) as Array<keyof HabitLog>)
+                    .map(key => {
+                      const values = weekHistory.map(d => d[key])
+                      const avg = values.reduce((a, b) => a + b, 0) / Math.max(values.length, 1)
+                      const pct = Math.round((avg / 10) * 100)
+                      return { key, ...HABIT_LABELS[key], pct }
+                    })
+                    .sort((a, b) => b.pct - a.pct)
+                    .map(h => (
+                      <Box key={h.key}>
+                        <Flex justify="space-between" align="center" mb={1.5}>
+                          <Flex align="center" gap={2}>
+                            <Text fontSize="md">{h.icon}</Text>
+                            <Text fontSize="sm" color={C.text} fontWeight="600">{h.label}</Text>
+                          </Flex>
+                          <Text fontSize="sm" fontWeight="700" color={h.pct >= 70 ? C.green : h.pct >= 40 ? C.amber : C.muted}>
+                            {h.pct}%
+                          </Text>
+                        </Flex>
+                        <Box h={1.5} bg={C.greenLight} borderRadius="full" overflow="hidden">
+                          <Box
+                            h="full" borderRadius="full"
+                            bg={h.pct >= 70 ? C.green : h.pct >= 40 ? C.amber : C.rose}
+                            style={{ width: `${h.pct}%`, transition: 'width 0.5s' }}
+                          />
+                        </Box>
+                      </Box>
+                    ))}
+                </Stack>
+              </Box>
+            </Stack>
+          )}
 
           {activeTab === 'mediciones' && (
             <Stack gap={5}>
