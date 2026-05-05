@@ -74,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         displayName: u.displayName ?? '',
         photoURL: u.photoURL ?? '',
         role: r,
+        plan: r === 'patient' ? 'premium' : null,
         onboardingCompleted: false,
         createdAt: serverTimestamp(),
         ...extra,

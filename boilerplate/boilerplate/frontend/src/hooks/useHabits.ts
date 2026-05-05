@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../config/firebase'
+import { markActiveToday } from '../utils/activity'
 
 export interface HabitLog {
   agua: number
@@ -95,6 +96,7 @@ export function useHabits(uid: string | undefined) {
       ...habits,
       savedAt: serverTimestamp(),
     })
+    await markActiveToday(uid)
     setSaving(false)
   }
 

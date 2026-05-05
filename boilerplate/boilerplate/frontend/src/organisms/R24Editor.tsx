@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Box, Button, Flex, Grid, Heading, Input, Stack, Text } from '@chakra-ui/react'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../config/firebase'
+import { markActiveToday } from '../utils/activity'
 import type { Alimento, AlimentoSeleccionado, MealKey } from '../types/nutrition'
 import { MEAL_KEYS, MEAL_DISTRIBUTION, calculateAlimentoTotals } from '../types/nutrition'
 
@@ -20,6 +21,7 @@ export function R24Editor({ patientId, targetGet }: { patientId: string; targetG
   const [searchResults, setSearchResults] = useState<Alimento[]>([])
   const [selectedMeal, setSelectedMeal] = useState<MealKey>('desayuno')
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   // Load food database
   useEffect(() => {
@@ -93,10 +95,14 @@ export function R24Editor({ patientId, targetGet }: { patientId: string; targetG
 
   async function saveR24() {
     setSaving(true)
+    setSaved(false)
     const today = new Date().toISOString().split('T')[0]
     const r24Ref = doc(db, 'users', patientId, 'r24', today)
     try {
       await setDoc(r24Ref, { meals, savedAt: serverTimestamp() }, { merge: true })
+      markActiveToday(patientId)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
     } catch (e) {
       console.error(e)
     } finally {
@@ -240,17 +246,21 @@ export function R24Editor({ patientId, targetGet }: { patientId: string; targetG
               </Flex>
               <Flex gap={2} align="center">
                 <Text fontSize="xs" color={C.muted} minW="60px">Porciones:</Text>
-                <Input
-                  type="number"
-                  min="0.5"
-                  step="0.5"
-                  value={food.porciones}
-                  onChange={e => updatePorciones(selectedMeal, idx, parseFloat(e.target.value) || 0)}
-                  size="sm"
-                  borderRadius="md"
-                  w="70px"
-                />
-                <Text fontSize="xs" color={C.green} fontWeight="600">{food.kcal_total.toFixed(0)} kcal</Text>
+                <Flex align="center" gap={1}>
+                  <Button size="xs" variant="outline" borderColor={C.border} color={C.green}
+                    onClick={() => updatePorciones(selectedMeal, idx, Math.max(0.5, food.porciones - 0.5))}
+                    w={6} h={6} p={0} fontSize="md" minW={0}>−</Button>
+                  <Input
+                    type="number" min="0.5" step="0.5" value={food.porciones}
+                    onChange={e => updatePorciones(selectedMeal, idx, parseFloat(e.target.value) || 0.5)}
+                    size="sm" borderRadius="md" w="52px" textAlign="center"
+                    borderColor={C.border} _focus={{ borderColor: C.green, boxShadow: 'none' }}
+                  />
+                  <Button size="xs" variant="outline" borderColor={C.border} color={C.green}
+                    onClick={() => updatePorciones(selectedMeal, idx, food.porciones + 0.5)}
+                    w={6} h={6} p={0} fontSize="md" minW={0}>+</Button>
+                </Flex>
+                <Text fontSize="xs" color={C.green} fontWeight="600" ml="auto">{food.kcal_total.toFixed(0)} kcal</Text>
               </Flex>
             </Box>
           ))
@@ -274,6 +284,12 @@ export function R24Editor({ patientId, targetGet }: { patientId: string; targetG
               </Stack>
             )
           })()}
+        </Box>
+      )}
+
+      {saved && (
+        <Box p={3} bg={C.greenLight} borderRadius="xl" textAlign="center" mb={3}>
+          <Text fontSize="sm" fontWeight="700" color={C.green}>✓ Registro guardado correctamente</Text>
         </Box>
       )}
 

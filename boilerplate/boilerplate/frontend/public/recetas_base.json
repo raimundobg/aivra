@@ -1,0 +1,731 @@
+[
+  {
+    "id": "base_001",
+    "nombre": "Avena con leche y plátano",
+    "tipo": "Desayuno",
+    "emoji": "🥣",
+    "tiempo": "10 min",
+    "kcal": 310,
+    "proteinas": 12,
+    "carbos": 52,
+    "grasas": 6,
+    "ingredientes": [
+      "1/2 taza avena tradicional (45 g)",
+      "1 taza leche semidescremada (250 ml)",
+      "1 plátano maduro mediano",
+      "1 cdita canela en polvo",
+      "1 cdita miel (opcional)"
+    ],
+    "preparacion": "1. Calienta la leche a fuego medio en una olla pequeña.\n2. Agrega la avena y revuelve constantemente por 5–7 minutos hasta espesar.\n3. Retira del fuego, añade canela y vierte en un tazón.\n4. Corta el plátano en rodajas y colócalo encima.\n5. Agrega miel si lo deseas y sirve de inmediato."
+  },
+  {
+    "id": "base_002",
+    "nombre": "Tostadas con palta y huevo pochado",
+    "tipo": "Desayuno",
+    "emoji": "🥑",
+    "tiempo": "15 min",
+    "kcal": 340,
+    "proteinas": 16,
+    "carbos": 28,
+    "grasas": 18,
+    "ingredientes": [
+      "2 rebanadas pan integral",
+      "1/2 palta madura",
+      "2 huevos",
+      "Sal, pimienta y limón al gusto",
+      "Merkén o ají molido (opcional)"
+    ],
+    "preparacion": "1. Tuesta el pan integral hasta dorar.\n2. Aplasta la palta con tenedor, sazona con sal, pimienta y unas gotas de limón.\n3. Hierve agua en una olla pequeña con un chorrito de vinagre.\n4. Forma un remolino en el agua y agrega los huevos uno a uno. Cocina 3 minutos.\n5. Unta la palta sobre las tostadas, coloca los huevos encima y espolvorea merkén."
+  },
+  {
+    "id": "base_003",
+    "nombre": "Yogur griego con granola y berries",
+    "tipo": "Desayuno",
+    "emoji": "🫐",
+    "tiempo": "5 min",
+    "kcal": 280,
+    "proteinas": 18,
+    "carbos": 32,
+    "grasas": 7,
+    "ingredientes": [
+      "3/4 taza yogur griego natural sin azúcar (180 g)",
+      "1/4 taza granola artesanal (30 g)",
+      "1/2 taza berries mixtos (moras, arándanos o frutillas)",
+      "1 cdita miel"
+    ],
+    "preparacion": "1. Vierte el yogur griego en un tazón.\n2. Agrega la granola por encima para mantener el crunch.\n3. Distribuye los berries lavados.\n4. Añade un hilo de miel y sirve de inmediato."
+  },
+  {
+    "id": "base_004",
+    "nombre": "Revuelto de huevos con tomate y ciboulette",
+    "tipo": "Desayuno",
+    "emoji": "🍳",
+    "tiempo": "10 min",
+    "kcal": 250,
+    "proteinas": 16,
+    "carbos": 6,
+    "grasas": 18,
+    "ingredientes": [
+      "3 huevos",
+      "1 tomate mediano picado en cubos",
+      "2 cdas ciboulette o cebollín picado fino",
+      "1 cdita aceite de oliva",
+      "Sal y pimienta al gusto"
+    ],
+    "preparacion": "1. Bate los huevos con sal y pimienta en un tazón.\n2. Calienta el aceite en sartén antiadherente a fuego medio.\n3. Agrega el tomate y saltea 1 minuto.\n4. Vierte los huevos y revuelve lentamente con espátula.\n5. Retira del fuego cuando estén cremosos, espolvorea ciboulette y sirve."
+  },
+  {
+    "id": "base_005",
+    "nombre": "Pancakes de avena y plátano",
+    "tipo": "Desayuno",
+    "emoji": "🥞",
+    "tiempo": "20 min",
+    "kcal": 320,
+    "proteinas": 14,
+    "carbos": 48,
+    "grasas": 8,
+    "ingredientes": [
+      "1 taza avena molida (90 g)",
+      "1 plátano maduro grande",
+      "2 huevos",
+      "1/2 cdita polvos de hornear",
+      "1 cdita vainilla",
+      "Spray vegetal para la sartén"
+    ],
+    "preparacion": "1. Aplasta el plátano hasta obtener un puré sin grumos.\n2. Mezcla con los huevos batidos, la avena, polvos de hornear y vainilla.\n3. Calienta la sartén a fuego medio-bajo y rocía con spray vegetal.\n4. Vierte 1/4 taza de mezcla por pancake. Cocina 2–3 min por lado.\n5. Sirve con fruta fresca o un hilo de miel."
+  },
+  {
+    "id": "base_006",
+    "nombre": "Marraqueta con quesillo y tomate",
+    "tipo": "Desayuno",
+    "emoji": "🥖",
+    "tiempo": "5 min",
+    "kcal": 290,
+    "proteinas": 14,
+    "carbos": 38,
+    "grasas": 8,
+    "ingredientes": [
+      "1 marraqueta (80 g)",
+      "60 g quesillo fresco",
+      "1 tomate mediano en rodajas",
+      "Orégano seco al gusto",
+      "Sal y pimienta al gusto"
+    ],
+    "preparacion": "1. Corta la marraqueta por la mitad y tuesta ligeramente si prefieres.\n2. Coloca rodajas de quesillo sobre cada mitad.\n3. Agrega las rodajas de tomate.\n4. Sazona con sal, pimienta y orégano.\n5. Sirve de inmediato."
+  },
+  {
+    "id": "base_007",
+    "nombre": "Batido verde de espinaca y frutas",
+    "tipo": "Desayuno",
+    "emoji": "🥤",
+    "tiempo": "5 min",
+    "kcal": 220,
+    "proteinas": 8,
+    "carbos": 38,
+    "grasas": 4,
+    "ingredientes": [
+      "1 taza espinaca baby fresca (30 g)",
+      "1 plátano congelado",
+      "1/2 manzana verde",
+      "1 taza leche de almendras sin azúcar (250 ml)",
+      "1 cdita jengibre rallado"
+    ],
+    "preparacion": "1. Lava bien la espinaca y escurre.\n2. Coloca todos los ingredientes en la licuadora.\n3. Procesa a alta velocidad por 60 segundos.\n4. Ajusta consistencia con más leche si es necesario.\n5. Sirve inmediatamente para conservar nutrientes."
+  },
+  {
+    "id": "base_008",
+    "nombre": "Tostadas francesas con canela",
+    "tipo": "Desayuno",
+    "emoji": "🍞",
+    "tiempo": "15 min",
+    "kcal": 300,
+    "proteinas": 14,
+    "carbos": 38,
+    "grasas": 9,
+    "ingredientes": [
+      "2 rebanadas pan de molde integral gruesas",
+      "2 huevos",
+      "3 cdas leche semidescremada",
+      "1 cdita canela",
+      "1 cdita vainilla",
+      "1 cdita aceite de coco o mantequilla"
+    ],
+    "preparacion": "1. Bate los huevos con leche, canela y vainilla en un plato hondo.\n2. Remoja cada rebanada de pan en la mezcla 30 segundos por lado.\n3. Calienta el aceite en sartén a fuego medio.\n4. Cocina el pan 2–3 minutos por lado hasta dorar.\n5. Sirve con frutas frescas o un toque de miel."
+  },
+  {
+    "id": "base_009",
+    "nombre": "Manzana con mantequilla de maní",
+    "tipo": "Colación",
+    "emoji": "🍎",
+    "tiempo": "3 min",
+    "kcal": 200,
+    "proteinas": 5,
+    "carbos": 28,
+    "grasas": 8,
+    "ingredientes": [
+      "1 manzana roja o verde mediana",
+      "1.5 cdas mantequilla de maní natural (sin azúcar)",
+      "Canela al gusto (opcional)"
+    ],
+    "preparacion": "1. Lava y corta la manzana en gajos.\n2. Sirve los gajos en un plato junto a la mantequilla de maní.\n3. Espolvorea canela si gustas.\n4. Consume de inmediato."
+  },
+  {
+    "id": "base_010",
+    "nombre": "Mix de nueces y almendras",
+    "tipo": "Colación",
+    "emoji": "🥜",
+    "tiempo": "1 min",
+    "kcal": 180,
+    "proteinas": 5,
+    "carbos": 6,
+    "grasas": 16,
+    "ingredientes": [
+      "15 g nueces (aprox. 5 mitades)",
+      "15 g almendras crudas (aprox. 12 unidades)",
+      "10 g maní sin sal",
+      "5 pasas o arándanos deshidratados (opcional)"
+    ],
+    "preparacion": "1. Mezcla todos los frutos secos en un recipiente pequeño.\n2. Sirve y consume lentamente para favorecer la saciedad.\n3. Ideal para llevar en un contenedor pequeño."
+  },
+  {
+    "id": "base_011",
+    "nombre": "Hummus con palitos de zanahoria y apio",
+    "tipo": "Colación",
+    "emoji": "🥕",
+    "tiempo": "5 min",
+    "kcal": 160,
+    "proteinas": 6,
+    "carbos": 18,
+    "grasas": 7,
+    "ingredientes": [
+      "4 cdas hummus casero o comprado (80 g)",
+      "1 zanahoria grande cortada en palitos",
+      "2 tallos de apio cortados en palitos",
+      "Pimentón rojo en tiras (opcional)"
+    ],
+    "preparacion": "1. Lava y pela la zanahoria, corta en palitos alargados.\n2. Lava el apio y corta en bastones.\n3. Sirve el hummus en un recipiente pequeño.\n4. Acompaña con los palitos de verduras para dipear."
+  },
+  {
+    "id": "base_012",
+    "nombre": "Yogur natural con miel y nueces",
+    "tipo": "Colación",
+    "emoji": "🍯",
+    "tiempo": "2 min",
+    "kcal": 190,
+    "proteinas": 9,
+    "carbos": 22,
+    "grasas": 7,
+    "ingredientes": [
+      "1 taza yogur natural sin azúcar (200 g)",
+      "1 cdita miel pura",
+      "1 cda nueces picadas (10 g)",
+      "Canela al gusto"
+    ],
+    "preparacion": "1. Vierte el yogur en un tazón.\n2. Agrega la miel en hilo fino.\n3. Espolvorea las nueces picadas y la canela.\n4. Sirve de inmediato."
+  },
+  {
+    "id": "base_013",
+    "nombre": "Quesillo con tomates cherry",
+    "tipo": "Colación",
+    "emoji": "🧀",
+    "tiempo": "3 min",
+    "kcal": 150,
+    "proteinas": 11,
+    "carbos": 5,
+    "grasas": 9,
+    "ingredientes": [
+      "60 g quesillo fresco",
+      "10 tomates cherry",
+      "Orégano seco y sal al gusto",
+      "1 cdita aceite de oliva"
+    ],
+    "preparacion": "1. Corta el quesillo en cubos o rebanadas.\n2. Lava y parte por la mitad los tomates cherry.\n3. Mezcla en un plato, rocía aceite de oliva.\n4. Sazona con orégano y sal."
+  },
+  {
+    "id": "base_014",
+    "nombre": "Plátano con cacao en polvo",
+    "tipo": "Colación",
+    "emoji": "🍌",
+    "tiempo": "2 min",
+    "kcal": 130,
+    "proteinas": 2,
+    "carbos": 28,
+    "grasas": 1,
+    "ingredientes": [
+      "1 plátano mediano",
+      "1 cdita cacao en polvo sin azúcar",
+      "Pizca de canela"
+    ],
+    "preparacion": "1. Pela el plátano y córtalo en rodajas.\n2. Espolvorea el cacao en polvo y la canela por encima.\n3. Sirve de inmediato."
+  },
+  {
+    "id": "base_015",
+    "nombre": "Cazuela de vacuno con choclo",
+    "tipo": "Almuerzo",
+    "emoji": "🍲",
+    "tiempo": "60 min",
+    "kcal": 420,
+    "proteinas": 32,
+    "carbos": 38,
+    "grasas": 12,
+    "ingredientes": [
+      "200 g osobuco o posta negra en trozos",
+      "1 choclo en rodajas",
+      "1 papa mediana pelada",
+      "1/2 zanahoria en rodajas",
+      "1/4 zapallo en cubos (100 g)",
+      "1 taza porotos verdes",
+      "1 diente de ajo",
+      "Sal, orégano, comino al gusto",
+      "1 lt agua o caldo sin sal"
+    ],
+    "preparacion": "1. Dora la carne en olla a presión o cacerola con un toque de aceite.\n2. Agrega el agua o caldo, el ajo y las especias. Cocina 30 min a presión o 45 min en olla normal.\n3. Añade las papas, zanahoria, zapallo y choclo. Cocina 15 min más.\n4. Agrega los porotos verdes los últimos 5 minutos.\n5. Rectifica sal y sirve bien caliente con un ramo de cilantro si gustas."
+  },
+  {
+    "id": "base_016",
+    "nombre": "Arroz con pollo al jugo",
+    "tipo": "Almuerzo",
+    "emoji": "🍗",
+    "tiempo": "45 min",
+    "kcal": 450,
+    "proteinas": 35,
+    "carbos": 48,
+    "grasas": 10,
+    "ingredientes": [
+      "150 g pechuga de pollo en trozos",
+      "3/4 taza arroz largo (150 g crudo)",
+      "1/2 cebolla picada fina",
+      "1 diente de ajo",
+      "1/2 pimentón rojo en cubos",
+      "1 tomate maduro picado",
+      "1 cda aceite de oliva",
+      "Sal, orégano, comino, merkén al gusto"
+    ],
+    "preparacion": "1. Sofríe la cebolla con el ajo en aceite hasta transparentar.\n2. Agrega el pollo y dora bien por todos lados.\n3. Incorpora el pimentón y el tomate, cocina 5 minutos.\n4. Añade el arroz, mezcla y agrega 1.5 tazas agua caliente.\n5. Sazona, tapa y cocina a fuego bajo 18–20 minutos."
+  },
+  {
+    "id": "base_017",
+    "nombre": "Lentejas guisadas con verduras",
+    "tipo": "Almuerzo",
+    "emoji": "🫘",
+    "tiempo": "40 min",
+    "kcal": 380,
+    "proteinas": 22,
+    "carbos": 54,
+    "grasas": 6,
+    "ingredientes": [
+      "1 taza lentejas crudas (180 g), remojadas",
+      "1/2 cebolla picada",
+      "1 zanahoria picada en cubos",
+      "1 tomate maduro picado",
+      "2 dientes de ajo",
+      "1 cda aceite de oliva",
+      "Sal, comino, pimentón dulce al gusto",
+      "Cilantro fresco para servir"
+    ],
+    "preparacion": "1. Sofríe la cebolla y el ajo en aceite hasta dorar.\n2. Agrega zanahoria y tomate, cocina 5 minutos.\n3. Añade las lentejas escurridas y cubre con agua (3 tazas).\n4. Cocina a fuego medio 25–30 minutos hasta que estén tiernas.\n5. Sazona con sal, comino y pimentón. Sirve con cilantro."
+  },
+  {
+    "id": "base_018",
+    "nombre": "Ensalada completa con atún",
+    "tipo": "Almuerzo",
+    "emoji": "🥗",
+    "tiempo": "10 min",
+    "kcal": 320,
+    "proteinas": 28,
+    "carbos": 18,
+    "grasas": 14,
+    "ingredientes": [
+      "1 lata atún en agua (170 g, escurrido)",
+      "2 tazas lechuga romana troceada",
+      "1 tomate mediano en cubos",
+      "1/2 pepino en rodajas",
+      "1/4 palta en cubos",
+      "1 huevo duro en cuartos",
+      "1 cda aceite de oliva",
+      "Jugo de 1/2 limón, sal y pimienta"
+    ],
+    "preparacion": "1. Lava y seca bien la lechuga, coloca en un bol grande.\n2. Agrega tomate, pepino, palta y el huevo duro.\n3. Desmenuza el atún escurrido sobre la ensalada.\n4. Aliña con aceite de oliva, limón, sal y pimienta.\n5. Mezcla suavemente y sirve de inmediato."
+  },
+  {
+    "id": "base_019",
+    "nombre": "Pollo al horno con papas y zapallo",
+    "tipo": "Almuerzo",
+    "emoji": "🍗",
+    "tiempo": "50 min",
+    "kcal": 430,
+    "proteinas": 38,
+    "carbos": 35,
+    "grasas": 12,
+    "ingredientes": [
+      "200 g pechuga o muslo de pollo sin piel",
+      "1 papa mediana en gajos",
+      "150 g zapallo en cubos",
+      "1 diente de ajo machacado",
+      "1 cda aceite de oliva",
+      "Jugo de 1/2 limón",
+      "Orégano, ají de color, sal y pimienta"
+    ],
+    "preparacion": "1. Precalienta el horno a 200°C.\n2. Marina el pollo con aceite, ajo, limón y especias 10 minutos.\n3. Coloca las papas y zapallo en una bandeja, sazona con sal.\n4. Ubica el pollo sobre las verduras.\n5. Hornea 40–45 minutos hasta que el pollo esté dorado y las verduras tiernas."
+  },
+  {
+    "id": "base_020",
+    "nombre": "Salmón a la plancha con arroz integral",
+    "tipo": "Almuerzo",
+    "emoji": "🐟",
+    "tiempo": "30 min",
+    "kcal": 460,
+    "proteinas": 40,
+    "carbos": 40,
+    "grasas": 14,
+    "ingredientes": [
+      "180 g filete de salmón",
+      "3/4 taza arroz integral cocido (120 g cocido)",
+      "1 limón",
+      "1 diente de ajo laminado",
+      "1 cdita aceite de oliva",
+      "Eneldo o perejil fresco",
+      "Sal y pimienta"
+    ],
+    "preparacion": "1. Cocina el arroz integral según instrucciones (aprox. 25 min).\n2. Seca el salmón con papel absorbente, sazona con sal y pimienta.\n3. Calienta sartén con aceite a fuego alto.\n4. Sella el salmón 3–4 minutos por lado con el ajo laminado.\n5. Sirve sobre el arroz, exprime limón y decora con eneldo."
+  },
+  {
+    "id": "base_021",
+    "nombre": "Porotos con riendas",
+    "tipo": "Almuerzo",
+    "emoji": "🫘",
+    "tiempo": "35 min",
+    "kcal": 400,
+    "proteinas": 20,
+    "carbos": 58,
+    "grasas": 8,
+    "ingredientes": [
+      "1 taza porotos cocidos o en conserva (200 g)",
+      "80 g tallarines riendas cocidos al dente",
+      "1/2 cebolla picada",
+      "1 tomate maduro picado",
+      "1 loncha tocino o chorizo (30 g, opcional)",
+      "1 diente de ajo",
+      "1 cda aceite vegetal",
+      "Sal, comino, orégano al gusto"
+    ],
+    "preparacion": "1. Sofríe la cebolla, el ajo y el tocino hasta dorar.\n2. Agrega el tomate y cocina 5 minutos.\n3. Añade los porotos con un poco de su caldo, mezcla bien.\n4. Incorpora los tallarines ya cocidos, mezcla suavemente.\n5. Sazona con sal, comino y orégano. Cocina 5 min más."
+  },
+  {
+    "id": "base_022",
+    "nombre": "Pechuga con quinoa y brócoli",
+    "tipo": "Almuerzo",
+    "emoji": "🥦",
+    "tiempo": "30 min",
+    "kcal": 390,
+    "proteinas": 42,
+    "carbos": 32,
+    "grasas": 9,
+    "ingredientes": [
+      "180 g pechuga de pollo",
+      "1/2 taza quinoa cruda (90 g)",
+      "1 taza brócoli en ramitos",
+      "1 diente de ajo",
+      "1 cda aceite de oliva",
+      "Jugo de 1/2 limón",
+      "Sal, pimienta y merkén"
+    ],
+    "preparacion": "1. Cocina la quinoa en 1 taza agua con sal durante 15 minutos.\n2. Cocina el brócoli al vapor 5–6 minutos.\n3. Sazona la pechuga con ajo, limón, sal y merkén.\n4. Gríllala en sartén o plancha 6–7 minutos por lado.\n5. Sirve la pechuga fileteada sobre la quinoa con el brócoli al lado."
+  },
+  {
+    "id": "base_023",
+    "nombre": "Carbonada chilena",
+    "tipo": "Almuerzo",
+    "emoji": "🍲",
+    "tiempo": "50 min",
+    "kcal": 360,
+    "proteinas": 26,
+    "carbos": 40,
+    "grasas": 9,
+    "ingredientes": [
+      "150 g carne de vacuno en cubos (asado carnicero o posta)",
+      "1 papa mediana en cubos",
+      "1/4 zapallo en cubos",
+      "1 zanahoria en rodajas",
+      "1/2 choclo en rodajas",
+      "1/2 cebolla picada",
+      "1 tomate picado",
+      "Sal, orégano, comino, ají de color"
+    ],
+    "preparacion": "1. Dora la carne en olla con aceite caliente.\n2. Agrega cebolla y tomate, sofríe hasta ablandar.\n3. Cubre con agua o caldo (1 lt), agrega especias y tapa.\n4. Cocina 20 minutos, luego añade papas, zapallo, zanahoria y choclo.\n5. Cocina 20 minutos más hasta que todo esté tierno. Rectifica sal."
+  },
+  {
+    "id": "base_024",
+    "nombre": "Ensalada de garbanzos con pollo grillado",
+    "tipo": "Almuerzo",
+    "emoji": "🥗",
+    "tiempo": "20 min",
+    "kcal": 400,
+    "proteinas": 36,
+    "carbos": 34,
+    "grasas": 12,
+    "ingredientes": [
+      "150 g pechuga de pollo grillada",
+      "1 taza garbanzos cocidos o en conserva (200 g)",
+      "1 pepino en cubos",
+      "1 tomate en cubos",
+      "1/4 cebolla morada en plumas",
+      "Jugo de 1 limón",
+      "1 cda aceite de oliva",
+      "Sal, pimienta y perejil fresco"
+    ],
+    "preparacion": "1. Gríllala pechuga sazonada con sal y limón 6–7 minutos por lado, luego filetea.\n2. Mezcla los garbanzos, pepino, tomate y cebolla en un bol.\n3. Aliña con limón, aceite, sal y pimienta.\n4. Agrega la pechuga fileteada encima.\n5. Finaliza con perejil fresco picado."
+  },
+  {
+    "id": "base_025",
+    "nombre": "Fideos con salsa boloñesa liviana",
+    "tipo": "Almuerzo",
+    "emoji": "🍝",
+    "tiempo": "35 min",
+    "kcal": 420,
+    "proteinas": 30,
+    "carbos": 50,
+    "grasas": 10,
+    "ingredientes": [
+      "80 g fideos spaghetti o penne (crudo)",
+      "150 g carne molida de vacuno o pavo",
+      "1 taza puré de tomate natural",
+      "1/2 cebolla picada",
+      "2 dientes de ajo",
+      "1 cda aceite de oliva",
+      "Orégano, sal y pimienta al gusto"
+    ],
+    "preparacion": "1. Cocina los fideos en agua con sal hasta al dente, escurre.\n2. Sofríe la cebolla y el ajo en aceite hasta transparentar.\n3. Agrega la carne molida y dora bien, rompiendo los grumos.\n4. Añade el puré de tomate y especias, cocina 15 minutos.\n5. Mezcla con los fideos escurridos y sirve."
+  },
+  {
+    "id": "base_026",
+    "nombre": "Reineta al vapor con ensalada",
+    "tipo": "Almuerzo",
+    "emoji": "🐠",
+    "tiempo": "25 min",
+    "kcal": 300,
+    "proteinas": 34,
+    "carbos": 12,
+    "grasas": 10,
+    "ingredientes": [
+      "200 g filete de reineta o merluza",
+      "Jugo de 1 limón",
+      "1 diente de ajo",
+      "2 tazas lechuga y tomate",
+      "1 cda aceite de oliva",
+      "Sal, pimienta y perejil"
+    ],
+    "preparacion": "1. Sazona el pescado con limón, ajo, sal y pimienta.\n2. Cocina al vapor sobre agua hirviendo con perejil durante 12–15 minutos.\n3. Prepara la ensalada con lechuga, tomate, aceite de oliva y limón.\n4. Sirve el pescado junto a la ensalada fresca."
+  },
+  {
+    "id": "base_027",
+    "nombre": "Tortilla de zapallo italiano y huevo",
+    "tipo": "Cena",
+    "emoji": "🍳",
+    "tiempo": "20 min",
+    "kcal": 280,
+    "proteinas": 18,
+    "carbos": 10,
+    "grasas": 18,
+    "ingredientes": [
+      "3 huevos",
+      "1 zapallo italiano mediano rallado",
+      "1/4 cebolla picada fina",
+      "1 cda aceite de oliva",
+      "Sal, pimienta y hierbas al gusto"
+    ],
+    "preparacion": "1. Escurre bien el zapallo rallado con sal, apretando con tus manos.\n2. Sofríe la cebolla en aceite hasta transparentar, agrega el zapallo 3 minutos.\n3. Bate los huevos con sal y pimienta, vierte sobre las verduras.\n4. Cocina a fuego bajo tapado 5–7 minutos, luego voltea con un plato.\n5. Cocina 3 minutos más y sirve tibia."
+  },
+  {
+    "id": "base_028",
+    "nombre": "Sopa de verduras con fideos",
+    "tipo": "Cena",
+    "emoji": "🥣",
+    "tiempo": "30 min",
+    "kcal": 250,
+    "proteinas": 8,
+    "carbos": 38,
+    "grasas": 5,
+    "ingredientes": [
+      "1 zanahoria en cubos",
+      "1 papa mediana en cubos",
+      "1/2 taza apio en rodajas",
+      "1/2 taza porotos verdes",
+      "50 g fideos cabello de ángel",
+      "1 diente de ajo",
+      "1 lt caldo de verduras sin sal",
+      "Sal, orégano y perejil"
+    ],
+    "preparacion": "1. Hierve el caldo en una olla grande con el ajo.\n2. Agrega zanahoria, papa y apio. Cocina 15 minutos.\n3. Añade los porotos verdes y los fideos, cocina 7 minutos más.\n4. Sazona con sal y orégano.\n5. Sirve caliente con perejil fresco picado."
+  },
+  {
+    "id": "base_029",
+    "nombre": "Crema de zapallo asado",
+    "tipo": "Cena",
+    "emoji": "🎃",
+    "tiempo": "40 min",
+    "kcal": 220,
+    "proteinas": 5,
+    "carbos": 32,
+    "grasas": 8,
+    "ingredientes": [
+      "400 g zapallo camote o butternut en cubos",
+      "1/2 cebolla",
+      "1 diente de ajo",
+      "1 cda aceite de oliva",
+      "600 ml caldo de verduras",
+      "Sal, pimienta y nuez moscada",
+      "2 cdas yogur natural (para servir)"
+    ],
+    "preparacion": "1. Asa el zapallo y la cebolla en horno a 200°C por 25 minutos.\n2. Sofríe el ajo en aceite en una olla.\n3. Agrega las verduras asadas y el caldo caliente.\n4. Procesa con minipimer hasta obtener crema suave.\n5. Sazona, sirve con yogur y un hilo de aceite de oliva."
+  },
+  {
+    "id": "base_030",
+    "nombre": "Omelette de champiñones y queso",
+    "tipo": "Cena",
+    "emoji": "🍄",
+    "tiempo": "15 min",
+    "kcal": 280,
+    "proteinas": 20,
+    "carbos": 5,
+    "grasas": 20,
+    "ingredientes": [
+      "3 huevos",
+      "80 g champiñones laminados",
+      "30 g queso mantecoso o ricotta",
+      "1 cdita aceite de oliva",
+      "Ciboulette o perejil picado",
+      "Sal y pimienta"
+    ],
+    "preparacion": "1. Saltea los champiñones en aceite con sal hasta que suelten líquido y doren.\n2. Bate los huevos con sal, pimienta y ciboulette.\n3. Calienta sartén antiadherente a fuego medio con aceite.\n4. Vierte los huevos, cocina 1 minuto y agrega champiñones y queso en el centro.\n5. Dobla el omelette por la mitad y sirve."
+  },
+  {
+    "id": "base_031",
+    "nombre": "Sopa de lentejas rojas",
+    "tipo": "Cena",
+    "emoji": "🍜",
+    "tiempo": "25 min",
+    "kcal": 290,
+    "proteinas": 16,
+    "carbos": 42,
+    "grasas": 6,
+    "ingredientes": [
+      "3/4 taza lentejas rojas (140 g, sin remojar)",
+      "1/2 cebolla picada",
+      "1 zanahoria en cubos",
+      "1 tomate picado",
+      "1 diente de ajo",
+      "1 cdita comino",
+      "1 cda aceite de oliva",
+      "800 ml agua o caldo"
+    ],
+    "preparacion": "1. Sofríe cebolla y ajo en aceite hasta dorar.\n2. Agrega zanahoria, tomate y comino, cocina 3 minutos.\n3. Añade las lentejas y el agua o caldo.\n4. Cocina a fuego medio 18–20 minutos hasta que las lentejas se disuelvan.\n5. Mezcla bien, rectifica sal y sirve caliente."
+  },
+  {
+    "id": "base_032",
+    "nombre": "Ensalada de quinoa con verduras asadas",
+    "tipo": "Cena",
+    "emoji": "🥙",
+    "tiempo": "35 min",
+    "kcal": 330,
+    "proteinas": 12,
+    "carbos": 44,
+    "grasas": 12,
+    "ingredientes": [
+      "1/2 taza quinoa cruda (90 g)",
+      "1/2 pimentón rojo",
+      "1/2 zapallo italiano",
+      "1/4 cebolla morada",
+      "1 cda aceite de oliva",
+      "Jugo de 1 limón",
+      "Perejil y menta fresca",
+      "Sal y pimienta"
+    ],
+    "preparacion": "1. Cocina la quinoa en 1 taza agua con sal, 15 minutos. Enfría.\n2. Corta pimentón, zapallo y cebolla en trozos, asa en horno 200°C por 20 min.\n3. Mezcla la quinoa fría con las verduras asadas.\n4. Aliña con aceite, limón, sal y pimienta.\n5. Finaliza con perejil y menta picados."
+  },
+  {
+    "id": "base_033",
+    "nombre": "Pechuga de pollo grillada con ensalada griega",
+    "tipo": "Cena",
+    "emoji": "🥗",
+    "tiempo": "20 min",
+    "kcal": 320,
+    "proteinas": 38,
+    "carbos": 10,
+    "grasas": 14,
+    "ingredientes": [
+      "180 g pechuga de pollo",
+      "1 pepino en cubos",
+      "1 tomate en cubos",
+      "1/4 cebolla morada en plumas",
+      "40 g queso feta o quesillo firme",
+      "10 aceitunas negras",
+      "1 cda aceite de oliva",
+      "Orégano, sal y limón"
+    ],
+    "preparacion": "1. Sazona la pechuga con sal, pimienta y orégano.\n2. Grilla en sartén o plancha 6–7 minutos por lado.\n3. Mezcla pepino, tomate, cebolla, feta y aceitunas.\n4. Aliña con aceite, limón y orégano.\n5. Sirve la ensalada con la pechuga fileteada encima."
+  },
+  {
+    "id": "base_034",
+    "nombre": "Tofu salteado con verduras y arroz",
+    "tipo": "Cena",
+    "emoji": "🥡",
+    "tiempo": "25 min",
+    "kcal": 360,
+    "proteinas": 18,
+    "carbos": 44,
+    "grasas": 12,
+    "ingredientes": [
+      "150 g tofu firme en cubos",
+      "1/2 taza arroz cocido (100 g)",
+      "1/2 pimentón en tiras",
+      "1 taza brócoli en ramitos",
+      "1 zanahoria en bastones",
+      "2 cdas salsa de soya baja en sodio",
+      "1 cda aceite de sésamo",
+      "1 diente de ajo, jengibre rallado"
+    ],
+    "preparacion": "1. Seca el tofu y córtalo en cubos. Sella en sartén con aceite hasta dorar.\n2. Saltea las verduras en el mismo sartén con ajo y jengibre 4–5 minutos.\n3. Regresa el tofu, añade salsa de soya y aceite de sésamo.\n4. Mezcla bien y cocina 2 minutos más.\n5. Sirve sobre el arroz caliente."
+  },
+  {
+    "id": "base_035",
+    "nombre": "Merluza al horno con papas",
+    "tipo": "Cena",
+    "emoji": "🐟",
+    "tiempo": "35 min",
+    "kcal": 340,
+    "proteinas": 32,
+    "carbos": 30,
+    "grasas": 9,
+    "ingredientes": [
+      "200 g filete de merluza",
+      "2 papas medianas en rodajas finas",
+      "1 tomate en rodajas",
+      "1/2 cebolla en plumas",
+      "1 cda aceite de oliva",
+      "Jugo de 1 limón",
+      "Orégano, sal y perejil"
+    ],
+    "preparacion": "1. Precalienta el horno a 190°C.\n2. Coloca las papas en una bandeja y hornea 15 minutos.\n3. Ubica la merluza sobre las papas, cubre con tomate y cebolla.\n4. Rocía aceite, limón y orégano.\n5. Hornea 15–18 minutos más hasta que el pescado esté opaco."
+  },
+  {
+    "id": "base_036",
+    "nombre": "Revuelto de zapallo italiano con huevo",
+    "tipo": "Cena",
+    "emoji": "🥚",
+    "tiempo": "15 min",
+    "kcal": 240,
+    "proteinas": 14,
+    "carbos": 12,
+    "grasas": 14,
+    "ingredientes": [
+      "2 zapallitos italianos medianos en rodajas",
+      "3 huevos",
+      "1/4 cebolla picada",
+      "1 diente de ajo",
+      "1 cdita aceite de oliva",
+      "Sal, pimienta y orégano"
+    ],
+    "preparacion": "1. Saltea la cebolla y el ajo en aceite hasta transparentar.\n2. Agrega el zapallito en rodajas, cocina 5–6 minutos revolviendo.\n3. Bate los huevos con sal y pimienta.\n4. Vierte sobre el zapallito y revuelve suavemente.\n5. Cocina hasta cuajar, espolvorea orégano y sirve."
+  }
+]

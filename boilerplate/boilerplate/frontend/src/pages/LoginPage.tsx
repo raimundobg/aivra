@@ -15,9 +15,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 
-  function redirectAfterLogin(role: string, onboardingCompleted: boolean) {
-    if (role === 'nutritionist') { navigate('/nutricionista'); return }
-    navigate(onboardingCompleted ? '/dashboard' : '/onboarding')
+  function redirectAfterLogin(role: string) {
+    navigate(role === 'nutritionist' ? '/nutricionista' : '/dashboard')
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -25,8 +24,8 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      const { role, onboardingCompleted } = await login(email, password)
-      redirectAfterLogin(role, onboardingCompleted)
+      const { role } = await login(email, password)
+      redirectAfterLogin(role)
     } catch {
       setError('Correo o contraseña incorrectos.')
     } finally {
@@ -38,8 +37,8 @@ export default function LoginPage() {
     setError('')
     setGoogleLoading(true)
     try {
-      const { role, onboardingCompleted } = await loginWithGoogle()
-      redirectAfterLogin(role, onboardingCompleted)
+      const { role } = await loginWithGoogle()
+      redirectAfterLogin(role)
     } catch {
       setError('No se pudo iniciar sesión con Google.')
     } finally {

@@ -112,7 +112,7 @@ interface GroqRequest  { messages: GroqMessage[]; maxTokens?: number; temperatur
 interface GroqResponse { content: string }
 
 export const groqProxy = onCall<GroqRequest, Promise<GroqResponse>>(
-  { cors: true },
+  { cors: true, invoker: 'public' },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Must be signed in");

@@ -18,14 +18,14 @@ import RecipesPage from './pages/RecipesPage'
 import ShoppingListPage from './pages/ShoppingListPage'
 import TrainingPage from './pages/TrainingPage'
 import R24Page from './pages/R24Page'
+import MealPrepPage from './pages/MealPrepPage'
 
-// Authenticated patient who has completed onboarding
+// Authenticated patient — no onboarding gate
 function PatientRoute({ children }: { children: React.ReactNode }) {
-  const { user, role, onboardingCompleted, loading } = useAuth()
+  const { user, role, loading } = useAuth()
   if (loading) return null
   if (!user) return <Navigate to="/login" replace />
   if (role === 'nutritionist') return <Navigate to="/nutricionista" replace />
-  if (!onboardingCompleted) return <Navigate to="/onboarding" replace />
   return <>{children}</>
 }
 
@@ -45,13 +45,13 @@ function NutricionistaRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-// Unauthenticated only — redirect based on role if already logged in
+// Unauthenticated only — redirect to dashboard if already logged in
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, role, onboardingCompleted, loading } = useAuth()
+  const { user, role, loading } = useAuth()
   if (loading) return null
   if (!user) return <>{children}</>
   if (role === 'nutritionist') return <Navigate to="/nutricionista" replace />
-  return <Navigate to={onboardingCompleted ? '/dashboard' : '/onboarding'} replace />
+  return <Navigate to="/dashboard" replace />
 }
 
 export default function App() {
@@ -75,6 +75,7 @@ export default function App() {
       <Route path="/lista-compras" element={<PatientRoute><ShoppingListPage /></PatientRoute>} />
       <Route path="/entrenamiento" element={<PatientRoute><TrainingPage /></PatientRoute>} />
       <Route path="/r24" element={<PatientRoute><R24Page /></PatientRoute>} />
+      <Route path="/meal-prep" element={<PatientRoute><MealPrepPage /></PatientRoute>} />
       <Route path="/nutricionista" element={<NutricionistaRoute><NutricionistaPage /></NutricionistaRoute>} />
       <Route path="/nutricionista/paciente/:patientId" element={<NutricionistaRoute><NutricionistaPage /></NutricionistaRoute>} />
     </Routes>

@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Button, Container, Flex, Grid, Heading, Stack, Text, Badge } from '@chakra-ui/react'
-import { doc, getDoc } from 'firebase/firestore'
+import { Box, Button, Container, Flex, Grid, Heading, Input, Stack, Text, Badge } from '@chakra-ui/react'
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../config/firebase'
 import { useAuth } from '../providers/AuthProvider'
 import { useHabits } from '../hooks/useHabits'
+import { calcRacha } from '../utils/activity'
+import { generarPautaBasica } from '../services/groq'
 import AppLayout from '../app/AppLayout'
 import PatientNav from '../organisms/PatientNav'
+import { WelcomeModal } from '../molecules/WelcomeModal'
 import type { PautaGenerada } from '../services/groq'
 
 const C = {
@@ -22,6 +25,14 @@ const C = {
   warning: '#d97706',
   amber: '#fbbf24',
 }
+
+const OBJETIVOS = [
+  { v: 'bajar_peso', label: '⬇️ Bajar peso' },
+  { v: 'ganar_masa', label: '💪 Músculo' },
+  { v: 'mantener', label: '⚖️ Mantener' },
+  { v: 'salud', label: '❤️ Salud' },
+  { v: 'rendimiento', label: '🏃 Rendimiento' },
+]
 
 const MEAL_EMOJIS: Record<string, string> = {
   desayuno: '🥣',
@@ -46,7 +57,6 @@ function formatDate(): string {
   return `${days[d.getDay()]} ${d.getDate()} de ${months[d.getMonth()]}`
 }
 
-// Map 1-10 habit value → label
 function valueToLabel(value: number, type: 'positive' | 'negative' = 'positive'): string {
   if (value === 0) return '—'
   if (type === 'positive') {
@@ -71,19 +81,13 @@ function valueToColor(value: number, type: 'positive' | 'negative' = 'positive')
   return C.warning
 }
 
-// Map sleep value (1-10) → approximate hours
 function sleepToHours(value: number): string {
   if (value === 0) return '—'
-  const hours = 4 + (value / 10) * 5 // 1→4.5h, 10→9h
+  const hours = 4 + (value / 10) * 5
   return `${hours.toFixed(1)}h`
 }
 
-interface CircularProgressProps {
-  value: number // 0-100
-  size?: number
-}
-
-function CircularProgress({ value, size = 100 }: CircularProgressProps) {
+function CircularProgress({ value, size = 100 }: { value: number; size?: number }) {
   const stroke = 10
   const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
@@ -106,32 +110,13 @@ function CircularProgress({ value, size = 100 }: CircularProgressProps) {
   )
 }
 
-interface MealCardProps {
-  name: string
-  description: string
-  kcal?: number
-  onClick: () => void
-}
-
-function MealCard({ name, description, kcal, onClick }: MealCardProps) {
+function MealCard({ name, description, kcal, onClick }: { name: string; description: string; kcal?: number; onClick: () => void }) {
   return (
-    <Flex
-      onClick={onClick}
-      align="center"
-      gap={3}
-      p={3}
-      borderRadius="xl"
-      bg="white"
-      borderWidth="1px"
-      borderColor={C.border}
-      cursor="pointer"
-      _hover={{ borderColor: C.green, shadow: 'sm' }}
-      transition="all 0.15s"
-    >
-      <Box
-        w={12} h={12} borderRadius="lg" bg={C.greenLight}
-        display="flex" alignItems="center" justifyContent="center" flexShrink={0}
-      >
+    <Flex onClick={onClick} align="center" gap={3} p={3} borderRadius="xl" bg="white"
+      borderWidth="1px" borderColor={C.border} cursor="pointer"
+      _hover={{ borderColor: C.green, shadow: 'sm' }} transition="all 0.15s">
+      <Box w={12} h={12} borderRadius="lg" bg={C.greenLight}
+        display="flex" alignItems="center" justifyContent="center" flexShrink={0}>
         <Text fontSize="2xl">{getMealEmoji(name)}</Text>
       </Box>
       <Box flex={1} minW={0}>
@@ -144,14 +129,7 @@ function MealCard({ name, description, kcal, onClick }: MealCardProps) {
   )
 }
 
-interface SummaryItemProps {
-  icon: string
-  label: string
-  value: string
-  color: string
-}
-
-function SummaryItem({ icon, label, value, color }: SummaryItemProps) {
+function SummaryItem({ icon, label, value, color }: { icon: string; label: string; value: string; color: string }) {
   return (
     <Flex direction="column" align="center" gap={1} p={3} borderRadius="xl" bg={C.cream}>
       <Text fontSize="xl">{icon}</Text>
@@ -161,13 +139,7 @@ function SummaryItem({ icon, label, value, color }: SummaryItemProps) {
   )
 }
 
-interface StatRowProps {
-  label: string
-  value: string
-  emphasized?: boolean
-}
-
-function StatRow({ label, value, emphasized }: StatRowProps) {
+function StatRow({ label, value, emphasized }: { label: string; value: string; emphasized?: boolean }) {
   return (
     <Flex justify="space-between" align="center">
       <Text fontSize="sm" color={C.muted}>{label}</Text>
@@ -179,11 +151,32 @@ function StatRow({ label, value, emphasized }: StatRowProps) {
 export default function DashboardPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const firstName = (user?.displayName ?? user?.email ?? 'Paciente').split(' ')[0]
+  const rawName = user?.displayName || user?.email?.split('@')[0] || 'Paciente'
+  const firstName = rawName.split(' ')[0]
 
   const [pauta, setPauta] = useState<PautaGenerada | null>(null)
   const [r24Today, setR24Today] = useState<Record<string, unknown> | null>(null)
   const { habits, adherence } = useHabits(user?.uid)
+  const [showWelcome, setShowWelcome] = useState(false)
+  const [profileIncomplete, setProfileIncomplete] = useState(false)
+  const [activityDays, setActivityDays] = useState<string[]>([])
+  const [checkInDone, setCheckInDone] = useState(false)
+  const [generatingPauta, setGeneratingPauta] = useState(false)
+  const [pautaObjeto, setPautaObjeto] = useState('salud')
+  const [pautaPeso, setPautaPeso] = useState('')
+  const [pautaTalla, setPautaTalla] = useState('')
+
+  useEffect(() => {
+    if (!user) return
+    getDoc(doc(db, 'users', user.uid)).then(snap => {
+      const data = snap.data()
+      const seen = data?.basicProfileSeen ?? false
+      const complete = data?.basicProfileCompleted ?? false
+      if (!seen) setShowWelcome(true)
+      if (!complete) setProfileIncomplete(true)
+      if (data?.activityDays) setActivityDays(data.activityDays as string[])
+    })
+  }, [user])
 
   useEffect(() => {
     if (!user) return
@@ -200,25 +193,83 @@ export default function DashboardPage() {
     })
   }, [user])
 
-  // Calculate compliance metrics
-  const totalMeals = pauta?.comidas.length ?? 4
+  useEffect(() => {
+    if (!user) return
+    const today = new Date().toISOString().split('T')[0]
+    getDoc(doc(db, 'users', user.uid, 'checkins', today)).then(snap => {
+      setCheckInDone(snap.exists())
+    })
+  }, [user])
+
+  const totalMeals = pauta?.comidas.length ?? 5
   const completedMeals = r24Today?.meals
     ? Object.values(r24Today.meals as Record<string, unknown[]>).filter(arr => Array.isArray(arr) && arr.length > 0).length
     : 0
+  const todayKcal = r24Today?.meals
+    ? Math.round(
+        Object.values(r24Today.meals as Record<string, Array<{ kcal_total: number }>>)
+          .flat()
+          .reduce((sum, f) => sum + (f.kcal_total ?? 0), 0)
+      )
+    : 0
+  const targetKcal = pauta?.macros?.calorias ?? 2000
+  const kcalPct = Math.min(Math.round((todayKcal / targetKcal) * 100), 100)
   const aguaVasos = habits.agua > 0 ? Math.round((habits.agua / 10) * 8) : 0
-  const aguaMeta = 8
+  const racha = calcRacha(activityDays)
 
-  const cumplimientoPct = Math.round(
-    ((completedMeals / totalMeals) * 0.6 + (aguaVasos / aguaMeta) * 0.2 + (adherence / 100) * 0.2) * 100
-  )
+  // suppress unused warning — adherence used in future
+  void adherence
+
+  async function handleGenerarPauta() {
+    if (!user || generatingPauta || !pautaPeso || !pautaTalla) return
+    setGeneratingPauta(true)
+    try {
+      const p = await generarPautaBasica({
+        nombre: firstName,
+        objetivo: pautaObjeto,
+        peso: parseFloat(pautaPeso),
+        talla: parseFloat(pautaTalla),
+      })
+      await setDoc(doc(db, 'users', user.uid, 'pauta', 'current'), {
+        ...p, generadoPor: 'ia', generadoAt: serverTimestamp(),
+      })
+      setPauta(p)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setGeneratingPauta(false)
+    }
+  }
 
   return (
     <AppLayout>
       <PatientNav />
 
+      {showWelcome && user && (
+        <WelcomeModal user={user} onClose={() => { setShowWelcome(false); setProfileIncomplete(false) }} />
+      )}
+
       <Box bg={C.cream} minH="calc(100dvh - 56px)">
         <Container maxW="container.md" pt={6} pb={28}>
-          {/* Header: greeting + date */}
+
+          {!showWelcome && profileIncomplete && (
+            <Box mb={4} p={4} borderRadius="xl" bg="white"
+              borderWidth="1px" borderColor={C.border}
+              borderLeftWidth="3px" borderLeftColor={C.green}>
+              <Flex justify="space-between" align="center" gap={3}>
+                <Box>
+                  <Text fontSize="sm" fontWeight="700" color={C.text}>Completa tu perfil 🌿</Text>
+                  <Text fontSize="xs" color={C.muted}>Ayúdanos a personalizar tu experiencia — nombre, objetivo, peso y talla</Text>
+                </Box>
+                <Button size="xs" bg={C.green} color="white" borderRadius="lg"
+                  _hover={{ opacity: 0.9 }} flexShrink={0}
+                  onClick={() => setShowWelcome(true)}>
+                  Completar
+                </Button>
+              </Flex>
+            </Box>
+          )}
+
           <Flex justify="space-between" align="flex-start" mb={5}>
             <Box>
               <Heading fontFamily="heading" fontSize={{ base: '2xl', md: '3xl' }} fontWeight="800" color={C.text} lineHeight="1.1">
@@ -226,12 +277,10 @@ export default function DashboardPage() {
               </Heading>
               <Text fontSize="sm" color={C.muted} mt={1} textTransform="capitalize">{formatDate()}</Text>
             </Box>
-            <Flex
-              align="center" justify="center" w={11} h={11} borderRadius="full"
+            <Flex align="center" justify="center" w={11} h={11} borderRadius="full"
               bg={C.green} color="white" fontFamily="heading" fontWeight="700" fontSize="md"
               cursor="pointer" onClick={() => navigate('/perfil')}
-              _hover={{ bg: C.greenDark }} transition="all 0.15s"
-            >
+              _hover={{ bg: C.greenDark }} transition="all 0.15s">
               {firstName.charAt(0).toUpperCase()}
             </Flex>
           </Flex>
@@ -240,58 +289,70 @@ export default function DashboardPage() {
           <Box bg="white" borderRadius="2xl" p={5} borderWidth="1px" borderColor={C.border} mb={4}>
             <Flex justify="space-between" align="center" mb={4}>
               <Text fontFamily="heading" fontWeight="700" color={C.text} fontSize="md">Tu plan de hoy</Text>
-              <Badge bg={C.green} color="white" px={2.5} py={0.5} borderRadius="full" fontSize="9px" fontWeight="700">
-                PREMIUM
-              </Badge>
+              <Badge bg={C.green} color="white" px={2.5} py={0.5} borderRadius="full" fontSize="9px" fontWeight="700">PREMIUM</Badge>
             </Flex>
 
             {pauta?.comidas && pauta.comidas.length > 0 ? (
               <Stack gap={2}>
                 {pauta.comidas.map((comida, i) => (
-                  <MealCard
-                    key={i}
-                    name={comida.nombre}
-                    description={comida.items[0] ?? 'Sin definir'}
-                    kcal={comida.kcal}
-                    onClick={() => navigate('/pauta')}
-                  />
+                  <MealCard key={i} name={comida.nombre} description={comida.items[0] ?? 'Sin definir'}
+                    kcal={comida.kcal} onClick={() => navigate('/pauta')} />
                 ))}
-                <Button
-                  onClick={() => navigate('/pauta')}
-                  variant="ghost" size="sm" mt={1}
-                  color={C.green} fontWeight="600"
-                  _hover={{ bg: C.greenLight }}
-                >
+                <Button onClick={() => navigate('/pauta')} variant="ghost" size="sm" mt={1}
+                  color={C.green} fontWeight="600" _hover={{ bg: C.greenLight }}>
                   Ver plan completo →
                 </Button>
               </Stack>
             ) : (
-              <Box textAlign="center" py={6}>
-                <Text fontSize="sm" color={C.muted} mb={3}>Aún no tienes una pauta activa.</Text>
-                <Button
-                  onClick={() => navigate('/onboarding')}
-                  bg={C.green} color="white" borderRadius="full" size="sm" fontWeight="700"
-                  _hover={{ opacity: 0.9 }}
-                >
-                  Generar mi primera pauta
+              <Stack gap={3}>
+                <Text fontSize="sm" color={C.muted} textAlign="center">Genera tu pauta personalizada con IA</Text>
+                <Flex gap={2} flexWrap="wrap">
+                  {OBJETIVOS.map(o => (
+                    <Box key={o.v} px={3} py={1.5} borderRadius="full" cursor="pointer"
+                      fontSize="xs" fontWeight="500" borderWidth="1px"
+                      bg={pautaObjeto === o.v ? C.green : 'white'}
+                      color={pautaObjeto === o.v ? 'white' : C.muted}
+                      borderColor={pautaObjeto === o.v ? C.green : C.border}
+                      onClick={() => setPautaObjeto(o.v)} transition="all 0.15s">
+                      {o.label}
+                    </Box>
+                  ))}
+                </Flex>
+                <Flex gap={2}>
+                  <Input value={pautaPeso} onChange={e => setPautaPeso(e.target.value)}
+                    placeholder="Peso (kg)" type="number" borderRadius="xl"
+                    borderColor={C.border} _focus={{ borderColor: C.green, boxShadow: 'none' }} />
+                  <Input value={pautaTalla} onChange={e => setPautaTalla(e.target.value)}
+                    placeholder="Talla (cm)" type="number" borderRadius="xl"
+                    borderColor={C.border} _focus={{ borderColor: C.green, boxShadow: 'none' }} />
+                </Flex>
+                <Button bg={C.green} color="white" borderRadius="full" size="sm" fontWeight="700"
+                  _hover={{ opacity: 0.9 }} loading={generatingPauta}
+                  disabled={!pautaPeso || !pautaTalla} onClick={handleGenerarPauta}>
+                  🤖 Generar mi pauta
                 </Button>
-              </Box>
+              </Stack>
             )}
           </Box>
 
-          {/* Cumplimiento del plan */}
+          {/* Calorías de hoy */}
           <Box bg="white" borderRadius="2xl" p={5} borderWidth="1px" borderColor={C.border} mb={4}>
             <Text fontFamily="heading" fontWeight="700" color={C.text} fontSize="md" mb={4}>
-              Cumplimiento del plan
+              Calorías de hoy
             </Text>
-            <Flex align="center" gap={5}>
-              <CircularProgress value={cumplimientoPct} size={100} />
-              <Stack gap={3} flex={1}>
-                <StatRow label="Comidas completadas" value={`${completedMeals} / ${totalMeals}`} />
-                <StatRow label="Adherencia hábitos" value={`${adherence}%`} />
-                <StatRow label="Agua" value={`${aguaVasos} / ${aguaMeta} vasos`} />
+            <Flex align="center" gap={5} mb={4}>
+              <CircularProgress value={kcalPct} size={100} />
+              <Stack gap={2.5} flex={1}>
+                <StatRow label="Consumidas" value={`${todayKcal} kcal`} emphasized />
+                <StatRow label="Meta" value={`${targetKcal} kcal`} />
+                <StatRow label="Agua" value={`${aguaVasos} / 8 vasos`} />
               </Stack>
             </Flex>
+            <Grid templateColumns="repeat(3, 1fr)" gap={2}>
+              <SummaryItem icon="🔥" label="Racha" value={racha > 0 ? `${racha}d` : '—'} color={racha > 0 ? C.green : C.muted} />
+              <SummaryItem icon="🍽️" label="Comidas" value={`${completedMeals}/${totalMeals}`} color={C.text} />
+              <SummaryItem icon="😊" label="Check-in" value={checkInDone ? '✓' : '—'} color={checkInDone ? C.green : C.muted} />
+            </Grid>
           </Box>
 
           {/* Resumen diario */}
@@ -300,65 +361,36 @@ export default function DashboardPage() {
               Resumen diario
             </Text>
             <Grid templateColumns="repeat(4, 1fr)" gap={2.5}>
-              <SummaryItem
-                icon="🔥"
-                label="Energía"
-                value={valueToLabel(habits.actividad, 'positive')}
-                color={valueToColor(habits.actividad, 'positive')}
-              />
-              <SummaryItem
-                icon="🫧"
-                label="Digestión"
-                value={valueToLabel(habits.digestion, 'positive')}
-                color={valueToColor(habits.digestion, 'positive')}
-              />
-              <SummaryItem
-                icon="🧘"
-                label="Estrés"
-                value={valueToLabel(habits.estres, 'negative')}
-                color={valueToColor(habits.estres, 'negative')}
-              />
-              <SummaryItem
-                icon="😴"
-                label="Sueño"
-                value={sleepToHours(habits.sueno)}
-                color={valueToColor(habits.sueno, 'positive')}
-              />
+              <SummaryItem icon="🔥" label="Energía"
+                value={valueToLabel(habits.actividad)} color={valueToColor(habits.actividad)} />
+              <SummaryItem icon="🫧" label="Digestión"
+                value={valueToLabel(habits.digestion)} color={valueToColor(habits.digestion)} />
+              <SummaryItem icon="🧘" label="Estrés"
+                value={valueToLabel(habits.estres, 'negative')} color={valueToColor(habits.estres, 'negative')} />
+              <SummaryItem icon="😴" label="Sueño"
+                value={sleepToHours(habits.sueno)} color={valueToColor(habits.sueno)} />
             </Grid>
-            <Button
-              onClick={() => navigate('/habitos')}
-              variant="ghost" size="sm" mt={3} w="full"
-              color={C.green} fontWeight="600"
-              _hover={{ bg: C.greenLight }}
-            >
+            <Button onClick={() => navigate('/habitos')} variant="ghost" size="sm" mt={3} w="full"
+              color={C.green} fontWeight="600" _hover={{ bg: C.greenLight }}>
               Registrar hábitos de hoy →
             </Button>
           </Box>
 
           {/* CTA Chat */}
-          <Box
-            bg={C.green} borderRadius="2xl" p={5}
-            backgroundImage={`linear-gradient(135deg, ${C.green} 0%, ${C.greenDark} 100%)`}
-          >
+          <Box bg={C.green} borderRadius="2xl" p={5}
+            backgroundImage={`linear-gradient(135deg, ${C.green} 0%, ${C.greenDark} 100%)`}>
             <Flex align="center" justify="space-between" gap={3}>
               <Box flex={1}>
-                <Text fontFamily="heading" fontWeight="700" color="white" fontSize="md" mb={1}>
-                  ¿Tienes una duda?
-                </Text>
-                <Text fontSize="xs" color="whiteAlpha.800">
-                  Tu nutricionista o el asistente IA te responden.
-                </Text>
+                <Text fontFamily="heading" fontWeight="700" color="white" fontSize="md" mb={1}>¿Tienes una duda?</Text>
+                <Text fontSize="xs" color="whiteAlpha.800">Tu nutricionista o el asistente IA te responden.</Text>
               </Box>
-              <Button
-                onClick={() => navigate('/chat')}
-                bg="white" color={C.green}
-                borderRadius="full" size="sm" fontWeight="700"
-                _hover={{ bg: C.greenLight }}
-              >
+              <Button onClick={() => navigate('/chat')} bg="white" color={C.green}
+                borderRadius="full" size="sm" fontWeight="700" _hover={{ bg: C.greenLight }}>
                 💬 Chatear
               </Button>
             </Flex>
           </Box>
+
         </Container>
       </Box>
     </AppLayout>

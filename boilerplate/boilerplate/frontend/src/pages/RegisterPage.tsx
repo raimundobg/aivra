@@ -60,7 +60,7 @@ export default function RegisterPage() {
       await register(email, password, name, role, {
         phone, birthdate, country, especialidades, modalidad, registro,
       })
-      navigate(role === 'patient' ? '/onboarding' : '/nutricionista')
+      navigate(role === 'patient' ? '/dashboard' : '/nutricionista')
     } catch (err: unknown) {
       const code = (err as { code?: string }).code
       if (code === 'auth/email-already-in-use') setError('Este correo ya está registrado.')
@@ -75,7 +75,7 @@ export default function RegisterPage() {
     setGoogleLoading(true)
     try {
       await loginWithGoogle(role)
-      navigate(role === 'patient' ? '/onboarding' : '/nutricionista')
+      navigate(role === 'patient' ? '/dashboard' : '/nutricionista')
     } catch {
       setError('No se pudo registrar con Google.')
     } finally {

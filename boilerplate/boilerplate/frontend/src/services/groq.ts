@@ -1,11 +1,9 @@
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '../config/firebase'
 
-// In production the key lives in Firebase Secrets — never in the bundle.
-// In development (Spark plan / local), fall back to the VITE_ env var.
-// When the project upgrades to Blaze, remove the DEV branch entirely.
 const DEV_KEY = import.meta.env.VITE_GROQ_API_KEY as string | undefined
-const IS_DEV  = import.meta.env.DEV === true
+// Use direct API call when key is available; proxy as fallback
+const USE_DIRECT = !!DEV_KEY
 
 interface GroqCallData   { messages: Array<{ role: string; content: string }>; maxTokens?: number; temperature?: number; jsonMode?: boolean }
 interface GroqCallResult { content: string }
@@ -18,13 +16,12 @@ async function groqChat(
   temperature = 0.5,
   jsonMode = false,
 ): Promise<string> {
-  // Production path: Cloud Function holds the secret
-  if (!IS_DEV) {
+  // Use proxy when no key available
+  if (!USE_DIRECT) {
     const result = await _proxy({ messages, maxTokens, temperature, jsonMode })
     return result.data.content
   }
 
-  // Dev path: direct fetch — key stays local, never committed
   if (!DEV_KEY) throw new Error('VITE_GROQ_API_KEY not set in .env')
   const body: Record<string, unknown> = {
     model: 'llama-3.3-70b-versatile',
@@ -340,4 +337,43 @@ Responde ÚNICAMENTE con JSON válido:
   const content = await groqChat([{ role: 'user', content: prompt }], 3000, 0.6, true)
   const parsed = JSON.parse(content) as { menu: MenuDia[] }
   return parsed.menu
+}
+
+// ─── Basic Pauta (from WelcomeModal minimal data) ────────────────────────────
+
+export async function generarPautaBasica(params: {
+  nombre: string
+  objetivo: string
+  peso: number
+  talla: number
+}): Promise<PautaGenerada> {
+  const peso = params.peso || 70
+  const talla = params.talla || 165
+  const tmb = 447.593 + (9.247 * peso) + (3.098 * talla) - (4.330 * 30)
+  const get = Math.round(tmb * 1.375)
+  const ajuste = params.objetivo === 'bajar_peso' ? -300 : params.objetivo === 'ganar_masa' ? 250 : 0
+  const kcal = Math.max(1200, get + ajuste)
+  const prot = Math.round(peso * 1.8)
+  const grasas = Math.round((kcal * 0.30) / 9)
+  const carbos = Math.max(50, Math.round((kcal - prot * 4 - grasas * 9) / 4))
+  const OBJ_DESC: Record<string, string> = {
+    bajar_peso: 'pérdida de peso saludable',
+    ganar_masa: 'aumento de masa muscular',
+    mantener: 'mantenimiento de peso',
+    salud: 'mejora de salud general',
+    rendimiento: 'rendimiento deportivo',
+  }
+  const objDesc = OBJ_DESC[params.objetivo] ?? 'bienestar general'
+  const d25 = Math.round(kcal * 0.25)
+  const d10 = Math.round(kcal * 0.10)
+  const d35 = Math.round(kcal * 0.35)
+  const d20 = Math.round(kcal * 0.20)
+
+  const prompt = `Genera pauta nutricional en español chileno para ${params.nombre}. Objetivo: ${objDesc}. Peso: ${peso}kg, Talla: ${talla}cm. Meta: ${kcal} kcal/día, ${prot}g proteína, ${grasas}g grasas, ${carbos}g carbos. Alimentos chilenos típicos, porciones exactas.
+
+Responde ÚNICAMENTE con JSON válido:
+{"titulo":"Pauta nutricional personalizada","objetivo":"${objDesc} — ${kcal} kcal/día","macros":{"calorias":${kcal},"proteinas":${prot},"carbos":${carbos},"grasas":${grasas}},"comidas":[{"nombre":"Desayuno","horario":"8:00","kcal":${d25},"items":["item1","item2","item3"]},{"nombre":"Colación AM","horario":"11:00","kcal":${d10},"items":["item1","item2"]},{"nombre":"Almuerzo","horario":"13:00","kcal":${d35},"items":["item1","item2","item3","item4"]},{"nombre":"Colación PM","horario":"17:00","kcal":${d10},"items":["item1","item2"]},{"nombre":"Cena","horario":"20:00","kcal":${d20},"items":["item1","item2","item3"]}],"sustituciones":[{"grupo":"Proteínas","items":["pollo 100g","atún en lata","huevo 2 unidades","tofu 100g"]},{"grupo":"Carbohidratos","items":["arroz integral 1/2 taza","papa mediana","avena 1/2 taza","pan integral 2 rebanadas"]},{"grupo":"Grasas","items":["palta 1/4","aceite oliva 1 cdita","nueces 30g","almendras 20g"]},{"grupo":"Lácteos","items":["yogurt griego","leche semidescremada 1 taza","quesillo 50g","leche vegetal"]}],"consejos":[{"icon":"💧","title":"Hidratación","desc":"Toma al menos 2 litros de agua al día, especialmente entre comidas."},{"icon":"🕐","title":"Horarios","desc":"Mantén intervalos de 3-4 horas entre comidas para regular el hambre."},{"icon":"🥦","title":"Verduras","desc":"Incluye verduras coloridas en almuerzo y cena para cubrir micronutrientes."},{"icon":"🧂","title":"Sodio","desc":"Prefiere hierbas aromáticas sobre la sal para condimentar."},{"icon":"📏","title":"Porciones","desc":"Usa la mano como referencia: palma para proteínas, puño para carbos."}]}`
+
+  const content = await groqChat([{ role: 'user', content: prompt }], 2000, 0.4, true)
+  return JSON.parse(content) as PautaGenerada
 }

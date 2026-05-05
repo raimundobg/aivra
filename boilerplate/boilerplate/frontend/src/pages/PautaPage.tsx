@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import { Box, Button, Container, Flex, Grid, Heading, Stack, Text } from '@chakra-ui/react'
 import { doc, onSnapshot, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../config/firebase'
@@ -7,6 +7,33 @@ import { useAuth } from '../providers/AuthProvider'
 import AppLayout from '../app/AppLayout'
 import PatientNav from '../organisms/PatientNav'
 import type { MealKey } from '../types/nutrition'
+import { generarMenuSemanal, type MenuDia } from '../services/groq'
+
+interface Alimento {
+  grupo: string
+  subgrupo: string
+  alimento: string
+  gramos_porcion: number
+  medida_casera: string
+  kcal_porcion: number
+  proteinas_g: number
+  lipidos_g: number
+  carbohidratos_g: number
+}
+
+const MEAL_GROUPS: Record<string, string[]> = {
+  desayuno: ['Panes y cereales', 'Lácteos', 'Frutas'],
+  'colación am': ['Frutas', 'Lácteos', 'Panes y cereales'],
+  'colacion am': ['Frutas', 'Lácteos', 'Panes y cereales'],
+  colación: ['Frutas', 'Lácteos', 'Panes y cereales'],
+  colacion: ['Frutas', 'Lácteos', 'Panes y cereales'],
+  almuerzo: ['Cárneos y derivados', 'Alternativas proteicas vegetales', 'Legumbres secas', 'Panes y cereales', 'Verduras'],
+  'colación pm': ['Frutas', 'Lácteos', 'Panes y cereales'],
+  'colacion pm': ['Frutas', 'Lácteos', 'Panes y cereales'],
+  cena: ['Cárneos y derivados', 'Alternativas proteicas vegetales', 'Legumbres secas', 'Panes y cereales', 'Verduras'],
+  once: ['Panes y cereales', 'Lácteos', 'Frutas'],
+  merienda: ['Panes y cereales', 'Lácteos', 'Frutas'],
+}
 
 const C = {
   green: '#5F6F52',
@@ -22,7 +49,6 @@ const C = {
 }
 
 interface Comida { icon?: string; nombre: string; horario: string; kcal: number; items: string[] }
-interface Sustitucion { grupo: string; items: string[] }
 interface Consejo { icon?: string; title: string; desc: string }
 
 interface Pauta {
@@ -30,7 +56,6 @@ interface Pauta {
   objetivo?: string
   macros?: { calorias?: number; proteinas?: number; carbos?: number; grasas?: number }
   comidas?: Comida[]
-  sustituciones?: Sustitucion[]
   consejos?: Consejo[]
 }
 
@@ -59,12 +84,20 @@ function nombreToMealKey(nombre: string): MealKey | null {
   return null
 }
 
+const DAYS = ['Hoy', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
 export default function PautaPage() {
   const { user } = useAuth()
-  const [tab, setTab] = useState<'plan' | 'sustituciones' | 'consejos'>('plan')
+  const [tab, setTab] = useState<'plan' | 'consejos'>('plan')
   const [pauta, setPauta] = useState<Pauta | null>(null)
   const [loading, setLoading] = useState(true)
   const [completed, setCompleted] = useState<Set<MealKey>>(new Set())
+  const [selectedDay, setSelectedDay] = useState(0)
+  const [menu, setMenu] = useState<MenuDia[] | null>(null)
+  const [menuLoading, setMenuLoading] = useState(true)
+  const [generatingMenu, setGeneratingMenu] = useState(false)
+  const [alimentos, setAlimentos] = useState<Alimento[]>([])
+  const [exchangeTarget, setExchangeTarget] = useState<{ dayIdx: number; mealIdx: number; itemIdx: number } | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -75,7 +108,6 @@ export default function PautaPage() {
     })
   }, [user])
 
-  // Load today's R24 to know which meals are completed
   useEffect(() => {
     if (!user) return
     const today = new Date().toISOString().split('T')[0]
@@ -91,6 +123,49 @@ export default function PautaPage() {
     })
   }, [user])
 
+  useEffect(() => {
+    if (!user) return
+    getDoc(doc(db, 'users', user.uid, 'menu', 'current'))
+      .then(snap => {
+        if (snap.exists()) setMenu((snap.data().dias ?? []) as MenuDia[])
+        setMenuLoading(false)
+      })
+      .catch(() => setMenuLoading(false))
+  }, [user])
+
+  useEffect(() => {
+    fetch('/alimentos.json').then(r => r.json()).then((data: Alimento[]) => setAlimentos(data)).catch(() => {})
+  }, [])
+
+  function getAlternatives(mealNombre: string, kcalTarget: number): Alimento[] {
+    const key = mealNombre.toLowerCase().trim()
+    const groups = MEAL_GROUPS[key] ?? ['Panes y cereales', 'Cárneos y derivados', 'Frutas', 'Lácteos']
+    return alimentos
+      .filter(a => groups.includes(a.grupo))
+      .sort((a, b) => Math.abs(a.kcal_porcion - kcalTarget) - Math.abs(b.kcal_porcion - kcalTarget))
+      .slice(0, 8)
+  }
+
+  async function applyExchange(alimento: Alimento) {
+    if (!exchangeTarget || !user || !menu) return
+    const { dayIdx, mealIdx, itemIdx } = exchangeTarget
+    const newMenu = menu.map((dia, di) => {
+      if (di !== dayIdx) return dia
+      return {
+        ...dia,
+        comidas: dia.comidas.map((comida, ci) => {
+          if (ci !== mealIdx) return comida
+          const newItems = [...comida.items]
+          newItems[itemIdx] = `${alimento.alimento} (${alimento.medida_casera})`
+          return { ...comida, items: newItems }
+        }),
+      }
+    })
+    setMenu(newMenu)
+    setExchangeTarget(null)
+    await setDoc(doc(db, 'users', user.uid, 'menu', 'current'), { dias: newMenu, updatedAt: serverTimestamp() }, { merge: true })
+  }
+
   async function toggleComida(comida: Comida) {
     if (!user) return
     const mealKey = nombreToMealKey(comida.nombre)
@@ -102,14 +177,13 @@ export default function PautaPage() {
     const existing = snap.exists() ? snap.data().meals ?? {} : {}
 
     const newCompleted = new Set(completed)
-    let newMeals = { ...existing }
+    const newMeals = { ...existing }
 
     if (completed.has(mealKey)) {
       newCompleted.delete(mealKey)
       newMeals[mealKey] = []
     } else {
       newCompleted.add(mealKey)
-      // Quick-add: stub the meal as "checked from pauta" with the items as labels only
       newMeals[mealKey] = comida.items.map((item, i) => ({
         alimento: item,
         grupo: 'pauta',
@@ -126,6 +200,20 @@ export default function PautaPage() {
 
     setCompleted(newCompleted)
     await setDoc(r24Ref, { meals: newMeals, savedAt: serverTimestamp() }, { merge: true })
+  }
+
+  async function generarMenu() {
+    if (!user || !pauta) return
+    setGeneratingMenu(true)
+    try {
+      const dias = await generarMenuSemanal(pauta as Parameters<typeof generarMenuSemanal>[0], [])
+      await setDoc(doc(db, 'users', user.uid, 'menu', 'current'), { dias, generadoAt: serverTimestamp() })
+      setMenu(dias)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setGeneratingMenu(false)
+    }
   }
 
   const totalComidas = pauta?.comidas?.length ?? 0
@@ -200,10 +288,9 @@ export default function PautaPage() {
 
               {/* Tabs */}
               <Box bg="white" borderRadius="full" p={1} borderWidth="1px" borderColor={C.border} mb={4}>
-                <Grid templateColumns="1fr 1fr 1fr" gap={1}>
+                <Grid templateColumns="1fr 1fr" gap={1}>
                   {([
                     ['plan', 'Comidas'],
-                    ['sustituciones', 'Sustituciones'],
                     ['consejos', 'Consejos'],
                   ] as const).map(([t, l]) => (
                     <Box
@@ -221,106 +308,202 @@ export default function PautaPage() {
               {/* Plan de comidas */}
               {tab === 'plan' && (
                 <Stack gap={3}>
-                  {(pauta.comidas ?? []).map((c, idx) => {
-                    const mealKey = nombreToMealKey(c.nombre)
-                    const isDone = mealKey ? completed.has(mealKey) : false
-                    return (
+                  {/* Day selector: Hoy + Lun-Dom */}
+                  <Flex gap={1.5} flexWrap="wrap">
+                    {DAYS.map((day, i) => (
                       <Box
-                        key={idx}
-                        bg="white" borderRadius="2xl" p={4} borderWidth="1.5px"
-                        borderColor={isDone ? C.green : C.border}
-                        opacity={isDone ? 0.8 : 1}
-                        transition="all 0.15s"
+                        key={day} px={3} py={1.5} borderRadius="full" cursor="pointer"
+                        bg={selectedDay === i ? C.green : 'white'}
+                        borderWidth="1px" borderColor={selectedDay === i ? C.green : C.border}
+                        onClick={() => setSelectedDay(i)} transition="all 0.15s"
                       >
-                        <Flex align="center" justify="space-between" mb={3}>
-                          <Flex align="center" gap={3} flex={1} minW={0}>
-                            <Box
-                              w={11} h={11} borderRadius="xl"
-                              bg={isDone ? C.green : C.greenLight}
-                              display="flex" alignItems="center" justifyContent="center" flexShrink={0}
-                            >
-                              <Text fontSize="xl">{getMealIcon(c.nombre)}</Text>
-                            </Box>
-                            <Box flex={1} minW={0}>
-                              <Text fontFamily="heading" fontWeight="700" color={C.text} fontSize="sm" textTransform="capitalize">
-                                {c.nombre}
-                              </Text>
-                              <Text fontSize="xs" color={C.muted}>{c.horario} · {c.kcal} kcal</Text>
-                            </Box>
-                          </Flex>
+                        <Text fontSize="xs" fontWeight={selectedDay === i ? 700 : 500}
+                          color={selectedDay === i ? 'white' : C.muted}>{day}</Text>
+                      </Box>
+                    ))}
+                  </Flex>
+
+                  {selectedDay === 0 ? (
+                    <>
+                      {(pauta.comidas ?? []).map((c, idx) => {
+                        const mealKey = nombreToMealKey(c.nombre)
+                        const isDone = mealKey ? completed.has(mealKey) : false
+                        return (
                           <Box
-                            onClick={() => toggleComida(c)}
-                            w={7} h={7} borderRadius="full" cursor="pointer" flexShrink={0}
-                            bg={isDone ? C.green : 'white'}
-                            borderWidth="2px" borderColor={isDone ? C.green : C.border}
-                            display="flex" alignItems="center" justifyContent="center"
-                            _hover={{ borderColor: C.green }}
+                            key={idx}
+                            bg="white" borderRadius="2xl" p={4} borderWidth="1.5px"
+                            borderColor={isDone ? C.green : C.border}
+                            opacity={isDone ? 0.8 : 1}
                             transition="all 0.15s"
                           >
-                            {isDone && <Text color="white" fontSize="sm" fontWeight="700">✓</Text>}
-                          </Box>
-                        </Flex>
-                        <Stack gap={1} pl={1}>
-                          {c.items.map((item, i) => (
-                            <Flex key={i} align="flex-start" gap={2}>
-                              <Box w={1} h={1} borderRadius="full" bg={C.green} mt={2} flexShrink={0} />
-                              <Text fontSize="xs" color={C.text} lineHeight="1.5">{item}</Text>
+                            <Flex align="center" justify="space-between" mb={3}>
+                              <Flex align="center" gap={3} flex={1} minW={0}>
+                                <Box
+                                  w={11} h={11} borderRadius="xl"
+                                  bg={isDone ? C.green : C.greenLight}
+                                  display="flex" alignItems="center" justifyContent="center" flexShrink={0}
+                                >
+                                  <Text fontSize="xl">{getMealIcon(c.nombre)}</Text>
+                                </Box>
+                                <Box flex={1} minW={0}>
+                                  <Text fontFamily="heading" fontWeight="700" color={C.text} fontSize="sm" textTransform="capitalize">
+                                    {c.nombre}
+                                  </Text>
+                                  <Text fontSize="xs" color={C.muted}>{c.horario} · {c.kcal} kcal</Text>
+                                </Box>
+                              </Flex>
+                              <Box
+                                onClick={() => toggleComida(c)}
+                                w={7} h={7} borderRadius="full" cursor="pointer" flexShrink={0}
+                                bg={isDone ? C.green : 'white'}
+                                borderWidth="2px" borderColor={isDone ? C.green : C.border}
+                                display="flex" alignItems="center" justifyContent="center"
+                                _hover={{ borderColor: C.green }}
+                                transition="all 0.15s"
+                              >
+                                {isDone && <Text color="white" fontSize="sm" fontWeight="700">✓</Text>}
+                              </Box>
                             </Flex>
-                          ))}
-                        </Stack>
-                      </Box>
-                    )
-                  })}
+                            <Stack gap={1} pl={1}>
+                              {c.items.map((item, i) => (
+                                <Flex key={i} align="flex-start" gap={2}>
+                                  <Box w={1} h={1} borderRadius="full" bg={C.green} mt={2} flexShrink={0} />
+                                  <Text fontSize="xs" color={C.text} lineHeight="1.5">{item}</Text>
+                                </Flex>
+                              ))}
+                            </Stack>
+                          </Box>
+                        )
+                      })}
 
-                  <Box bg={C.beige} borderRadius="2xl" p={4}>
-                    <Flex align="flex-start" gap={2}>
-                      <Text fontSize="md">💡</Text>
-                      <Text fontSize="xs" color={C.text} lineHeight="1.6">
-                        Tocá el círculo para marcar una comida como hecha. Esto registra automáticamente en tu R24 del día.
-                      </Text>
-                    </Flex>
-                  </Box>
-
-                  <Button
-                    onClick={() => navigate('/r24')}
-                    variant="outline" borderRadius="full" borderColor={C.green} color={C.green}
-                    fontWeight="600" fontSize="sm" mt={1}
-                    _hover={{ bg: C.greenLight }}
-                  >
-                    Editar registro 24h en detalle →
-                  </Button>
-                </Stack>
-              )}
-
-              {/* Sustituciones */}
-              {tab === 'sustituciones' && (
-                <Stack gap={3}>
-                  {(pauta.sustituciones ?? []).length === 0 ? (
-                    <Box bg="white" borderRadius="2xl" p={6} textAlign="center" borderWidth="1px" borderColor={C.border}>
-                      <Text fontSize="sm" color={C.muted}>Tu pauta aún no incluye sustituciones.</Text>
-                    </Box>
-                  ) : (
-                    (pauta.sustituciones ?? []).map(s => (
-                      <Box key={s.grupo} bg="white" borderRadius="2xl" p={4} borderWidth="1px" borderColor={C.border}>
-                        <Text fontFamily="heading" fontWeight="700" color={C.green} mb={3} fontSize="sm">{s.grupo}</Text>
-                        <Flex gap={2} flexWrap="wrap">
-                          {s.items.map(item => (
-                            <Box key={item} px={3} py={1.5} bg={C.greenLight} borderRadius="full">
-                              <Text fontSize="xs" color={C.green} fontWeight="600">{item}</Text>
-                            </Box>
-                          ))}
+                      <Box bg={C.beige} borderRadius="2xl" p={4}>
+                        <Flex align="flex-start" gap={2}>
+                          <Text fontSize="md">💡</Text>
+                          <Text fontSize="xs" color={C.text} lineHeight="1.6">
+                            Tocá el círculo para marcar una comida como hecha. Registra automáticamente en tu R24.
+                          </Text>
                         </Flex>
                       </Box>
-                    ))
+
+                      <Button
+                        onClick={() => navigate('/r24')}
+                        variant="outline" borderRadius="full" borderColor={C.green} color={C.green}
+                        fontWeight="600" fontSize="sm"
+                        _hover={{ bg: C.greenLight }}
+                      >
+                        Editar registro 24h en detalle →
+                      </Button>
+                    </>
+                  ) : (
+                    menuLoading ? (
+                      <Box py={6} textAlign="center">
+                        <Text fontSize="sm" color={C.muted}>Cargando menú...</Text>
+                      </Box>
+                    ) : !menu ? (
+                      <Box bg="white" borderRadius="2xl" p={8} textAlign="center" borderWidth="1px" borderColor={C.border}>
+                        <Text fontSize="3xl" mb={3}>📅</Text>
+                        <Text fontFamily="heading" fontWeight="700" color={C.text} mb={2}>Sin menú semanal</Text>
+                        <Text fontSize="sm" color={C.muted} mb={5} lineHeight="1.6">
+                          Genera tu menú de 7 días con opciones variadas basadas en tu pauta.
+                        </Text>
+                        <Button
+                          bg={C.green} color="white" borderRadius="full" fontWeight="700"
+                          loading={generatingMenu} loadingText="Generando menú..."
+                          onClick={generarMenu} _hover={{ opacity: 0.9 }}
+                        >
+                          ✨ Generar menú semanal
+                        </Button>
+                      </Box>
+                    ) : (
+                      <Stack gap={3}>
+                        {(menu[selectedDay - 1]?.comidas ?? []).map((comida, mealIdx) => {
+                          const dayIdx = selectedDay - 1
+                          const mealKcal = (comida as { kcal?: number }).kcal ?? 400
+                          const mealKcalPerItem = comida.items.length > 0 ? Math.round(mealKcal / comida.items.length) : 100
+                          return (
+                          <Box key={mealIdx} bg="white" borderRadius="2xl" p={4} borderWidth="1px" borderColor={C.border}>
+                            <Flex align="center" gap={3} mb={2}>
+                              <Box w={10} h={10} bg={C.greenLight} borderRadius="xl"
+                                display="flex" alignItems="center" justifyContent="center" flexShrink={0}>
+                                <Text fontSize="lg">{getMealIcon(comida.nombre)}</Text>
+                              </Box>
+                              <Text fontFamily="heading" fontWeight="700" color={C.text} fontSize="sm" textTransform="capitalize">
+                                {comida.nombre}
+                              </Text>
+                            </Flex>
+                            <Stack gap={1} pl={1}>
+                              {comida.items.map((item, itemIdx) => {
+                                const isTarget = exchangeTarget?.dayIdx === dayIdx && exchangeTarget?.mealIdx === mealIdx && exchangeTarget?.itemIdx === itemIdx
+                                const alternatives = isTarget ? getAlternatives(comida.nombre, mealKcalPerItem) : []
+                                return (
+                                  <Box key={itemIdx}>
+                                    <Flex
+                                      align="flex-start" gap={2} cursor="pointer"
+                                      onClick={() => setExchangeTarget(isTarget ? null : { dayIdx, mealIdx, itemIdx })}
+                                      _hover={{ opacity: 0.75 }} transition="opacity 0.15s"
+                                      borderRadius="md" p={1} mx={-1}
+                                      bg={isTarget ? C.greenLight : 'transparent'}
+                                    >
+                                      <Box w={1} h={1} borderRadius="full" bg={C.green} mt={2} flexShrink={0} />
+                                      <Text fontSize="xs" color={C.text} lineHeight="1.5" flex={1}>{item}</Text>
+                                      <Box
+                                        flexShrink={0} px={2} py={0.5} borderRadius="full"
+                                        bg={isTarget ? C.green : C.greenLight}
+                                        borderWidth="1px" borderColor={isTarget ? C.green : C.border}
+                                      >
+                                        <Text fontSize="xs" color={isTarget ? 'white' : C.green} fontWeight="700" lineHeight="1.4">
+                                          {isTarget ? 'cerrar' : '⇄ cambiar'}
+                                        </Text>
+                                      </Box>
+                                    </Flex>
+                                    {isTarget && (
+                                      <Box mt={2} mb={1} pl={3}>
+                                        <Text fontSize="10px" color={C.muted} fontWeight="600" mb={2} textTransform="uppercase" letterSpacing="0.05em">
+                                          Intercambiar por:
+                                        </Text>
+                                        <Flex gap={1.5} flexWrap="wrap">
+                                          {alternatives.map((alt, ai) => (
+                                            <Box
+                                              key={ai}
+                                              px={2.5} py={1} borderRadius="full" cursor="pointer"
+                                              bg="white" borderWidth="1.5px" borderColor={C.border}
+                                              _hover={{ borderColor: C.green, bg: C.greenLight }}
+                                              transition="all 0.15s"
+                                              onClick={(e) => { e.stopPropagation(); applyExchange(alt) }}
+                                            >
+                                              <Text fontSize="10px" color={C.text} fontWeight="600">{alt.alimento}</Text>
+                                              <Text fontSize="9px" color={C.muted}>{alt.medida_casera} · {alt.kcal_porcion} kcal</Text>
+                                            </Box>
+                                          ))}
+                                        </Flex>
+                                      </Box>
+                                    )}
+                                  </Box>
+                                )
+                              })}
+                            </Stack>
+                          </Box>
+                          )
+                        })}
+                        <Flex gap={2} flexWrap="wrap">
+                          <Button
+                            size="sm" variant="outline" borderRadius="full"
+                            borderColor={C.border} color={C.muted} fontWeight="600"
+                            loading={generatingMenu} loadingText="Regenerando..."
+                            onClick={generarMenu}
+                          >
+                            🔄 Regenerar menú
+                          </Button>
+                          <RouterLink to="/meal-prep" style={{ textDecoration: 'none' }}>
+                            <Button size="sm" bg={C.greenLight} color={C.green} borderRadius="full" fontWeight="600"
+                              _hover={{ bg: C.beige }}>
+                              🥘 Ver prep semanal
+                            </Button>
+                          </RouterLink>
+                        </Flex>
+                      </Stack>
+                    )
                   )}
-                  <Box bg={C.beige} borderRadius="2xl" p={4}>
-                    <Flex align="flex-start" gap={2}>
-                      <Text fontSize="md">🔄</Text>
-                      <Text fontSize="xs" color={C.text} lineHeight="1.6">
-                        Podés intercambiar dentro del mismo grupo manteniendo porciones similares.
-                      </Text>
-                    </Flex>
-                  </Box>
                 </Stack>
               )}
 
