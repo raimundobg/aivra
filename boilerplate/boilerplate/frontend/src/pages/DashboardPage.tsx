@@ -159,6 +159,7 @@ export default function DashboardPage() {
   const { habits, adherence } = useHabits(user?.uid)
   const [showWelcome, setShowWelcome] = useState(false)
   const [profileIncomplete, setProfileIncomplete] = useState(false)
+  const [showDetailedCTA, setShowDetailedCTA] = useState(false)
   const [activityDays, setActivityDays] = useState<string[]>([])
   const [checkInDone, setCheckInDone] = useState(false)
   const [generatingPauta, setGeneratingPauta] = useState(false)
@@ -175,6 +176,7 @@ export default function DashboardPage() {
       if (!seen) setShowWelcome(true)
       if (!complete) setProfileIncomplete(true)
       if (data?.activityDays) setActivityDays(data.activityDays as string[])
+      if (!data?.detailedProfileCompleted) setShowDetailedCTA(true)
     })
   }, [user])
 
@@ -217,8 +219,7 @@ export default function DashboardPage() {
   const aguaVasos = habits.agua > 0 ? Math.round((habits.agua / 10) * 8) : 0
   const racha = calcRacha(activityDays)
 
-  // suppress unused warning — adherence used in future
-  void adherence
+  const adherenceColor = adherence >= 70 ? C.green : adherence >= 40 ? C.amber : C.warning
 
   async function handleGenerarPauta() {
     if (!user || generatingPauta || !pautaPeso || !pautaTalla) return
@@ -285,6 +286,33 @@ export default function DashboardPage() {
             </Flex>
           </Flex>
 
+          {/* CTA formulario detallado */}
+          {showDetailedCTA && (
+            <Box
+              mb={4} p={4} borderRadius="2xl" cursor="pointer"
+              background={`linear-gradient(135deg, ${C.green} 0%, ${C.greenDark} 100%)`}
+              onClick={() => navigate('/onboarding')}
+              _hover={{ opacity: 0.95 }} transition="opacity 0.15s"
+              position="relative" overflow="hidden"
+            >
+              <Box position="absolute" top="-20px" right="-20px" w="100px" h="100px"
+                borderRadius="full" bg="whiteAlpha.100" />
+              <Flex align="center" justify="space-between" gap={3}>
+                <Box flex={1}>
+                  <Text fontFamily="heading" fontWeight="800" color="white" fontSize="md" mb={0.5}>
+                    Saca el máximo provecho de NuAI ✨
+                  </Text>
+                  <Text fontSize="xs" color="whiteAlpha.800" lineHeight="1.5">
+                    Completa tu perfil clínico — NuAI generará una pauta 10x más precisa para ti
+                  </Text>
+                </Box>
+                <Box px={3} py={2} bg="white" borderRadius="xl" flexShrink={0}>
+                  <Text fontSize="xs" fontWeight="700" color={C.green}>Empezar →</Text>
+                </Box>
+              </Flex>
+            </Box>
+          )}
+
           {/* Plan de hoy */}
           <Box bg="white" borderRadius="2xl" p={5} borderWidth="1px" borderColor={C.border} mb={4}>
             <Flex justify="space-between" align="center" mb={4}>
@@ -348,10 +376,11 @@ export default function DashboardPage() {
                 <StatRow label="Agua" value={`${aguaVasos} / 8 vasos`} />
               </Stack>
             </Flex>
-            <Grid templateColumns="repeat(3, 1fr)" gap={2}>
+            <Grid templateColumns="repeat(4, 1fr)" gap={2}>
               <SummaryItem icon="🔥" label="Racha" value={racha > 0 ? `${racha}d` : '—'} color={racha > 0 ? C.green : C.muted} />
               <SummaryItem icon="🍽️" label="Comidas" value={`${completedMeals}/${totalMeals}`} color={C.text} />
               <SummaryItem icon="😊" label="Check-in" value={checkInDone ? '✓' : '—'} color={checkInDone ? C.green : C.muted} />
+              <SummaryItem icon="📊" label="Adherencia" value={adherence > 0 ? `${adherence}%` : '—'} color={adherence > 0 ? adherenceColor : C.muted} />
             </Grid>
           </Box>
 

@@ -111,8 +111,8 @@ export default function PautaPage() {
   useEffect(() => {
     if (!user) return
     const today = new Date().toISOString().split('T')[0]
-    getDoc(doc(db, 'users', user.uid, 'r24', today)).then(snap => {
-      if (!snap.exists()) return
+    return onSnapshot(doc(db, 'users', user.uid, 'r24', today), snap => {
+      if (!snap.exists()) { setCompleted(new Set()); return }
       const meals = snap.data().meals as Record<string, unknown[]> | undefined
       if (!meals) return
       const done = new Set<MealKey>()

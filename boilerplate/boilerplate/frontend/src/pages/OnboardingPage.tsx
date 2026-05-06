@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore'
 import { db } from '../config/firebase'
 import { useAuth } from '../providers/AuthProvider'
-import { generarPauta } from '../services/groq'
+import { generarPauta, evaluarRedFlags } from '../services/groq'
 import {
   Box, Button, Container, Flex, Input, Text, Stack,
   Grid, Badge, Field, Separator,
@@ -595,28 +595,38 @@ export default function OnboardingPage() {
   const [saving, setSaving] = useState(false)
   const [savingMsg, setSavingMsg] = useState('')
 
-  // Load partial on mount
+  // Load partial on mount — pre-fill from intake/form or fallback to user profile
   useEffect(() => {
     if (!user) return
-    getDoc(doc(db, 'users', user.uid, 'intake', 'form')).then(snap => {
-      if (snap.exists()) {
-        const saved = snap.data() as Partial<IntakeData> & { lastStep?: number }
+    const arrayKeys: ArrayKey[] = [
+      'diagnosticos', 'diagnosticosOtros', 'medicamentos', 'suplementos', 'cirugias',
+      'antecedenteFamiliar', 'restricciones', 'alergias', 'actividadFisicas', 'sintomasGI',
+      'desayuno', 'colacion_am', 'almuerzo', 'colacion_pm', 'cena', 'objetivos',
+    ]
+    Promise.all([
+      getDoc(doc(db, 'users', user.uid, 'intake', 'form')),
+      getDoc(doc(db, 'users', user.uid)),
+    ]).then(([intakeSnap, profileSnap]) => {
+      const profile = profileSnap.data() ?? {}
+      const prefill: Partial<IntakeData> = {
+        nombre: profile.displayName ?? user.displayName ?? '',
+        peso: profile.peso ? String(profile.peso) : '',
+        talla: profile.talla ? String(profile.talla) : '',
+      }
+      if (intakeSnap.exists()) {
+        const saved = intakeSnap.data() as Partial<IntakeData> & { lastStep?: number }
         const lastStep = saved.lastStep ?? 0
         if (lastStep < STEPS.length - 1) {
-          // Sanitize: legacy data may have meal fields as strings or array fields as strings
-          const arrayKeys: ArrayKey[] = [
-            'diagnosticos', 'diagnosticosOtros', 'medicamentos', 'suplementos', 'cirugias',
-            'antecedenteFamiliar', 'restricciones', 'alergias', 'actividadFisicas', 'sintomasGI',
-            'desayuno', 'colacion_am', 'almuerzo', 'colacion_pm', 'cena', 'objetivos',
-          ]
           const sanitized: Partial<IntakeData> = { ...saved }
           for (const k of arrayKeys) {
             const v = (sanitized as Record<string, unknown>)[k]
             if (!Array.isArray(v)) (sanitized as Record<string, unknown>)[k] = []
           }
-          setData({ ...empty, ...sanitized, efc: saved.efc ?? {} })
+          setData({ ...empty, ...prefill, ...sanitized, efc: saved.efc ?? {} })
           setStep(lastStep)
         }
+      } else {
+        setData(prev => ({ ...prev, ...prefill }))
       }
     }).catch(() => { /* silent */ })
   }, [user])
@@ -658,6 +668,23 @@ export default function OnboardingPage() {
         completedAt: serverTimestamp(),
       }, { merge: true })
 
+      // Red flags check — block automated plan if critico
+      const redFlags = evaluarRedFlags(data)
+      await setDoc(doc(db, 'users', user.uid), {
+        onboardingCompleted: true,
+        detailedProfileCompleted: true,
+        redFlagsNivel: redFlags.nivel,
+        redFlags: redFlags.flags,
+      }, { merge: true })
+
+      if (redFlags.nivel === 'critico') {
+        setSavingMsg('⚠️ Detectamos situaciones que requieren atención profesional. Te recomendamos el Plan Full con nutricionista.')
+        await new Promise(r => setTimeout(r, 3000))
+        markOnboardingDone()
+        navigate('/dashboard')
+        return
+      }
+
       setSavingMsg('Generando tu pauta nutricional con IA...')
       const pauta = await generarPauta(data)
       await setDoc(doc(db, 'users', user.uid, 'pauta', 'current'), {
@@ -666,9 +693,8 @@ export default function OnboardingPage() {
         generadoAt: serverTimestamp(),
       })
 
-      await setDoc(doc(db, 'users', user.uid), { onboardingCompleted: true }, { merge: true })
       markOnboardingDone()
-      navigate('/planes')
+      navigate('/dashboard')
     } catch (e) {
       console.error(e)
       setSavingMsg('Error generando la pauta. Inténtalo de nuevo.')

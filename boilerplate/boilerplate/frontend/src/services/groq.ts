@@ -174,6 +174,38 @@ export async function generarPauta(intake: IntakeData, instruccionesNutricionist
 
   const efcText = Object.entries(intake.efc ?? {}).map(([g, f]) => `${g}: ${f}`).join(', ') || 'no especificado'
 
+  const restricciones = intake.restricciones || []
+  const alergias = intake.alergias || []
+  const tieneColacionAM = Array.isArray(intake.colacion_am) && intake.colacion_am.length > 0
+  const tieneColacionPM = Array.isArray(intake.colacion_pm) && intake.colacion_pm.length > 0
+  const esLactosoIntol = restricciones.some(r => r.toLowerCase().includes('lactosa')) ||
+    alergias.some(a => a.toLowerCase().includes('lactosa') || a.toLowerCase().includes('lácteo'))
+
+  const colacionAMKcal = Math.round(macros.objetivo * 0.10)
+  const colacionPMKcal = Math.round(macros.objetivo * 0.10)
+  const mainKcal = macros.objetivo - Math.round(macros.objetivo * 0.25) - Math.round(macros.objetivo * 0.20) -
+    (tieneColacionAM ? colacionAMKcal : 0) - (tieneColacionPM ? colacionPMKcal : 0)
+  const almuerzoPct = mainKcal
+
+  const comidasJson = [
+    `{ "nombre": "Desayuno", "horario": "8:00 - 9:00", "kcal": ${Math.round(macros.objetivo * 0.25)}, "items": ["alimento con porción exacta", "alimento 2", "alimento 3"] }`,
+    tieneColacionAM ? `{ "nombre": "Colación AM", "horario": "11:00", "kcal": ${colacionAMKcal}, "items": ["alimento 1", "alimento 2"] }` : null,
+    `{ "nombre": "Almuerzo", "horario": "13:00 - 14:00", "kcal": ${almuerzoPct}, "items": ["alimento 1", "alimento 2", "alimento 3", "alimento 4"] }`,
+    tieneColacionPM ? `{ "nombre": "Colación PM", "horario": "17:00", "kcal": ${colacionPMKcal}, "items": ["alimento 1", "alimento 2"] }` : null,
+    `{ "nombre": "Cena", "horario": "20:00 - 21:00", "kcal": ${Math.round(macros.objetivo * 0.20)}, "items": ["alimento 1", "alimento 2", "alimento 3"] }`,
+  ].filter(Boolean).join(',\n    ')
+
+  const numComidas = [true, tieneColacionAM, true, tieneColacionPM, true].filter(Boolean).length
+
+  const sustGrupos = [
+    `{ "grupo": "Proteínas", "items": ["opción 1 con porción", "opción 2", "opción 3", "opción 4"] }`,
+    `{ "grupo": "Carbohidratos", "items": ["opción 1", "opción 2", "opción 3", "opción 4"] }`,
+    `{ "grupo": "Grasas saludables", "items": ["opción 1", "opción 2", "opción 3", "opción 4"] }`,
+    esLactosoIntol
+      ? `{ "grupo": "Alternativas sin lactosa", "items": ["leche de avena", "leche de almendras", "yogur de coco", "queso vegano"] }`
+      : `{ "grupo": "Lácteos", "items": ["opción 1", "opción 2", "opción 3", "opción 4"] }`,
+  ].join(',\n    ')
+
   let prompt = `Eres una nutricionista clínica experta. Genera una pauta nutricional personalizada en español chileno para este paciente.
 
 DATOS DEL PACIENTE:
@@ -186,8 +218,8 @@ DATOS DEL PACIENTE:
 - Diagnósticos: ${diagnosticosList}
 - Medicamentos: ${(intake.medicamentos || []).join(', ') || 'ninguno'}
 - Suplementos: ${(intake.suplementos || []).join(', ') || 'ninguno'}
-- Restricciones alimentarias: ${intake.restricciones.join(', ') || 'ninguna'}
-- Alergias: ${(intake.alergias || []).join(', ') || 'ninguna'}
+- Restricciones alimentarias: ${restricciones.join(', ') || 'ninguna'}
+- Alergias: ${alergias.join(', ') || 'ninguna'}
 - Síntomas digestivos: ${intake.sintomasGI.join(', ') || 'ninguno'}
 - Recuerdo 24h: Desayuno: ${formatMeal(intake.desayuno)} | Colación AM: ${formatMeal(intake.colacion_am)} | Almuerzo: ${formatMeal(intake.almuerzo)} | Colación PM: ${formatMeal(intake.colacion_pm)} | Cena: ${formatMeal(intake.cena)}
 - Frecuencia de consumo: ${efcText}
@@ -195,20 +227,21 @@ DATOS DEL PACIENTE:
 REQUERIMIENTOS CALCULADOS (Harris-Benedict + factor actividad):
 - GET (Gasto Energético Total): ${macros.get} kcal/día
 - Meta calórica: ${macros.objetivo} kcal/día
-- Proteínas: ${macros.proteinas}g (${Math.round(macros.proteinas * 4)} kcal)
-- Grasas: ${macros.grasas}g (${Math.round(macros.grasas * 9)} kcal)
-- Carbohidratos: ${macros.carbos}g (${Math.round(macros.carbos * 4)} kcal)
+- Proteínas: ${macros.proteinas}g | Grasas: ${macros.grasas}g | Carbohidratos: ${macros.carbos}g
 USA EXACTAMENTE ESTOS VALORES DE MACROS — no los cambies.
 
+RESTRICCIONES ABSOLUTAS — PROHIBIDO IGNORAR:
+${esLactosoIntol ? '⛔ INTOLERANCIA A LA LACTOSA: NUNCA uses leche de vaca, yogur, queso, mantequilla, crema, ni ningún derivado lácteo. Usa alternativas vegetales (leche de avena, de almendras, etc.).' : ''}
+${restricciones.length > 0 ? `⛔ Restricciones declaradas: ${restricciones.join(', ')} — NUNCA incluyas estos alimentos en ninguna comida.` : ''}
+${alergias.length > 0 ? `⛔ Alergias: ${alergias.join(', ')} — NUNCA incluyas estos alimentos bajo ningún nombre.` : ''}
+
 INSTRUCCIONES ESTRICTAS:
-1. El array "comidas" debe tener EXACTAMENTE 5 elementos: "Desayuno", "Colación AM", "Almuerzo", "Colación PM", "Cena"
-2. El array "sustituciones" debe tener EXACTAMENTE 4 elementos con grupos: "Proteínas", "Carbohidratos", "Grasas", "Lácteos"
+1. El array "comidas" debe tener EXACTAMENTE ${numComidas} elementos (las colaciones SOLO si el paciente las consume según su R24h)
+2. El array "sustituciones" debe tener EXACTAMENTE 4 grupos
 3. El array "consejos" debe tener EXACTAMENTE 5 elementos personalizados para este paciente
 4. Cada comida: mínimo 3 items con porciones específicas (gramos, tazas, unidades)
-5. Cada grupo de sustituciones: mínimo 4 opciones
-6. Respeta ABSOLUTAMENTE restricciones y alergias — NUNCA incluyas alimentos prohibidos
-7. Usa alimentos típicos chilenos y latinoamericanos
-8. Distribuye las kcal de forma coherente: desayuno ~25%, colación AM ~10%, almuerzo ~35%, colación PM ~10%, cena ~20%
+5. Respeta ABSOLUTAMENTE restricciones y alergias — si viola una restricción, la pauta es inválida
+6. Usa alimentos típicos chilenos y latinoamericanos
 
 Responde ÚNICAMENTE con JSON válido, sin texto adicional:
 {
@@ -216,17 +249,10 @@ Responde ÚNICAMENTE con JSON válido, sin texto adicional:
   "objetivo": "descripción clínica del objetivo basada en los datos del paciente",
   "macros": { "calorias": ${macros.objetivo}, "proteinas": ${macros.proteinas}, "carbos": ${macros.carbos}, "grasas": ${macros.grasas} },
   "comidas": [
-    { "nombre": "Desayuno", "horario": "8:00 - 9:00", "kcal": ${Math.round(macros.objetivo * 0.25)}, "items": ["alimento con porción exacta", "alimento 2", "alimento 3"] },
-    { "nombre": "Colación AM", "horario": "11:00", "kcal": ${Math.round(macros.objetivo * 0.10)}, "items": ["alimento 1", "alimento 2", "alimento 3"] },
-    { "nombre": "Almuerzo", "horario": "13:00 - 14:00", "kcal": ${Math.round(macros.objetivo * 0.35)}, "items": ["alimento 1", "alimento 2", "alimento 3", "alimento 4"] },
-    { "nombre": "Colación PM", "horario": "17:00", "kcal": ${Math.round(macros.objetivo * 0.10)}, "items": ["alimento 1", "alimento 2", "alimento 3"] },
-    { "nombre": "Cena", "horario": "20:00 - 21:00", "kcal": ${Math.round(macros.objetivo * 0.20)}, "items": ["alimento 1", "alimento 2", "alimento 3", "alimento 4"] }
+    ${comidasJson}
   ],
   "sustituciones": [
-    { "grupo": "Proteínas", "items": ["opción 1 con porción", "opción 2", "opción 3", "opción 4"] },
-    { "grupo": "Carbohidratos", "items": ["opción 1", "opción 2", "opción 3", "opción 4"] },
-    { "grupo": "Grasas", "items": ["opción 1", "opción 2", "opción 3", "opción 4"] },
-    { "grupo": "Lácteos", "items": ["opción 1", "opción 2", "opción 3", "opción 4"] }
+    ${sustGrupos}
   ],
   "consejos": [
     { "icon": "💧", "title": "Hidratación", "desc": "consejo personalizado" },
